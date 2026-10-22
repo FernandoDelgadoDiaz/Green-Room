@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.netlify
+# Raw RSS snapshots: full episode descriptions are third-party content; only the derived dataset is committed.
+data/raw/
+# Never commit Qloo responses (developer guide: no Qloo data in public repos).
+.cache/

@@ -1,0 +1,118 @@
+import { useState } from 'react';
+import type { BacktestResult } from '../../core/backtest';
+import { api, type ShowSummary } from '../api';
+import { Badge } from './Badge';
+
+const CUTOFFS = ['2024-01-01', '2024-07-01', '2025-01-01', '2025-07-01'];
+
+export function BacktestView({ shows }: { shows: ShowSummary[] }) {
+  const [showId, setShowId] = useState('diary-of-a-ceo');
+  const [cutoff, setCutoff] = useState('2025-01-01');
+  const [result, setResult] = useState<BacktestResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const run = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setResult(await api.backtest(showId, cutoff));
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="card p-6">
+        <h3 className="font-display text-3xl">Would Green Room have seen it coming?</h3>
+        <p className="mt-2 max-w-3xl text-sm text-stone-400">
+          We hide everything published after a cutoff date, let the agent recommend using only earlier data, and then check which recommended people really
+          became first-time guests in the next 24 months. A hit means the host later booked that person. It measures agreement with real booking decisions, not
+          audience impact.
+        </p>
+        <div className="mt-5 flex flex-wrap items-end gap-3">
+          <label className="text-sm">
+            <span className="mb-1 block text-xs uppercase tracking-widest text-stone-500">Show</span>
+            <select className="rounded-lg border border-white/15 bg-stage-800 px-3 py-2" value={showId} onChange={(e) => setShowId(e.target.value)}>
+              {shows.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block text-xs uppercase tracking-widest text-stone-500">Cutoff</span>
+            <select className="rounded-lg border border-white/15 bg-stage-800 px-3 py-2" value={cutoff} onChange={(e) => setCutoff(e.target.value)}>
+              {CUTOFFS.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </label>
+          <button className="btn-primary" disabled={loading} onClick={run}>{loading ? 'Running…' : 'Run backtest'}</button>
+        </div>
+        {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
+      </div>
+
+      {result && (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+          <div className="card p-6">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-stone-400">
+              <span>{result.targetName}</span>·<span>history before {result.cutoff.slice(0, 10)} ({result.historyEpisodes} episodes)</span>·
+              <span>evaluated until {result.horizonEnd.slice(0, 10)}</span>
+              <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold ${result.leakage.ok ? 'bg-emerald-400/15 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
+                Leakage audit {result.leakage.ok ? 'passed' : 'FAILED'}
+              </span>
+            </div>
+            <table className="mt-5 w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-widest text-stone-500">
+                  <th className="pb-2">Method</th><th className="pb-2 text-right">Hits @5</th><th className="pb-2 text-right">@10</th><th className="pb-2 text-right">@25</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                <tr>
+                  <td className="py-3 text-stone-400">Random pick from the same pool (expected)</td>
+                  {Object.values(result.randomExpectation).map((v, i) => <td key={i} className="py-3 text-right tabular-nums text-stone-400">{v.toFixed(2)}</td>)}
+                </tr>
+                {result.arms.map((a) => (
+                  <tr key={a.label} className={a.isEvidence ? '' : 'opacity-60'}>
+                    <td className="py-3">
+                      <span className="mr-2">{a.label}</span>
+                      <Badge p={a.qlooMode === 'OFF' ? 'OFF' : a.qlooMode} />
+                      {!a.isEvidence && <p className="mt-1 text-xs text-fuchsia-200">Simulated Qloo input: this row tests the pipeline and is not a result.</p>}
+                    </td>
+                    {Object.values(a.hitsAt).map((v, i) => <td key={i} className="py-3 text-right text-lg font-semibold tabular-nums">{v}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="mt-6">
+              <p className="text-xs uppercase tracking-widest text-stone-500">Hits (recommended before the cutoff, booked after it)</p>
+              <ul className="mt-2 space-y-1 text-sm">
+                {result.arms[0].hits.map((h) => (
+                  <li key={h.name}>
+                    <span className="text-brass-300">#{h.rank}</span> {h.name} <span className="text-stone-500">— booked {h.bookedOn.slice(0, 10)}: {h.title}</span>
+                  </li>
+                ))}
+                {result.arms[0].hits.length === 0 && <li className="text-stone-400">No hits in the top 25. We show this as-is.</li>}
+              </ul>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="card p-6 text-sm">
+              <p className="text-xs uppercase tracking-widest text-stone-500">Ground truth</p>
+              <p className="mt-2 text-stone-300">
+                {result.hidden.length} first-time guests were booked after the cutoff. Only {result.reachable.length} of them had a verified appearance on a comparison
+                show before it, so {result.reachable.length} is the most any method could find here.
+              </p>
+              {result.reachable.length > 0 && <p className="mt-2 text-stone-400">Reachable: {result.reachable.join(', ')}.</p>}
+              <p className="mt-2 text-stone-500">Candidate pool at cutoff: {result.poolSize} people.</p>
+            </div>
+            <div className="card p-6 text-sm">
+              <p className="text-xs uppercase tracking-widest text-stone-500">Limitations</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-stone-400">{result.limitations.map((l) => <li key={l}>{l}</li>)}</ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
