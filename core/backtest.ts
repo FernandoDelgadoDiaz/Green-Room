@@ -19,6 +19,8 @@ export interface ArmResult {
   isEvidence: boolean;
   hitsAt: Record<number, number>;
   hits: Array<{ name: string; rank: number; bookedOn: string; title: string }>;
+  /** Canonical keys of the first 25 ranked people, to compare how much two arms differ. */
+  top: string[];
 }
 
 export interface BacktestResult {
@@ -46,7 +48,7 @@ export async function runBacktest(args: {
   others: PodcastDataset[];
   cutoff: string;
   horizonMonths?: number;
-  qlooArm?: { label: string; labelEs?: string; adapter: QlooAdapter };
+  qlooArm?: { label: string; labelEs?: string; adapter: QlooAdapter; discovery?: boolean };
 }): Promise<BacktestResult> {
   const { target, others, cutoff } = args;
   const horizonMonths = args.horizonMonths ?? 24;
@@ -76,12 +78,12 @@ export async function runBacktest(args: {
       .filter(({ r }) => hiddenMap.has(r.key))
       .map(({ r, rank }) => ({ name: r.name, rank, bookedOn: hiddenMap.get(r.key)!.bookedOn, title: hiddenMap.get(r.key)!.title }));
     const hitsAt = Object.fromEntries(KS.map((k) => [k, hits.filter((h) => h.rank <= k).length]));
-    return { label, labelEs, qlooMode: mode, isEvidence: mode !== 'MOCK', hitsAt, hits: hits.filter((h) => h.rank <= KS[KS.length - 1]) };
+    return { label, labelEs, qlooMode: mode, isEvidence: mode !== 'MOCK', hitsAt, hits: hits.filter((h) => h.rank <= KS[KS.length - 1]), top: ranked.slice(0, 25).map((r) => r.key) };
   };
 
   const arms: ArmResult[] = [scoreArm('Without Qloo (themes + verified track record)', 'Sin Qloo (temas + trayectoria verificada)', 'OFF', baseline.ranked)];
   if (args.qlooArm) {
-    const withQloo = await runAgent({ target, others, qloo: args.qlooArm.adapter, asOf: cutoff, k: 10 });
+    const withQloo = await runAgent({ target, others, qloo: args.qlooArm.adapter, asOf: cutoff, k: 10, qlooDiscovery: args.qlooArm.discovery });
     arms.push(scoreArm(args.qlooArm.label, args.qlooArm.labelEs ?? args.qlooArm.label, args.qlooArm.adapter.mode, withQloo.ranked));
   }
 

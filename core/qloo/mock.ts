@@ -40,7 +40,7 @@ export class MockQlooAdapter implements QlooAdapter {
     const seed = signalIds.slice().sort().join('|');
     const out = new Map<string, number>();
     for (const id of candidateIds) out.set(id, 0.2 + (stableHash(`${seed}#${id}`) % 700) / 1000);
-    this.log('/v2/insights', { 'filter.type': 'urn:entity:person', 'filter.entities': String(candidateIds.length) }, out.size, 'MOCK: pseudo-random affinities, not data');
+    this.log('/v2/insights', { 'filter.type': 'urn:entity:person', 'filter.results.entities': String(candidateIds.length) }, out.size, 'MOCK: pseudo-random affinities, not data');
     return out;
   }
 

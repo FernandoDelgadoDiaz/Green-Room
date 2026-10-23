@@ -4,7 +4,7 @@
 
 Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/). Qloo's taste graph is the audience signal: past guests become the taste fingerprint of the show, and Qloo finds and scores people with affinity to it.
 
-> **Status (2026-10-22): MOCK mode.** The Qloo hackathon key has not arrived yet. Podcasts, episodes, dates and guests are real (official RSS feeds). Every Qloo value is simulated, labeled **MOCK**, shown in pink, and has **weight 0** in the ranking. The live client is implemented and unit-tested against the documented API, but it is **not validated against the real API yet**.
+> **Status (2026-10-23): MOCK mode.** The Qloo hackathon key has arrived but has not been validated yet (the development container cannot reach the Qloo host). Phase 3 protocol and pre-registered criteria: [docs/QLOO_PHASE3.md](docs/QLOO_PHASE3.md). Agent audit: [docs/AGENT_AUDIT.md](docs/AGENT_AUDIT.md). Podcasts, episodes, dates and guests are real (official RSS feeds). Every Qloo value is simulated, labeled **MOCK**, shown in pink, and has **weight 0** in the ranking. The live client is implemented and unit-tested against the documented API, but it is **not validated against the real API yet**.
 
 ## What it does
 
@@ -53,20 +53,21 @@ Only 7 of the 59 later first-time guests were reachable: they had appeared on a 
 ```bash
 npm install
 npm run dev           # http://localhost:5173 (API served by the same handler as the Netlify Function)
-npm test              # 44 tests: extraction, agent decisions, leakage, Qloo client, secrets, i18n, profiles, unchanged ranking
+npm test              # 56 tests: extraction, agent decisions, leakage, Qloo client, secrets, i18n, profiles, unchanged ranking, experiment
 npm run typecheck
 npm run build
 npm run backtest -- <showId> <YYYY-MM-DD>
 npm run profiles:build  # refresh data/profiles.json from Wikipedia/Wikidata (needs network to those hosts)
 ```
 
-Live Qloo (when the key arrives):
+Live Qloo experiment (key never printed or stored by Green Room):
 
 ```bash
-cp .env.example .env   # set QLOO_API_KEY — server-side only, never VITE_-prefixed
-npm run qloo:smoke     # validates connectivity, person coverage, exclusions, explainability
-npm run dev            # header badge switches to LIVE
+npm install --global @qloo/qloo-harness && qloo setup --qloo   # official kit, hidden input
+npm run qloo:experiment   # T2 coverage, T4 originality, T5 with vs. without Qloo; stops if auth fails
 ```
+
+For the app itself, set `QLOO_API_KEY` in the server environment (never `VITE_`-prefixed) and run `npm run dev`; the header badge switches to LIVE.
 
 ## Architecture
 

@@ -39,6 +39,8 @@ export function parseEntity(raw: unknown): QlooEntity | null {
   const tags = Array.isArray(r.tags)
     ? (r.tags as unknown[]).map((t) => (t && typeof t === 'object' ? (t as Record<string, unknown>).name : t)).filter((t): t is string => typeof t === 'string')
     : undefined;
+  const props = (r.properties && typeof r.properties === 'object' ? r.properties : {}) as Record<string, unknown>;
+  const description = [props.short_description, props.description, r.disambiguation].find((d): d is string => typeof d === 'string' && d.length > 0);
   return {
     entityId,
     name,
@@ -46,6 +48,7 @@ export function parseEntity(raw: unknown): QlooEntity | null {
     popularity: num(r.popularity),
     affinity: num(query.affinity) ?? num(r.affinity),
     tags,
+    ...(description ? { description } : {}),
   };
 }
 
@@ -105,7 +108,8 @@ export class LiveQlooAdapter implements QlooAdapter {
   }
 
   searchPerson(name: string) {
-    return this.get('/search', { query: name, types: 'urn:entity:person', take: '3' });
+    // take=5, like the official harness, so namesakes are visible and can be treated as ambiguous.
+    return this.get('/search', { query: name, types: 'urn:entity:person', take: '5' });
   }
 
   personInsights({ signalIds, excludeIds, take, popularityMax }: { signalIds: string[]; excludeIds: string[]; take: number; popularityMax?: number }) {
@@ -125,10 +129,19 @@ export class LiveQlooAdapter implements QlooAdapter {
       const entities = await this.get('/v2/insights', {
         'filter.type': 'urn:entity:person',
         'signal.interests.entities': signalIds.join(','),
-        'filter.entities': batch.join(','),
+        // filter.results.entities restricts results to these ids (Entity Type Parameter Guide, person).
+        // An unknown name such as filter.entities is silently ignored and would return arbitrary people.
+        'filter.results.entities': batch.join(','),
         take: String(batch.length),
       });
-      for (const e of entities) if (e.affinity !== undefined) out.set(e.entityId, e.affinity);
+      let withAffinity = 0;
+      for (const e of entities) if (e.affinity !== undefined) {
+        out.set(e.entityId, e.affinity);
+        withAffinity++;
+      }
+      // Entities can come back without query.affinity; record how many carried a value.
+      const last = this.calls[this.calls.length - 1];
+      if (last) last.note = `affinity values: ${withAffinity}${last.note ? `; ${last.note}` : ''}`;
     }
     return out;
   }

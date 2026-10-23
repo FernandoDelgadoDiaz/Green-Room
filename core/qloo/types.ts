@@ -5,6 +5,8 @@
 //   GET /search?query=&types=urn:entity:person&take=     -> { success, duration, results: Entity[] }   (OpenAPI spec)
 //   GET /v2/insights?filter.type=…&signal.interests.entities=…&filter.exclude.entities=…&take=
 //       -> results.entities[] with affinity under query.affinity (Insights guide; NOT yet validated live)
+//   Candidate scoring uses filter.results.entities (Entity Type Parameter Guide, consulted 2026-10-23;
+//   same parameter as the official @qloo/qloo-harness 0.1.26 rank workflow).
 // The parser in client.ts is tolerant on purpose until the shapes are confirmed against the real API.
 
 export type QlooMode = 'LIVE' | 'MOCK' | 'OFF';
@@ -30,6 +32,8 @@ export interface QlooEntity {
   /** Affinity to the request's signals, when Qloo returns it. */
   affinity?: number;
   tags?: string[];
+  /** Short description, when Qloo returns one (used only for the identity check). */
+  description?: string;
 }
 
 export interface QlooCall {
@@ -48,7 +52,7 @@ export interface QlooAdapter {
   searchPerson(name: string): Promise<QlooEntity[]>;
   /** People with affinity to the signal entities, excluding the given ids. */
   personInsights(args: { signalIds: string[]; excludeIds: string[]; take: number; popularityMax?: number }): Promise<QlooEntity[]>;
-  /** Affinity of specific candidate entities to the signal entities (filter.entities). */
+  /** Affinity of specific candidate entities to the signal entities (filter.results.entities). */
   affinityFor(args: { signalIds: string[]; candidateIds: string[] }): Promise<Map<string, number>>;
   /** Cross-domain taste of the audience implied by the signals (artists, films, books…). */
   categoryInsights(args: { signalIds: string[]; type: InsightsEntityType; take: number }): Promise<QlooEntity[]>;

@@ -2,7 +2,8 @@
 // where each branch depends on the data it just observed. Every step is recorded in the trace.
 
 import type { Appearance, PodcastDataset, Provenance } from '../types';
-import { nameKey, sameName } from '../names';
+import { nameKey } from '../names';
+import { resolvePerson } from '../qloo/resolve';
 import { THEMES, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
 import type { QlooAdapter, QlooEntity } from '../qloo/types';
 
@@ -73,11 +74,16 @@ export interface AgentInput {
   /** Only information published strictly before this instant is used. Defaults to now. */
   asOf?: string;
   k?: number;
+  /**
+   * Let Qloo person insights add people outside the verified pool (default true). The T5
+   * experiment sets it to false so both arms rank exactly the same candidate base.
+   */
+  qlooDiscovery?: boolean;
 }
 
 const MONTH_MS = 30.44 * 24 * 3600 * 1000;
 const WEIGHTS = { themeFit: 0.6, momentum: 0.25, recency: 0.15 };
-const QLOO_BLEND = 0.5;
+export const QLOO_BLEND = 0.5;
 
 interface Candidate {
   key: string;
@@ -213,6 +219,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   // Simulated affinities must never change the ranking.
   const blend = qloo.mode === 'LIVE' ? QLOO_BLEND : 0;
   const qlooProvenance: Provenance = qloo.mode === 'OFF' ? 'INFERRED' : qloo.mode;
+  const ambiguousGuests: string[] = [];
   if (qloo.mode === 'OFF') {
     step({
       title: ['Ask Qloo about the audience’s taste', 'Consultar a Qloo sobre el gusto de la audiencia'],
@@ -224,9 +231,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   } else {
     for (const g of recentGuests) {
       try {
-        const hits = await qloo.searchPerson(g.name);
-        const match = hits.find((h) => sameName(h.name, g.name));
-        if (match) resolved.push(match);
+        const r = resolvePerson(await qloo.searchPerson(g.name), g.name);
+        if (r.status === 'exact') resolved.push(r.entity);
+        else if (r.status === 'ambiguous') ambiguousGuests.push(g.name);
       } catch (err) {
         warn([`Qloo search failed for ${g.name}: ${String(err)}`, `Falló la búsqueda en Qloo de ${g.name}: ${String(err)}`]);
       }
@@ -236,8 +243,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       title: ['Resolve past guests in Qloo’s taste graph', 'Ubicar a los invitados anteriores en el grafo de gustos de Qloo'],
       tool: 'qloo.search',
       detail: [
-        `${resolved.length} of the ${recentGuests.length} most recent guests resolved to Qloo person entities (exact name match only).`,
-        `${resolved.length} de los ${recentGuests.length} invitados más recientes se encontraron como personas en Qloo (solo coincidencia exacta de nombre).`,
+        `${resolved.length} of the ${recentGuests.length} most recent guests resolved to Qloo person entities (unique exact name match only)${ambiguousGuests.length ? `; ${ambiguousGuests.length} skipped as ambiguous (namesakes in Qloo)` : ''}.`,
+        `${resolved.length} de los ${recentGuests.length} invitados más recientes se encontraron como personas en Qloo (solo coincidencia exacta y única de nombre)${ambiguousGuests.length ? `; ${ambiguousGuests.length} omitidos por ambiguos (homónimos en Qloo)` : ''}.`,
       ],
       decision: qlooUsable
         ? ['Using these guests as the taste signal for the audience.', 'Uso a estos invitados como señal del gusto de la audiencia.']
@@ -315,7 +322,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     provenance: 'VERIFIED',
   });
 
-  if (qlooUsable) {
+  if (qlooUsable && input.qlooDiscovery !== false) {
     try {
       const people = await qloo.personInsights({ signalIds: resolved.map((r) => r.entityId), excludeIds: resolved.map((r) => r.entityId), take: 30 });
       let added = 0;
@@ -397,9 +404,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     for (const c of shortlist) {
       if (c.qlooEntityId) continue;
       try {
-        const hits = await qloo.searchPerson(c.name);
-        const match = hits.find((h) => sameName(h.name, c.name));
-        if (match) c.qlooEntityId = match.entityId;
+        const r = resolvePerson(await qloo.searchPerson(c.name), c.name);
+        if (r.status === 'exact') c.qlooEntityId = r.entity.entityId;
       } catch (err) {
         warn([`Qloo search failed for candidate ${c.name}: ${String(err)}`, `Falló la búsqueda en Qloo del candidato ${c.name}: ${String(err)}`]);
       }
@@ -421,7 +427,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     }
     step({
       title: ['Score candidates against the audience’s taste', 'Puntuar candidatos según el gusto de la audiencia'],
-      tool: 'qloo.insights (filter.entities)',
+      tool: 'qloo.insights (filter.results.entities)',
       detail: [
         `${ids.length} of the top ${shortlist.length} candidates resolved in Qloo; ${affinities.size} received an affinity score.`,
         `${ids.length} de los ${shortlist.length} mejores candidatos se encontraron en Qloo; ${affinities.size} recibieron puntaje de afinidad.`,
