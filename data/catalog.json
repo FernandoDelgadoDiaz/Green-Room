@@ -1,0 +1,612 @@
+{
+ "retrievedAt": "2026-10-23",
+ "charts": {
+  "us": {
+   "url": "https://rss.applemarketingtools.com/api/v2/us/podcasts/top/25/podcasts.json",
+   "updated": "2026-10-23T03:48:17Z"
+  },
+  "gb": {
+   "url": "https://rss.applemarketingtools.com/api/v2/gb/podcasts/top/25/podcasts.json",
+   "updated": "2026-10-23T03:48:16Z"
+  },
+  "mx": {
+   "url": "https://rss.applemarketingtools.com/api/v2/mx/podcasts/top/50/podcasts.json",
+   "updated": "2026-10-23T03:48:01Z"
+  },
+  "ar": {
+   "url": "https://rss.applemarketingtools.com/api/v2/ar/podcasts/top/25/podcasts.json",
+   "updated": "2026-10-23T03:48:17Z"
+  },
+  "es": {
+   "url": "https://rss.applemarketingtools.com/api/v2/es/podcasts/top/25/podcasts.json",
+   "updated": "2026-10-23T03:48:18Z"
+  }
+ },
+ "countries": [
+  "us",
+  "mx",
+  "gb",
+  "ar",
+  "es"
+ ],
+ "shows": [
+  {
+   "id": "joe-rogan",
+   "name": "The Joe Rogan Experience",
+   "host": "Joe Rogan",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/2e/66/e8/2e66e849-207e-095a-d60f-6dbdb4fcafb5/mza_14425023460891140426.jpeg/600x600bb.jpg",
+   "genre": "Comedy",
+   "language": "en",
+   "description": "The official podcast of comedian Joe",
+   "charts": [
+    {
+     "country": "us",
+     "rank": 5
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/us/podcast/the-joe-rogan-experience/id360084272",
+   "feedUrl": "https://feeds.megaphone.fm/GLT1412515089",
+   "appleTrackCount": 2000,
+   "lastRelease": "2026-10-22T17:00:00.000Z",
+   "snapshot": {
+    "episodes": 500,
+    "withGuestNames": 470,
+    "coverage": 0.94,
+    "first": "2024-02-29T18:00:00.000Z",
+    "last": "2026-10-22T17:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "shawn-ryan",
+   "name": "The Shawn Ryan Show",
+   "host": "Shawn Ryan",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts112/v4/d0/b3/2d/d0b32d7f-ab2d-5791-83b0-854f698a9184/mza_13561258173056659752.jpg/600x600bb.jpg",
+   "genre": "Philosophy",
+   "language": "en",
+   "description": "The \"Shawn Ryan Show\" is hosted by Shawn Ryan, former U.S. Navy SEAL, CIA Contractor, and Founder of Vigilance Elite. We tell REAL stories about REAL people from all walks of life. We discuss the ups and downs, wins and…",
+   "charts": [
+    {
+     "country": "us",
+     "rank": 20
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/us/podcast/the-shawn-ryan-show/id1492492083",
+   "feedUrl": "https://rss.pdrl.fm/ac69ac/feeds.megaphone.fm/WWO7410387571",
+   "appleTrackCount": 411,
+   "lastRelease": "2026-10-22T10:00:00.000Z",
+   "snapshot": {
+    "episodes": 411,
+    "withGuestNames": 358,
+    "coverage": 0.87,
+    "first": "2019-12-20T16:00:00.000Z",
+    "last": "2026-10-22T10:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "good-hang",
+   "name": "Good Hang with Amy Poehler",
+   "host": "Amy Poehler",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/2b/94/bb/2b94bb6e-44f1-9d57-7748-b7456072806d/mza_1064202164981856225.jpg/600x600bb.jpg",
+   "genre": "Comedy",
+   "language": "en",
+   "description": "Come hang with Amy Poehler. Each week on her podcast, she'll welcome celebrities and fun people to her studio. They'll share stories about their careers, mutual friends, shared enthusiasms, and most importantly, what's…",
+   "charts": [
+    {
+     "country": "us",
+     "rank": 10
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/us/podcast/good-hang-with-amy-poehler/id1795483480",
+   "feedUrl": "https://feeds.megaphone.fm/good-hang-with-amy-poehler",
+   "appleTrackCount": 87,
+   "lastRelease": "2026-10-20T10:00:00.000Z",
+   "snapshot": {
+    "episodes": 87,
+    "withGuestNames": 82,
+    "coverage": 0.94,
+    "first": "2025-02-10T15:47:00.000Z",
+    "last": "2026-10-20T10:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "lex-fridman",
+   "name": "Lex Fridman Podcast",
+   "host": "Lex Fridman",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/3e/e3/9c/3ee39c89-de08-47a6-7f3d-3849cef6d255/mza_16657851278549137484.png/600x600bb.jpg",
+   "genre": "Technology",
+   "language": "en",
+   "description": "Long-form conversations on technology, science, history, philosophy and culture.",
+   "charts": [
+    {
+     "country": "us",
+     "rank": null
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/us/podcast/lex-fridman-podcast/id1434243584",
+   "feedUrl": "https://lexfridman.com/feed/podcast/",
+   "appleTrackCount": 502,
+   "lastRelease": "2026-09-17T00:40:49.000Z",
+   "snapshot": {
+    "episodes": 502,
+    "withGuestNames": 485,
+    "coverage": 0.97,
+    "first": "2018-08-26T22:37:16.000Z",
+    "last": "2026-09-17T00:40:49.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "megyn-kelly",
+   "name": "The Megyn Kelly Show",
+   "host": "Megyn Kelly",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/3e/9f/c1/3e9fc13c-8030-b57e-f29e-0f14dc8db10d/mza_602213930944272333.jpg/600x600bb.jpg",
+   "genre": "News Commentary",
+   "language": "en",
+   "description": null,
+   "charts": [
+    {
+     "country": "us",
+     "rank": 18
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/us/podcast/the-megyn-kelly-show/id1532976305",
+   "feedUrl": "https://feeds.simplecast.com/RV1USAfC",
+   "appleTrackCount": 1995,
+   "lastRelease": "2026-10-22T18:00:00Z",
+   "snapshot": null,
+   "status": "not_analyzable",
+   "statusReason": "feed_not_snapshotted"
+  },
+  {
+   "id": "diary-of-a-ceo",
+   "name": "The Diary Of A CEO",
+   "host": "Steven Bartlett",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/69/af/0d/69af0ddd-1e0f-7ae3-c84b-88f18e31ad0c/mza_14445920128472365296.png/600x600bb.jpg",
+   "genre": "Business",
+   "language": "en",
+   "description": "Interviews on business, psychology, health and personal development.",
+   "charts": [
+    {
+     "country": "gb",
+     "rank": 13
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/gb/podcast/the-diary-of-a-ceo-with-steven-bartlett/id1291423644",
+   "feedUrl": "https://rss2.flightcast.com/xmsftuzjjykcmqwolaqn6mdn",
+   "appleTrackCount": 906,
+   "lastRelease": "2026-10-22T05:00:00.000Z",
+   "snapshot": {
+    "episodes": 583,
+    "withGuestNames": 292,
+    "coverage": 0.5,
+    "first": "2017-11-19T05:00:00.000Z",
+    "last": "2026-10-22T05:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "louis-theroux",
+   "name": "The Louis Theroux Podcast",
+   "host": "Louis Theroux",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/1e/20/d1/1e20d177-1e41-10cf-1e2d-3b895ad3df8e/mza_10878364100163359946.jpeg/600x600bb.jpg",
+   "genre": "Society & Culture",
+   "language": "en",
+   "description": "Join Louis Theroux as he embarks on a series of in-depth and freewheeling conversations with a curated collection of fascinating figures from across the globe.&nbsp;The Louis Theroux Podcast is a Spotify podcast from…",
+   "charts": [
+    {
+     "country": "gb",
+     "rank": 6
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/gb/podcast/the-louis-theroux-podcast/id1725833532",
+   "feedUrl": "https://feeds.megaphone.fm/GLT1948741183",
+   "appleTrackCount": 76,
+   "lastRelease": "2026-10-20T23:00:00.000Z",
+   "snapshot": {
+    "episodes": 76,
+    "withGuestNames": 63,
+    "coverage": 0.83,
+    "first": "2023-05-22T23:05:00.000Z",
+    "last": "2026-10-20T23:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "high-performance",
+   "name": "The High Performance Podcast",
+   "host": "Jake Humphrey & Damian Hughes",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/cf/1a/5a/cf1a5a8c-688e-690b-138d-04517a560b54/mza_11984786542722281203.jpeg/600x600bb.jpg",
+   "genre": "Sports",
+   "language": "en",
+   "description": "<p>Welcome to High Performance. Through fascinating conversations with remarkable guests, Jake Humphrey and Damian Hughes uncover the secrets behind High Performance and explore how we can all become the best version of…",
+   "charts": [
+    {
+     "country": "gb",
+     "rank": 14
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/gb/podcast/the-high-performance-podcast/id1500444735",
+   "feedUrl": "https://access.acast.com/rss/3d30295e-f7fb-5af1-b618-30a8763cc75a",
+   "appleTrackCount": 847,
+   "lastRelease": "2026-10-23T01:00:00.000Z",
+   "snapshot": {
+    "episodes": 499,
+    "withGuestNames": 316,
+    "coverage": 0.63,
+    "first": "2023-02-17T01:00:13.000Z",
+    "last": "2026-10-23T01:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "off-menu",
+   "name": "Off Menu with Ed Gamble and James Acaster",
+   "host": "Ed Gamble & James Acaster",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/c4/dc/de/c4dcdec7-fbea-749e-7a03-bbe27db17137/mza_4311127974403693339.jpeg/600x600bb.jpg",
+   "genre": "Comedy Interviews",
+   "language": "en",
+   "description": "Comedians Ed Gamble and James Acaster invite special guests into their magical restaurant to each choose their favourite starter, main course, side dish, dessert and drink. Ever wanted to eat your dream meal? It's time…",
+   "charts": [
+    {
+     "country": "gb",
+     "rank": 9
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/gb/podcast/off-menu-with-ed-gamble-and-james-acaster/id1442950743",
+   "feedUrl": "https://feeds.acast.com/public/shows/b19ac1f5-6adf-4c8b-aa1a-2af2160f99e4",
+   "appleTrackCount": 404,
+   "lastRelease": "2026-10-21T03:00:00.000Z",
+   "snapshot": {
+    "episodes": 386,
+    "withGuestNames": 350,
+    "coverage": 0.91,
+    "first": "2018-12-05T04:00:00.000Z",
+    "last": "2026-10-21T03:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "we-need-to-talk",
+   "name": "We Need To Talk with Paul C. Brunson",
+   "host": "Paul C. Brunson",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/6f/59/ae/6f59ae2a-afec-dfa0-38c1-2b88a48c1a1a/mza_16605880432833834071.jpg/600x600bb.jpg",
+   "genre": "Relationships",
+   "language": "en",
+   "description": "The most powerful conversations are the ones we usually avoid. Hosted by Paul C. Brunson, We Need To Talk is a show that empowers people to have the conversations they avoid by creating a safe, supportive, and…",
+   "charts": [
+    {
+     "country": "gb",
+     "rank": 20
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/gb/podcast/we-need-to-talk-with-paul-c-brunson/id1765126946",
+   "feedUrl": "https://feeds.megaphone.fm/weneedtotalk",
+   "appleTrackCount": 178,
+   "lastRelease": "2026-10-22T05:00:00.000Z",
+   "snapshot": {
+    "episodes": 178,
+    "withGuestNames": 83,
+    "coverage": 0.47,
+    "first": "2024-08-28T10:08:00.000Z",
+    "last": "2026-10-22T05:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "cracks-oso-trava",
+   "name": "Cracks Podcast con Oso Trava",
+   "host": "Oso Trava",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/10/c3/ea/10c3eaa9-a610-70c3-2d4b-fd8b957cd5f4/mza_8126512650065582333.jpg/600x600bb.jpg",
+   "genre": "Business",
+   "language": "es",
+   "description": "Cracks es un podcast de entrevistas con enfoque de negocios y mentalidad que le enseñará a cualquiera que aspire a la grandeza los hábitos y trucos que usan los mejores en deportes, negocios, tecnología y medios para…",
+   "charts": [
+    {
+     "country": "mx",
+     "rank": 11
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/mx/podcast/cracks-podcast-con-oso-trava/id1450858380",
+   "feedUrl": "https://rss.buzzsprout.com/1682368.rss",
+   "appleTrackCount": 407,
+   "lastRelease": "2026-10-19T00:00:00.000Z",
+   "snapshot": {
+    "episodes": 406,
+    "withGuestNames": 376,
+    "coverage": 0.93,
+    "first": "2019-01-28T20:18:15.000Z",
+    "last": "2026-10-19T00:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "creativo",
+   "name": "CREATIVO",
+   "host": "Roberto Mtz",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/21/38/30/2138307d-e6fd-c8e3-9085-31d92f4d27b7/mza_5346177115818418047.jpg/600x600bb.jpg",
+   "genre": "Business",
+   "language": "es",
+   "description": "Mexican interview podcast: music, comedy, sports, business and culture (Spanish).",
+   "charts": [
+    {
+     "country": "mx",
+     "rank": 30
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/mx/podcast/creativo/id1446811102",
+   "feedUrl": "https://anchor.fm/s/fdd14414/podcast/rss",
+   "appleTrackCount": 784,
+   "lastRelease": "2026-10-22T15:15:45.000Z",
+   "snapshot": {
+    "episodes": 763,
+    "withGuestNames": 677,
+    "coverage": 0.89,
+    "first": "2018-12-13T22:00:08.000Z",
+    "last": "2026-10-22T15:15:45.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "marco-antonio-regil",
+   "name": "El Podcast de Marco Antonio Regil",
+   "host": "Marco Antonio Regil",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/cd/61/66/cd616656-7471-9247-49aa-1e22f0ad4bea/mza_17070065911085234368.jpg/600x600bb.jpg",
+   "genre": "Self-Improvement",
+   "language": "es",
+   "description": "Aprende cómo disfrutar y vivir tu vida al máximo. Cada semana con entrevistas y capítulos especiales, Marco Antonio Regil te acompaña en un viaje de crecimiento personal y consciencia que te empodera y apoya, para que…",
+   "charts": [
+    {
+     "country": "mx",
+     "rank": 32
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/mx/podcast/el-podcast-de-marco-antonio-regil/id650657153",
+   "feedUrl": "https://feeds.simplecast.com/bMFpBb9o",
+   "appleTrackCount": 467,
+   "lastRelease": "2026-10-19T10:55:00.000Z",
+   "snapshot": {
+    "episodes": 467,
+    "withGuestNames": 301,
+    "coverage": 0.64,
+    "first": "2013-01-28T20:00:00.000Z",
+    "last": "2026-10-19T10:55:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "martha-debayle",
+   "name": "Martha Debayle",
+   "host": "Martha Debayle",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/fa/19/df/fa19df07-ea92-ba2a-de80-d0f24f287164/mza_7095161225554850210.jpeg/600x600bb.jpg",
+   "genre": "Self-Improvement",
+   "language": "es",
+   "description": null,
+   "charts": [
+    {
+     "country": "mx",
+     "rank": 8
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/mx/podcast/martha-debayle/id553271510",
+   "feedUrl": "https://feeds.acast.com/public/shows/martha-debayle-podcast",
+   "appleTrackCount": 2000,
+   "lastRelease": "2026-10-22T20:03:00Z",
+   "snapshot": null,
+   "status": "not_analyzable",
+   "statusReason": "feed_not_snapshotted"
+  },
+  {
+   "id": "santiago-bilinkis",
+   "name": "Santiago Bilinkis – Futuro en Construcción",
+   "host": "Santiago Bilinkis",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/2c/f1/8e/2cf18e78-44bd-24a8-3916-abc013d88df1/mza_7231275226110463195.jpg/600x600bb.jpg",
+   "genre": "Technology",
+   "language": "es",
+   "description": "Un Espacio para Pensar el Presente, Entender los Cambios y Construir Nuestro",
+   "charts": [
+    {
+     "country": "ar",
+     "rank": 19
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/santiago-bilinkis-futuro-en-construcci%C3%B3n/id1467493626",
+   "feedUrl": "https://anchor.fm/s/10506bea8/podcast/rss",
+   "appleTrackCount": 239,
+   "lastRelease": "2026-10-16T18:00:00.000Z",
+   "snapshot": {
+    "episodes": 239,
+    "withGuestNames": 8,
+    "coverage": 0.03,
+    "first": "2012-03-05T21:16:37.000Z",
+    "last": "2026-10-16T18:00:00.000Z"
+   },
+   "status": "limited",
+   "statusReason": "few_guest_names"
+  },
+  {
+   "id": "aislados",
+   "name": "Aislados El Podcast",
+   "host": "Aislados",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/9c/65/37/9c6537b9-8bd1-32a8-cced-12d36526430f/mza_2382673899373874267.jpg/600x600bb.jpg",
+   "genre": "Comedy",
+   "language": "es",
+   "description": "Un podcast en donde Lucas Lauriente, Lucho Mellera, Nicolas De Tracy y Nanutria van a decir muchas palabras juntas para que a ustedes les cause",
+   "charts": [
+    {
+     "country": "ar",
+     "rank": 7
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/aislados-el-podcast/id1535862495",
+   "feedUrl": "https://anchor.fm/s/3b78c054/podcast/rss",
+   "appleTrackCount": 310,
+   "lastRelease": "2026-10-21T15:00:00.000Z",
+   "snapshot": {
+    "episodes": 310,
+    "withGuestNames": 4,
+    "coverage": 0.01,
+    "first": "2020-10-14T13:47:35.000Z",
+    "last": "2026-10-21T15:00:00.000Z"
+   },
+   "status": "limited",
+   "statusReason": "few_guest_names"
+  },
+  {
+   "id": "roca-project",
+   "name": "ROCA PROJECT",
+   "host": "Carlos Roca",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/73/86/e1/7386e15e-0695-54f2-537b-4b89a384c7a1/mza_5987050166075130693.jpg/600x600bb.jpg",
+   "genre": "Society & Culture",
+   "language": "es",
+   "description": "Un Podcast para personas que buscan inspiración, aprendizaje y crecimiento personal. En Roca Project, Carlos Roca pone el foco en el valor humano conversando, sin filtros y en profundidad, con expertos, personajes…",
+   "charts": [
+    {
+     "country": "ar",
+     "rank": 11
+    },
+    {
+     "country": "es",
+     "rank": 2
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/roca-project/id1738229736",
+   "feedUrl": "https://anchor.fm/s/ff4c5068/podcast/rss",
+   "appleTrackCount": 123,
+   "lastRelease": "2026-10-21T17:30:00.000Z",
+   "snapshot": {
+    "episodes": 122,
+    "withGuestNames": 49,
+    "coverage": 0.4,
+    "first": "2024-03-27T13:07:15.000Z",
+    "last": "2026-10-21T17:30:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "palabra-plena",
+   "name": "Palabra Plena, con Gabriel Rolón",
+   "host": "Gabriel Rolón",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/ea/7c/06/ea7c069e-b99f-f05e-4860-0a160af960c4/mza_9527189730086957450.jpg/600x600bb.jpg",
+   "genre": "Physics",
+   "language": "es",
+   "description": null,
+   "charts": [
+    {
+     "country": "ar",
+     "rank": 6
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/palabra-plena-con-gabriel-rol%C3%B3n/id1503058155",
+   "feedUrl": "https://audioboom.com/channels/5021027.rss",
+   "appleTrackCount": 6,
+   "lastRelease": "2020-04-14T18:16:00Z",
+   "snapshot": null,
+   "status": "not_analyzable",
+   "statusReason": "inactive"
+  },
+  {
+   "id": "wild-project",
+   "name": "The Wild Project",
+   "host": "Jordi Wild",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/f9/d1/5f/f9d15fa3-7cf2-110e-647d-c7966f292cff/mza_3972999760339797846.jpg/600x600bb.jpg",
+   "genre": "Society & Culture",
+   "language": "es",
+   "description": "CADA SEMANA NUEVOS EPISODIOS. Bienvenidos a THE WILD PROJECT, el podcast de Jordi Wild. Charlas con los invitados más interesantes, actualidad, ciencia, deportes, filosofía, psicología, misterio, debates y tertulias...…",
+   "charts": [
+    {
+     "country": "es",
+     "rank": 6
+    },
+    {
+     "country": "ar",
+     "rank": 17
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/es/podcast/the-wild-project/id1501968107",
+   "feedUrl": "https://anchor.fm/s/115a4336c/podcast/rss",
+   "appleTrackCount": 414,
+   "lastRelease": "2026-10-22T20:00:01.000Z",
+   "snapshot": {
+    "episodes": 413,
+    "withGuestNames": 79,
+    "coverage": 0.19,
+    "first": "2020-03-05T17:40:00.000Z",
+    "last": "2026-10-22T20:00:01.000Z"
+   },
+   "status": "limited",
+   "statusReason": "few_guest_names"
+  },
+  {
+   "id": "uri-sabat",
+   "name": "La Fórmula Del Éxito con Uri Sabat",
+   "host": "Uri Sabat",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/11/95/22/11952205-cfdf-7e1e-4993-a68e9810b9b7/mza_5334932151455688011.jpg/600x600bb.jpg",
+   "genre": "Society & Culture",
+   "language": "es",
+   "description": "ENTREVISTAS Y VIVENCIAS PARA ESCUCHAR SIEMPRE. Puedes llegar a conseguir todo lo que te propongas y conoceremos a gente que lo han conseguido. Yo en principio no se nada, pero seguro que lo descubriré. Explorando el…",
+   "charts": [
+    {
+     "country": "es",
+     "rank": 20
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/es/podcast/la-f%C3%B3rmula-del-%C3%A9xito-con-uri-sabat/id1469066632",
+   "feedUrl": "https://anchor.fm/s/476c0ec/podcast/rss",
+   "appleTrackCount": 320,
+   "lastRelease": "2026-10-21T16:28:27.000Z",
+   "snapshot": {
+    "episodes": 320,
+    "withGuestNames": 188,
+    "coverage": 0.59,
+    "first": "2019-06-18T16:06:47.000Z",
+    "last": "2026-10-21T16:28:27.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  },
+  {
+   "id": "alex-fidalgo",
+   "name": "LO QUE TÚ DIGAS con Alex Fidalgo",
+   "host": "Alex Fidalgo",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/09/b8/3e/09b83e2e-4d1e-0158-717b-71887b9470bd/mza_14275587141073344359.jpg/600x600bb.jpg",
+   "genre": "Society & Culture",
+   "language": "es",
+   "description": "Cada lunes y jueves Alex Fidalgo recibe a las personalidades más interesantes e influyentes para mantener una charla íntima, espontánea e impredecible. Un oasis para la reflexión en el que no se juzga al protagonista ni…",
+   "charts": [
+    {
+     "country": "es",
+     "rank": 24
+    }
+   ],
+   "appleUrl": "https://podcasts.apple.com/es/podcast/lo-que-t%C3%BA-digas-con-alex-fidalgo/id1245349669",
+   "feedUrl": "https://anchor.fm/s/101d1e078/podcast/rss",
+   "appleTrackCount": 506,
+   "lastRelease": "2026-10-22T16:00:00.000Z",
+   "snapshot": {
+    "episodes": 500,
+    "withGuestNames": 410,
+    "coverage": 0.82,
+    "first": "2017-07-18T17:55:29.000Z",
+    "last": "2026-10-22T16:00:00.000Z"
+   },
+   "status": "analyzable",
+   "statusReason": null
+  }
+ ]
+}

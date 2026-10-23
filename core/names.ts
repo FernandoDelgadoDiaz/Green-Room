@@ -48,3 +48,11 @@ export function looksLikePersonName(s: string, opts: { minTokens?: number } = {}
   if (!/^[A-ZÀ-Ý]/u.test(tokens[0])) return false;
   return tokens.every((tok) => NAME_TOKEN.test(tok));
 }
+
+const SEGMENT_WORDS = new Set(['tertulia', 'mesa', 'debate', 'especial', 'expediente', 'roundtable', 'panel', 'podcast', 'show', 'club', 'mailbag', 'tren', 'recap', 'resumen']);
+
+/** "El Tren", "Tertulia de Sapiens": recurring segment or series names that title rules can mistake for people. */
+export function looksLikeSegmentName(name: string): boolean {
+  const toks = stripAccents(name).toLowerCase().split(/\s+/);
+  return ['el', 'la', 'los', 'las', 'the', 'lo'].includes(toks[0]) || toks.some((t) => SEGMENT_WORDS.has(t));
+}

@@ -19,7 +19,8 @@
     "live:diagnose": "tsx scripts/live-diagnose.ts",
     "perf:sim": "tsx scripts/perf-sim.ts",
     "editorial:prepare": "tsx scripts/editorial-prepare.ts",
-    "editorial:score": "tsx scripts/editorial-score.ts"
+    "editorial:score": "tsx scripts/editorial-score.ts",
+    "catalog:build": "tsx scripts/build-catalog.ts"
   },
   "devDependencies": {
     "@netlify/functions": "^2.8.2",

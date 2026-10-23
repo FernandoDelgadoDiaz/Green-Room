@@ -21,7 +21,7 @@ const ROLE_WORDS = new Set(
   ].map((w) => w.toLowerCase()),
 );
 
-function hasRoleWord(s: string): boolean {
+export function hasRoleWord(s: string): boolean {
   return s
     .toLowerCase()
     .replace(/[^\p{L}\s&'-]/gu, ' ')
@@ -29,7 +29,7 @@ function hasRoleWord(s: string): boolean {
     .some((t) => ROLE_WORDS.has(t));
 }
 
-function cleanNameCandidate(s: string): string {
+export function cleanNameCandidate(s: string): string {
   return s
     .replace(/\(.*?\)/g, ' ')
     .replace(/["“”!?]/g, ' ')
