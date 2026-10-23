@@ -127,10 +127,10 @@ export function makeVerifier(env: Env) {
 }
 
 /** One analysis: agent run, Wikipedia photos/profiles, and (LIVE) the baseline comparison. */
-export async function recommendFor(target: PodcastDataset, others: PodcastDataset[], qloo: QlooAdapter, env: Env, k: number, origin: unknown) {
+export async function recommendFor(target: PodcastDataset, others: PodcastDataset[], qloo: QlooAdapter, env: Env, k: number, origin: unknown, options: { publicFast?: boolean; deadlineMs?: number } = {}) {
   const live = qloo.mode === 'LIVE';
   const verifier = live ? makeVerifier(env) : undefined;
-  const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, verifier });
+  const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, verifier, ...options });
   // LIVE: also run the baseline (no Qloo, no API calls) on the same data and rules, to show what Qloo added.
   const comparison = live ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF }), result) : null;
   const profiles = await profilesFor(result.recommendations, env.PROFILE_LOOKUP !== '0');
