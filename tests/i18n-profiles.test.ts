@@ -121,6 +121,48 @@ describe('guest profiles (photos and bios)', () => {
     expect(p.photo).toMatchObject({ license: 'CC BY 3.0', artist: 'Someone' });
   });
 
+  it('matches "F1" in a title with "Fórmula 1" on the page', () => {
+    expect(contextOverlap('Toto Wolff', 'director ejecutivo de Mercedes-Benz en Fórmula 1', ['Toto Wolff: F1 Dominance & Hamilton Relationship'])).toContain('formula');
+  });
+
+  it('falls back to the Spanish Wikipedia when there is no English page, with the same context check', async () => {
+    const fetchJson = async (url: string) => {
+      const u = new URL(url);
+      const titles = (u.searchParams.get('titles') ?? '').split('|');
+      if (u.hostname === 'www.wikidata.org') return { entities: { Q9: { descriptions: { es: { value: 'cantante mexicana' } } } } };
+      if (u.searchParams.get('prop') === 'imageinfo') {
+        return { query: { pages: [{ title: 'File:Cantante.jpg', imageinfo: [{ thumburl: 'https://upload.wikimedia.org/c.jpg', thumbwidth: 320, thumbheight: 400, descriptionurl: 'https://commons.wikimedia.org/wiki/File:Cantante.jpg', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' }, Artist: { value: 'Alguien' } } }] }] } };
+      }
+      if (u.hostname === 'en.wikipedia.org') {
+        // Ana has no English page; Juan has one, about a namesake sharing nothing with his titles.
+        return { query: { pages: titles.map((t) => (t === 'Juan Gómez' ? { title: t, extract: 'Juan Gómez is a Uruguayan footballer.' } : { title: t, missing: true })) } };
+      }
+      return {
+        query: {
+          pages: [
+            { title: 'Ana Pérez', fullurl: 'https://es.wikipedia.org/wiki/Ana_P%C3%A9rez', extract: 'Ana Pérez es una cantante mexicana de música regional. Ganó varios premios.', pageimage: 'Cantante.jpg', pageprops: { wikibase_item: 'Q9' } },
+            { title: 'Juan Gómez', extract: 'Juan Gómez es un futbolista uruguayo.' },
+          ],
+        },
+      };
+    };
+    const out = await resolveProfiles(
+      [
+        { name: 'Ana Pérez', appearanceTitles: ['Ana Pérez, cantante: la música que me salvó'] },
+        { name: 'Juan Gómez', appearanceTitles: ['Juan Gómez y la economía del miedo'] },
+      ],
+      fetchJson,
+      '2026-10-23',
+    );
+    const ana = out.get('Ana Pérez') as GuestProfile;
+    expect(ana.wikipedia.url).toContain('es.wikipedia.org');
+    expect(ana.description.es).toBe('cantante mexicana');
+    expect(ana.extract).toMatchObject({ en: null, es: expect.stringContaining('cantante mexicana') });
+    expect(ana.photo).toMatchObject({ license: 'CC BY-SA 4.0' });
+    // A Spanish page that shares no context with the titles is not attached (possible namesake).
+    expect(out.get('Juan Gómez')).toBeNull();
+  });
+
   it('every stored photo has a free license, an author and an https Wikimedia URL', () => {
     const profiles = JSON.parse(readFileSync('data/profiles.json', 'utf8')) as Record<string, GuestProfile>;
     const withPhoto = Object.values(profiles).filter((p) => p.photo);

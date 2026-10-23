@@ -42,6 +42,8 @@ export function contentWords(text: string): Set<string> {
     stripAccents(text)
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, ' ')
+      // Short forms that the 4-letter minimum would drop ("F1" in a title, "Fórmula 1" in the page).
+      .replace(/\bf1\b/g, 'formula')
       .split(/\s+/)
       .filter((w) => w.length >= 4 && !STOP.has(w)),
   );
@@ -183,9 +185,12 @@ export async function resolveProfiles(
   retrievedAt: string,
 ): Promise<Map<string, GuestProfile | null>> {
   const result = new Map<string, GuestProfile | null>();
-  const accepted: Array<{ name: string; page: WikiPage; overlap: string[] }> = [];
+  const accepted: Array<{ name: string; page: WikiPage; overlap: string[]; lang: 'en' | 'es' }> = [];
 
   const disambiguations: Array<{ person: { name: string; appearanceTitles: string[] }; title: string }> = [];
+  // People with no English page, or whose English page shares no context with their (often Spanish)
+  // interview titles: they get a second chance on the Spanish Wikipedia, under the same rules.
+  const noEnglishPage: Array<{ name: string; appearanceTitles: string[] }> = [];
   for (const batch of chunk(people, 20)) {
     const body = (await fetchJson(pagesUrl('en', batch.map((p) => p.name)))) as Record<string, unknown>;
     const titleMap = resolveTitles(body);
@@ -194,6 +199,7 @@ export async function resolveProfiles(
       const final = follow(person.name, titleMap);
       const page = pages.find((p) => p.title === final);
       if (page && page.pageprops?.disambiguation !== undefined) disambiguations.push({ person, title: page.title });
+      if (!page || page.missing) noEnglishPage.push(person);
       if (!page || page.missing || page.invalid || page.pageprops?.disambiguation !== undefined) {
         result.set(person.name, null);
         continue;
@@ -201,9 +207,23 @@ export async function resolveProfiles(
       const overlap = contextOverlap(person.name, `${page.title} ${page.description ?? ''} ${page.extract ?? ''}`, person.appearanceTitles);
       if (overlap.length === 0) {
         result.set(person.name, null);
+        noEnglishPage.push(person);
         continue;
       }
-      accepted.push({ name: person.name, page, overlap });
+      accepted.push({ name: person.name, page, overlap, lang: 'en' });
+    }
+  }
+
+  // Same rules on the Spanish Wikipedia: no disambiguation page, and shared context with the titles.
+  for (const batch of chunk(noEnglishPage, 20)) {
+    const body = (await fetchJson(pagesUrl('es', batch.map((p) => p.name)))) as Record<string, unknown>;
+    const titleMap = resolveTitles(body);
+    const pages = (((body.query as Record<string, unknown>)?.pages as WikiPage[]) ?? []).filter(Boolean);
+    for (const person of batch) {
+      const page = pages.find((p) => p.title === follow(person.name, titleMap));
+      if (!page || page.missing || page.invalid || page.pageprops?.disambiguation !== undefined) continue;
+      const overlap = contextOverlap(person.name, `${page.title} ${page.description ?? ''} ${page.extract ?? ''}`, person.appearanceTitles);
+      if (overlap.length > 0) accepted.push({ name: person.name, page, overlap, lang: 'es' });
     }
   }
 
@@ -231,7 +251,7 @@ export async function resolveProfiles(
       .map((page) => ({ page, overlap: contextOverlap(d.person.name, `${page.title} ${page.description ?? ''} ${page.extract ?? ''}`, d.person.appearanceTitles) }))
       .filter((m) => m.overlap.length > 0);
     if (matches.length === 1) {
-      accepted.push({ name: d.person.name, page: matches[0].page, overlap: matches[0].overlap });
+      accepted.push({ name: d.person.name, page: matches[0].page, overlap: matches[0].overlap, lang: 'en' });
       result.delete(d.person.name);
     }
   }
@@ -268,7 +288,7 @@ export async function resolveProfiles(
     }
   }
 
-  const esTitles = accepted.map((a) => a.page.langlinks?.find((l) => l.lang === 'es')?.title).filter((x): x is string => Boolean(x));
+  const esTitles = accepted.filter((a) => a.lang === 'en').map((a) => a.page.langlinks?.find((l) => l.lang === 'es')?.title).filter((x): x is string => Boolean(x));
   const esExtracts = new Map<string, { extract: string; url: string }>();
   for (const batch of chunk(esTitles, 20)) {
     const body = (await fetchJson(esExtractsUrl(batch))) as { query?: { pages?: WikiPage[] } };
@@ -277,14 +297,18 @@ export async function resolveProfiles(
 
   for (const a of accepted) {
     const qid = a.page.pageprops?.wikibase_item ?? null;
+    const pageUrl = a.page.fullurl ?? `https://${a.lang}.wikipedia.org/wiki/${encodeURIComponent(a.page.title.replace(/ /g, '_'))}`;
     const esTitle = a.page.langlinks?.find((l) => l.lang === 'es')?.title;
-    const es = esTitle ? esExtracts.get(esTitle) : undefined;
+    const es = a.lang === 'es' ? { extract: a.page.extract ?? '', url: pageUrl } : esTitle ? esExtracts.get(esTitle) : undefined;
     result.set(a.name, {
       name: a.name,
-      wikipedia: { title: a.page.title, url: a.page.fullurl ?? `https://en.wikipedia.org/wiki/${encodeURIComponent(a.page.title.replace(/ /g, '_'))}` },
+      wikipedia: { title: a.page.title, url: pageUrl },
       wikidataId: qid,
-      description: { en: (qid && descriptions.get(qid)?.en) || a.page.description || null, es: (qid && descriptions.get(qid)?.es) || null },
-      extract: { en: firstSentences(a.page.extract ?? null), es: firstSentences(es?.extract ?? null), esUrl: es?.url ?? null },
+      description: {
+        en: (qid && descriptions.get(qid)?.en) || (a.lang === 'en' ? a.page.description : null) || null,
+        es: (qid && descriptions.get(qid)?.es) || (a.lang === 'es' ? a.page.description : null) || null,
+      },
+      extract: { en: a.lang === 'en' ? firstSentences(a.page.extract ?? null) : null, es: firstSentences(es?.extract || null), esUrl: es?.url ?? null },
       photo: a.page.pageimage ? (photos.get(a.page.pageimage.replace(/ /g, '_')) ?? null) : null,
       matchEvidence: a.overlap.slice(0, 6),
       retrievedAt,
