@@ -105,6 +105,21 @@ function EvidencePanel({ rec, profile }: { rec: Recommendation; profile: GuestPr
           )}
         </div>
       )}
+      {rec.external && (
+        <div>
+          <p className="mb-1 flex items-center gap-2 text-xs uppercase tracking-widest text-stone-500">{t('ext.title')} <Badge p="VERIFIED" /></p>
+          <p className="text-stone-300">{(lang === 'es' ? rec.external.description.es : rec.external.description.en) ?? rec.external.description.en ?? rec.external.description.es}</p>
+          {rec.external.wikipedia && <blockquote className="mt-1 border-l-2 border-brass-400/50 pl-3 text-stone-400">{rec.external.wikipedia.extract.split(/(?<=\.)\s/).slice(0, 2).join(' ')}</blockquote>}
+          <p className="mt-1 text-[11px] text-stone-500">
+            {rec.external.sources.map((s) => (
+              <a key={s.url} className="mr-3 text-brass-300 hover:underline" href={s.url} target="_blank" rel="noreferrer">{s.name}</a>
+            ))}
+            {rec.external.wikipedia && 'CC BY-SA 4.0'}
+          </p>
+          <p className="mt-1 text-[11px] text-stone-500">{rec.external.identityEvidence.join(' · ')}</p>
+          <p className="mt-1 text-[11px] text-stone-500">{t('ext.noInterviews')}</p>
+        </div>
+      )}
       <div>
         <p className="mb-1 flex items-center gap-2 text-xs uppercase tracking-widest text-stone-500">{t('ev.topics')} <Badge p="INFERRED" /></p>
         <div className="flex flex-wrap gap-2">
@@ -121,7 +136,7 @@ function EvidencePanel({ rec, profile }: { rec: Recommendation; profile: GuestPr
               {a.url ? <a className="text-brass-300 underline-offset-2 hover:underline" href={a.url} target="_blank" rel="noreferrer">{a.title}</a> : a.title}
             </li>
           ))}
-          {rec.appearances.length === 0 && <li className="text-stone-400">{t('ev.noAppearances')}</li>}
+          {rec.appearances.length === 0 && <li className="text-stone-400">{rec.external ? t('ext.noInterviews') : t('ev.noAppearances')}</li>}
         </ul>
       </div>
       <p className="text-[11px] text-stone-500">
@@ -181,7 +196,8 @@ function TechnicalDetails({ rec, mode }: { rec: Recommendation; mode: RecommendR
           </li>
           <li className="rounded-lg bg-white/5 p-2">
             <p className="text-stone-500">{t('tech.a.evidence')}</p>
-            {t(`tech.a.level.${rec.assessment.evidence.level}` as Parameters<typeof t>[0])} · {t('tech.a.evidenceDetail', { n: rec.assessment.evidence.appearances, s: rec.assessment.evidence.shows })}
+            {t(`tech.a.level.${rec.assessment.evidence.level}` as Parameters<typeof t>[0])} ·{' '}
+            {rec.assessment.evidence.kind === 'external' ? t('tech.a.external') : t('tech.a.evidenceDetail', { n: rec.assessment.evidence.appearances, s: rec.assessment.evidence.shows })}
             {rec.assessment.evidence.automaticNamesOnly && ` · ${t('tech.a.automatic')}`}
           </li>
         </ul>
@@ -295,7 +311,9 @@ function StatusChips({ rec, show }: { rec: Pick<Recommendation, 'history' | 'lan
       </span>
       {rec.identity.status === 'pending' && <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-fuchsia-200">{t('card.identityPending')}</span>}
       {rec.assessment && rec.assessment.qlooProposedRank !== null && (
-        <span className="rounded-full bg-brass-400/15 px-2.5 py-1 text-brass-300">{t('card.qlooVerified', { n: rec.assessment.qlooProposedRank })}</span>
+        <span className="rounded-full bg-brass-400/15 px-2.5 py-1 text-brass-300">
+          {t(rec.assessment.evidence.kind === 'external' ? 'card.qlooExternal' : 'card.qlooVerified', { n: rec.assessment.qlooProposedRank })}
+        </span>
       )}
     </>
   );
@@ -345,12 +363,12 @@ function AnalysisSummary({ result, show }: { result: RecommendResult; show: Show
 const CHECK_ICON = (ok: boolean | null) => (ok === true ? '✓' : ok === false ? '✗' : '?');
 
 /** What Qloo proposed, what the agent verified, and what it rejected, with reasons. */
-function DiscoveryPanel({ result, show }: { result: RecommendResult; show: ShowSummary }) {
+function DiscoveryPanel({ result, show, part }: { result: RecommendResult; show: ShowSummary; part: 'head' | 'details' }) {
   const { lang, t } = useI18n();
   const f = result.funnel;
   const c = result.comparison;
   if (result.qlooMode !== 'LIVE')
-    return (
+    return part === 'details' ? null : (
       <div className="card border-white/10 p-5 text-sm">
         <h3 className="font-display text-2xl">{t('disc.title')}</h3>
         <p className="mt-1 text-stone-400">{t('disc.notLive')}</p>
@@ -359,10 +377,12 @@ function DiscoveryPanel({ result, show }: { result: RecommendResult; show: ShowS
   const steps: Array<[string, number]> = [
     [t('funnel.proposed'), f.proposed],
     [t('funnel.identity'), f.identityVerified],
+    [t('funnel.external'), f.externalDocumented],
     [t('funnel.ranked'), f.ranked],
-    [t('funnel.language'), f.languageCompatible],
     [t('funnel.shortlist'), f.inShortlist],
   ];
+  if (part === 'details')
+    return result.qlooProposals.length || result.discoveries.length ? <DiscoveryDetails result={result} show={show} /> : null;
   return (
     <div className="card border-brass-400/30 p-5 text-sm">
       <h3 className="flex items-center gap-2 font-display text-2xl">{t('disc.title')} <Badge p="LIVE" /></h3>
@@ -376,6 +396,7 @@ function DiscoveryPanel({ result, show }: { result: RecommendResult; show: ShowS
         ))}
       </ol>
       <p className="mt-3 text-stone-300">{lang === 'es' ? f.diagnosisTextEs : f.diagnosisText}</p>
+      {f.typeErrors > 0 && <p className="mt-1 text-xs text-stone-400">{f.typeErrors} {t('funnel.typeErrors')}</p>}
       {f.attempts.length > 1 && <p className="mt-1 text-xs text-sky-200/80">{t('disc.replanned', { a: f.attempts.map((x) => `${x.signal} (${x.proposed})`).join(' → ') })}</p>}
       {c && (
         <div className="mt-3 rounded-lg border border-white/10 p-3">
@@ -389,8 +410,17 @@ function DiscoveryPanel({ result, show }: { result: RecommendResult; show: ShowS
           </ul>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Every person Qloo proposed, the checks run (with source links), and the pending ones. */
+function DiscoveryDetails({ result, show }: { result: RecommendResult; show: ShowSummary }) {
+  const { lang, t } = useI18n();
+  return (
+    <div className="card p-5 text-sm">
       {result.qlooProposals.length > 0 && (
-        <details className="mt-3">
+        <details className="">
           <summary className="cursor-pointer text-stone-300">{t('disc.all', { n: result.qlooProposals.length })}</summary>
           <ul className="mt-2 space-y-2">
             {result.qlooProposals.map((p) => (
@@ -402,9 +432,16 @@ function DiscoveryPanel({ result, show }: { result: RecommendResult; show: ShowS
                   </span>
                 </div>
                 <p className="text-[11px] text-stone-500">{t('disc.rank', { n: p.qlooRank })} · {t('disc.signal', { s: p.signal })}</p>
+                {p.external && p.external.sources.length > 0 && (
+                  <p className="mt-1 text-[11px]">
+                    {p.external.sources.map((s) => (
+                      <a key={s.url} className="mr-3 text-brass-300 hover:underline" href={s.url} target="_blank" rel="noreferrer">{s.name}</a>
+                    ))}
+                  </p>
+                )}
                 <ul className="mt-1 space-y-0.5 text-xs text-stone-400">
                   {p.checks.map((ch) => (
-                    <li key={ch.check}>
+                    <li key={ch.check + ch.detail}>
                       <span className="mr-1 font-mono">{CHECK_ICON(ch.ok)}</span>
                       {t(`check.${ch.check}` as Parameters<typeof t>[0])}: {lang === 'es' ? ch.detailEs : ch.detail}
                     </li>
@@ -449,16 +486,17 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <section className="order-2 space-y-6 lg:order-1">
-        <div className="card p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="font-display text-2xl">{t('trace.title')}</h3>
-            <span className="text-[11px] text-stone-500">{t('trace.replay')}</span>
-          </div>
+        <details className="card group p-5">
+          <summary className="cursor-pointer list-none">
+            <span className="mr-1 inline-block transition group-open:rotate-90">›</span>
+            <span className="font-display text-2xl">{t('trace.collapsed', { n: result.trace.length })}</span>
+          </summary>
+          <p className="mt-2 text-[11px] text-stone-500">{t('trace.replay')}</p>
           <p className="mt-2 text-xs text-stone-500">{t('trace.planner')}</p>
           <div className="mt-4">
             <AgentTrace steps={result.trace.slice(0, visible)} done={done} />
           </div>
-        </div>
+        </details>
 
         <div className="card p-5">
           <h3 className="flex items-center gap-2 font-display text-2xl">{t('themes.title')} <Badge p="INFERRED" /></h3>
@@ -497,10 +535,11 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
           <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
         </div>
         <AnalysisSummary result={result} show={show} />
+        <DiscoveryPanel result={result} show={show} part="head" />
         {warnings.map((w) => <div key={w} className="rounded-xl border border-brass-400/30 bg-brass-400/10 px-4 py-3 text-sm text-brass-300">{w}</div>)}
         {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
         {result.recommendations.map((r) => <RecommendationCard key={r.key} rec={r} show={show} result={result} />)}
-        <DiscoveryPanel result={result} show={show} />
+        <DiscoveryPanel result={result} show={show} part="details" />
         {result.discarded.length > 0 && (
           <details className="card p-4 text-sm text-stone-300">
             <summary className="cursor-pointer font-semibold">{t('recs.discarded', { n: result.discarded.length })}</summary>

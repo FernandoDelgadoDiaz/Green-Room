@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 // as the Netlify Functions, so the Qloo key stays server-side in development too.
 function devApi(env: Record<string, string>): Plugin {
   const route =
-    (path: '/api/agent' | '/api/live') =>
+    (path: '/api/agent' | '/api/live' | '/api/podcasts') =>
     async (req: IncomingMessage, res: ServerResponse) => {
       if (req.method !== 'POST') {
         res.statusCode = 405;
@@ -17,7 +17,12 @@ function devApi(env: Record<string, string>): Plugin {
       try {
         const mod = await server!.ssrLoadModule('/core/api.ts');
         const body = JSON.parse(raw || '{}');
-        const out = path === '/api/agent' ? await mod.handleApi(body, { PROFILE_LOOKUP: env.PROFILE_LOOKUP }) : await mod.handleLive(body, env, req.headers.authorization);
+        const out =
+          path === '/api/agent'
+            ? await mod.handleApi(body, { PROFILE_LOOKUP: env.PROFILE_LOOKUP })
+            : path === '/api/podcasts'
+              ? await (await server!.ssrLoadModule('/core/podcasts-api.ts')).handlePodcasts(body, { PROFILE_LOOKUP: env.PROFILE_LOOKUP })
+              : await mod.handleLive(body, env, req.headers.authorization);
         res.statusCode = out.status;
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Cache-Control', 'no-store');
@@ -34,6 +39,7 @@ function devApi(env: Record<string, string>): Plugin {
       server = s;
       s.middlewares.use('/api/agent', route('/api/agent'));
       s.middlewares.use('/api/live', route('/api/live'));
+      s.middlewares.use('/api/podcasts', route('/api/podcasts'));
     },
   };
 }

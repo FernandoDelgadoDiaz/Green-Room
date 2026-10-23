@@ -1,0 +1,1227 @@
+{
+"entities": {
+"Q28723576": {
+"id": "Q28723576",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American entrepreneur, attorney and political candidate (born 1975)"
+},
+"es": {
+"language": "es",
+"value": "emprendedor estadounidense"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Andrew Yang",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Andrew Yang",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 131524,
+"id": "Q131524"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 40348,
+"id": "Q40348"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 11499163,
+"id": "Q11499163"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1860,
+"id": "Q1860"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P569": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P569",
+"datavalue": {
+"value": {
+"time": "+1975-01-13T00:00:00Z",
+"timezone": 0,
+"before": 0,
+"after": 0,
+"precision": 11,
+"calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+},
+"type": "time"
+}
+}
+}
+],
+"P856": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P856",
+"datavalue": {
+"value": "https://www.yang2020.com/",
+"type": "string"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P856",
+"datavalue": {
+"value": "https://www.yangforny.com/",
+"type": "string"
+}
+}
+}
+]
+}
+},
+"Q63112961": {
+"id": "Q63112961",
+"descriptions": {
+"es": {
+"language": "es",
+"value": "productor de cine"
+},
+"en": {
+"language": "en",
+"value": "film producer"
+}
+},
+"sitelinks": {},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 3282637,
+"id": "Q3282637"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q55603945": {
+"id": "Q55603945",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American artist"
+},
+"es": {
+"language": "es",
+"value": "artista estadounidense"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Andrew Yang (artist)",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 483501,
+"id": "Q483501"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q117071274": {
+"id": "Q117071274",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "Argentine actor, director and screenwriter"
+},
+"es": {
+"language": "es",
+"value": "actor, director y guionista argentino"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Santiago Korovsky",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Santiago Korovsky",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 10798782,
+"id": "Q10798782"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 578109,
+"id": "Q578109"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 2059704,
+"id": "Q2059704"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1321,
+"id": "Q1321"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 414,
+"id": "Q414"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P569": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P569",
+"datavalue": {
+"value": {
+"time": "+1985-02-26T00:00:00Z",
+"timezone": 0,
+"before": 0,
+"after": 0,
+"precision": 11,
+"calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+},
+"type": "time"
+}
+}
+}
+]
+}
+},
+"Q467940": {
+"id": "Q467940",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "Argentine singer-songwriter and musician"
+},
+"es": {
+"language": "es",
+"value": "cantautor y músico argentino"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Charly García",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Charly García",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 36834,
+"id": "Q36834"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 177220,
+"id": "Q177220"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 486748,
+"id": "Q486748"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 488205,
+"id": "Q488205"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1028181,
+"id": "Q1028181"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 33999,
+"id": "Q33999"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 639669,
+"id": "Q639669"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1321,
+"id": "Q1321"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1860,
+"id": "Q1860"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 414,
+"id": "Q414"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P569": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P569",
+"datavalue": {
+"value": {
+"time": "+1951-10-23T00:00:00Z",
+"timezone": 0,
+"before": 0,
+"after": 0,
+"precision": 11,
+"calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+},
+"type": "time"
+}
+}
+}
+]
+}
+},
+"Q54555985": {
+"id": "Q54555985",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American psychedelia band from Texas"
+},
+"es": {
+"language": "es",
+"value": "grupo musical estadounidense de Texas"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Khruangbin",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Khruangbin",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 215380,
+"id": "Q215380"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P527": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P527",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 63119029,
+"id": "Q63119029"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P527",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 63119120,
+"id": "Q63119120"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P527",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 63119768,
+"id": "Q63119768"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P856": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P856",
+"datavalue": {
+"value": "https://www.khruangbin.com/",
+"type": "string"
+}
+}
+}
+]
+}
+},
+"Q1469093": {
+"id": "Q1469093",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "Mexican guitar duo"
+},
+"es": {
+"language": "es",
+"value": "dúo de guitarras"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Rodrigo y Gabriela",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Rodrigo y Gabriela",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 215380,
+"id": "Q215380"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 36834,
+"id": "Q36834"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P527": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P527",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 37945735,
+"id": "Q37945735"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P527",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 37945744,
+"id": "Q37945744"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P856": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P856",
+"datavalue": {
+"value": "http://www.rodgab.com",
+"type": "string"
+}
+}
+}
+]
+}
+},
+"Q32620": {
+"id": "Q32620",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American politician (born 1981)"
+},
+"es": {
+"language": "es",
+"value": "política estadounidense"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Tulsi Gabbard",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Tulsi Gabbard",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 82955,
+"id": "Q82955"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 38239859,
+"id": "Q38239859"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 212238,
+"id": "Q212238"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1860,
+"id": "Q1860"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P569": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P569",
+"datavalue": {
+"value": {
+"time": "+1981-04-12T00:00:00Z",
+"timezone": 0,
+"before": 0,
+"after": 0,
+"precision": 11,
+"calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+},
+"type": "time"
+}
+}
+}
+],
+"P856": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P856",
+"datavalue": {
+"value": "https://www.tulsigabbard.com/",
+"type": "string"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P856",
+"datavalue": {
+"value": "http://gabbard.house.gov",
+"type": "string"
+}
+}
+}
+]
+}
+},
+"Q119686510": {
+"id": "Q119686510",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "Argentine waterpolo player"
+},
+"es": {
+"language": "es",
+"value": "waterpolista argentino"
+}
+},
+"sitelinks": {
+"eswiki": {
+"site": "eswiki",
+"title": "Carlos Alberto García",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 17524364,
+"id": "Q17524364"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 10843402,
+"id": "Q10843402"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 414,
+"id": "Q414"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P569": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P569",
+"datavalue": {
+"value": {
+"time": "+1981-12-14T00:00:00Z",
+"timezone": 0,
+"before": 0,
+"after": 0,
+"precision": 11,
+"calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+},
+"type": "time"
+}
+}
+}
+]
+}
+},
+"Q102373772": {
+"id": "Q102373772",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "Ph.D. Princeton University 2009"
+}
+},
+"sitelinks": {},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q89947651": {
+"id": "Q89947651",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "medical scientist"
+}
+},
+"sitelinks": {},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"id": "Q15401884"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q11118258": {
+"id": "Q11118258",
+"descriptions": {
+"en": {
+"language": "en",
+"value": "Taiwanese politician"
+},
+"es": {
+"language": "es",
+"value": "político taiwanés"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Andrew Nien-dzu Yang",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"id": "Q82955"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"id": "Q865"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+}
+}
+}

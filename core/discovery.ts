@@ -65,3 +65,80 @@ export function compareWithBaseline(baseline: AgentResult, enriched: AgentResult
     verdictEs,
   };
 }
+
+// ------------------------------------------------------------------ four controlled arms
+export type ArmId = 'A' | 'B' | 'C' | 'D';
+export const ARM_LABELS: Record<ArmId, { en: string; es: string }> = {
+  A: { en: 'Baseline (no Qloo)', es: 'Base (sin Qloo)' },
+  B: { en: 'Baseline + Qloo discoveries (no affinity weighting)', es: 'Base + descubrimientos de Qloo (sin ponderar afinidad)' },
+  C: { en: 'Baseline + Qloo affinity on existing candidates (no discoveries)', es: 'Base + afinidad Qloo sobre candidatos existentes (sin descubrimientos)' },
+  D: { en: 'Discoveries + affinity', es: 'Descubrimientos + afinidad' },
+};
+
+export interface ArmMetrics {
+  arm: ArmId;
+  label: { en: string; es: string };
+  top: Array<{ name: string; source: string; baselineRank: number | null; editorialRelevance: number; evidence: string; identity: string; language: string }>;
+  /** People in this arm's top-k that are also in the baseline top-k. */
+  overlapWithBaseline: number;
+  /** Mean editorial relevance (topical fit, momentum, recency from evidence; no Qloo) of the top-k. */
+  meanEditorialRelevance: number;
+  /** Top-k people not in the baseline top-k, and how many of them Qloo proposed. */
+  originality: { newVsBaseline: number; proposedByQloo: number };
+  evidence: Record<'high' | 'medium' | 'low', number>;
+  /** Top-k people whose identity is pending verification. */
+  identityIssues: number;
+  languageConfirmed: number;
+  funnel: { proposed: number; identityVerified: number; ranked: number; typeErrors: number };
+}
+
+const round = (x: number) => Math.round(x * 1000) / 1000;
+
+export function compareArms(arms: Record<ArmId, AgentResult>) {
+  const A = arms.A;
+  const baseTop = new Set(A.recommendations.map((r) => r.key));
+  const baseRank = new Map(A.ranked.map((r, i) => [r.key, i + 1]));
+  const metrics = (Object.keys(arms) as ArmId[]).map((id): ArmMetrics => {
+    const r = arms[id];
+    const recs = r.recommendations;
+    const ev = { high: 0, medium: 0, low: 0 };
+    for (const x of recs) ev[x.assessment.evidence.level]++;
+    return {
+      arm: id,
+      label: ARM_LABELS[id],
+      top: recs.map((x) => ({
+        name: x.name,
+        source: x.source,
+        baselineRank: baseRank.get(x.key) ?? null,
+        editorialRelevance: round(x.assessment.editorialRelevance),
+        evidence: x.assessment.evidence.level,
+        identity: x.identity.status,
+        language: x.language.status,
+      })),
+      overlapWithBaseline: recs.filter((x) => baseTop.has(x.key)).length,
+      meanEditorialRelevance: recs.length ? round(recs.reduce((s, x) => s + x.assessment.editorialRelevance, 0) / recs.length) : 0,
+      originality: { newVsBaseline: recs.filter((x) => !baseTop.has(x.key)).length, proposedByQloo: recs.filter((x) => x.assessment.qlooProposedRank !== null).length },
+      evidence: ev,
+      identityIssues: recs.filter((x) => x.identity.status === 'pending').length,
+      languageConfirmed: recs.filter((x) => x.language.status === 'confirmed').length,
+      funnel: { proposed: r.funnel.proposed, identityVerified: r.funnel.identityVerified, ranked: r.funnel.ranked, typeErrors: r.funnel.typeErrors },
+    };
+  });
+  const by = Object.fromEntries(metrics.map((m) => [m.arm, m])) as Record<ArmId, ArmMetrics>;
+  // Attribution: which Qloo effect changed the top list.
+  const changedByDiscovery = by.B.overlapWithBaseline < by.A.top.length;
+  const changedByAffinity = by.C.overlapWithBaseline < by.A.top.length;
+  const attribution = {
+    en: `${changedByDiscovery ? `Discovery changed ${by.B.originality.newVsBaseline} of the top ${by.A.top.length}` : 'Discovery alone did not change the top list'}; ${changedByAffinity ? `affinity weighting alone changed ${by.C.originality.newVsBaseline}, by reordering candidates we already had` : 'affinity weighting alone did not change it'}.`,
+    es: `${changedByDiscovery ? `El descubrimiento cambió ${by.B.originality.newVsBaseline} de los ${by.A.top.length} primeros` : 'El descubrimiento solo no cambió la lista principal'}; ${changedByAffinity ? `la ponderación por afinidad sola cambió ${by.C.originality.newVsBaseline}, reordenando candidatos que ya teníamos` : 'la ponderación por afinidad sola no la cambió'}.`,
+  };
+  return {
+    arms: metrics,
+    attribution,
+    notes: [
+      { en: 'Same show, data, candidate checks and k in every arm. Only the two Qloo effects are switched on or off.', es: 'Mismo programa, datos, controles y k en todas las variantes. Solo se prenden o apagan los dos efectos de Qloo.' },
+      { en: 'Editorial relevance is our evidence-based score without Qloo; it is not a probability that a guest accepts, nor a measure of editorial quality.', es: 'La relevancia editorial es nuestro puntaje basado en evidencia, sin Qloo; no es la probabilidad de que un invitado acepte ni una medida de calidad editorial.' },
+      { en: 'Editorial quality needs an independent blind evaluation (docs/EDITORIAL_EVAL.md).', es: 'La calidad editorial requiere una evaluación ciega independiente (docs/EDITORIAL_EVAL.md).' },
+    ],
+  };
+}

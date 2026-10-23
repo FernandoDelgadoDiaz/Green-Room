@@ -34,6 +34,10 @@ export interface QlooEntity {
   tags?: string[];
   /** Short description, when Qloo returns one (used only for the identity check). */
   description?: string;
+  /** Every entity type Qloo lists (e.g. urn:entity:person, urn:entity:artist). */
+  types?: string[];
+  /** Wikidata ids Qloo links to this entity, when present (entity `external` field; shape not yet validated live). */
+  wikidataIds?: string[];
 }
 
 export interface QlooCall {

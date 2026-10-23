@@ -1,0 +1,342 @@
+{
+"entities": {
+"Q1028181": {
+"id": "Q1028181",
+"labels": {
+"en": {
+"language": "en",
+"value": "painter"
+},
+"es": {
+"language": "es",
+"value": "pintor"
+}
+}
+},
+"Q10798782": {
+"id": "Q10798782",
+"labels": {
+"en": {
+"language": "en",
+"value": "television actor"
+},
+"es": {
+"language": "es",
+"value": "actor de televisión"
+}
+}
+},
+"Q10843402": {
+"id": "Q10843402",
+"labels": {
+"en": {
+"language": "en",
+"value": "swimmer"
+},
+"es": {
+"language": "es",
+"value": "nadador"
+}
+}
+},
+"Q11499163": {
+"id": "Q11499163",
+"labels": {
+"en": {
+"language": "en",
+"value": "political pundit"
+},
+"es": {
+"language": "es",
+"value": "comentarista político"
+}
+}
+},
+"Q131524": {
+"id": "Q131524",
+"labels": {
+"en": {
+"language": "en",
+"value": "entrepreneur"
+},
+"es": {
+"language": "es",
+"value": "emprendedor"
+}
+}
+},
+"Q1321": {
+"id": "Q1321",
+"labels": {
+"en": {
+"language": "en",
+"value": "Spanish"
+},
+"es": {
+"language": "es",
+"value": "español"
+}
+}
+},
+"Q17524364": {
+"id": "Q17524364",
+"labels": {
+"en": {
+"language": "en",
+"value": "water polo player"
+},
+"es": {
+"language": "es",
+"value": "waterpolista"
+}
+}
+},
+"Q177220": {
+"id": "Q177220",
+"labels": {
+"en": {
+"language": "en",
+"value": "singer"
+},
+"es": {
+"language": "es",
+"value": "cantante"
+}
+}
+},
+"Q1860": {
+"id": "Q1860",
+"labels": {
+"en": {
+"language": "en",
+"value": "English"
+},
+"es": {
+"language": "es",
+"value": "inglés"
+}
+}
+},
+"Q2059704": {
+"id": "Q2059704",
+"labels": {
+"en": {
+"language": "en",
+"value": "television director"
+},
+"es": {
+"language": "es",
+"value": "realizador de televisión"
+}
+}
+},
+"Q212238": {
+"id": "Q212238",
+"labels": {
+"en": {
+"language": "en",
+"value": "civil servant"
+},
+"es": {
+"language": "es",
+"value": "funcionario"
+}
+}
+},
+"Q215380": {
+"id": "Q215380",
+"labels": {
+"en": {
+"language": "en",
+"value": "musical group"
+},
+"es": {
+"language": "es",
+"value": "grupo musical"
+}
+}
+},
+"Q30": {
+"id": "Q30",
+"labels": {
+"en": {
+"language": "en",
+"value": "United States"
+},
+"es": {
+"language": "es",
+"value": "Estados Unidos"
+}
+}
+},
+"Q3282637": {
+"id": "Q3282637",
+"labels": {
+"en": {
+"language": "en",
+"value": "film producer"
+},
+"es": {
+"language": "es",
+"value": "productor de cine"
+}
+}
+},
+"Q33999": {
+"id": "Q33999",
+"labels": {
+"en": {
+"language": "en",
+"value": "actor"
+},
+"es": {
+"language": "es",
+"value": "actor"
+}
+}
+},
+"Q36834": {
+"id": "Q36834",
+"labels": {
+"en": {
+"language": "en",
+"value": "composer"
+},
+"es": {
+"language": "es",
+"value": "compositor"
+}
+}
+},
+"Q38239859": {
+"id": "Q38239859",
+"labels": {
+"en": {
+"language": "en",
+"value": "army officer"
+},
+"es": {
+"language": "es",
+"value": "oficial de ejército"
+}
+}
+},
+"Q40348": {
+"id": "Q40348",
+"labels": {
+"en": {
+"language": "en",
+"value": "lawyer"
+},
+"es": {
+"language": "es",
+"value": "abogado"
+}
+}
+},
+"Q414": {
+"id": "Q414",
+"labels": {
+"en": {
+"language": "en",
+"value": "Argentina"
+},
+"es": {
+"language": "es",
+"value": "Argentina"
+}
+}
+},
+"Q483501": {
+"id": "Q483501",
+"labels": {
+"en": {
+"language": "en",
+"value": "artist"
+},
+"es": {
+"language": "es",
+"value": "artista"
+}
+}
+},
+"Q486748": {
+"id": "Q486748",
+"labels": {
+"en": {
+"language": "en",
+"value": "pianist"
+},
+"es": {
+"language": "es",
+"value": "pianista"
+}
+}
+},
+"Q488205": {
+"id": "Q488205",
+"labels": {
+"en": {
+"language": "en",
+"value": "singer-songwriter"
+},
+"es": {
+"language": "es",
+"value": "cantautor"
+}
+}
+},
+"Q5": {
+"id": "Q5",
+"labels": {
+"en": {
+"language": "en",
+"value": "human"
+},
+"es": {
+"language": "es",
+"value": "ser humano"
+}
+}
+},
+"Q578109": {
+"id": "Q578109",
+"labels": {
+"en": {
+"language": "en",
+"value": "television producer"
+},
+"es": {
+"language": "es",
+"value": "productor de televisión"
+}
+}
+},
+"Q639669": {
+"id": "Q639669",
+"labels": {
+"en": {
+"language": "en",
+"value": "musician"
+},
+"es": {
+"language": "es",
+"value": "músico"
+}
+}
+},
+"Q82955": {
+"id": "Q82955",
+"labels": {
+"en": {
+"language": "en",
+"value": "politician"
+},
+"es": {
+"language": "es",
+"value": "político"
+}
+}
+}
+}
+}

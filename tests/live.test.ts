@@ -6,7 +6,7 @@ import { LiveQlooAdapter } from '../core/qloo/client';
 
 const TOKEN = 'test-token-0123456789abcdefghijklmnopqrstuvwxyz';
 const KEY = 'qloo-secret-key-SHOULD-NEVER-LEAK';
-const liveEnv = (extra: Record<string, string> = {}) => ({ QLOO_LIVE_ENABLED: 'true', QLOO_API_KEY: KEY, LIVE_ACCESS_TOKEN_SHA256: sha256Hex(TOKEN), PROFILE_LOOKUP: '0', ...extra });
+const liveEnv = (extra: Record<string, string> = {}) => ({ QLOO_LIVE_ENABLED: 'true', QLOO_API_KEY: KEY, LIVE_ACCESS_TOKEN_SHA256: sha256Hex(TOKEN), PROFILE_LOOKUP: '0', EXTERNAL_VERIFY: '0', ...extra });
 const auth = `Bearer ${TOKEN}`;
 
 /** Fake Qloo with documented shapes and a configurable latency; records the headers it saw. */

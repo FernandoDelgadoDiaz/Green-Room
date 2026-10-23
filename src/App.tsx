@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, liveToken, type Catalog, type LiveStatus, type RecommendResult, type ShowSummary } from './api';
+import { api, liveToken, type Catalog, type FeedAnalysisSummary, type LiveStatus, type PodcastHit, type RecommendResult, type ShowSummary } from './api';
 import { CatalogPicker } from './components/CatalogPicker';
 import { Badge } from './components/Badge';
 import { RecommendView } from './components/RecommendView';
@@ -86,6 +86,20 @@ function PrivateLive({ onMode }: { onMode: (m: 'LIVE' | 'MOCK') => void }) {
   );
 }
 
+/** How far a show outside the catalog can be analyzed, why, and which sources were read. */
+function AnalysisStatus({ hit, analysis }: { hit: PodcastHit; analysis: FeedAnalysisSummary }) {
+  const { lang, t } = useI18n();
+  const tone = analysis.level === 'complete' ? 'border-emerald-400/30 text-emerald-200' : analysis.level === 'limited' ? 'border-brass-400/30 text-brass-200' : 'border-red-400/30 text-red-200';
+  return (
+    <div className={`card border p-4 text-sm ${tone}`}>
+      <p className="font-semibold">{hit.name} · {t(`as.${analysis.level}`)}</p>
+      <p className="text-xs text-stone-400">{t('os.originUnverifiedLong')}</p>
+      {analysis.reasons.length > 0 && <ul className="mt-2 list-disc pl-5 text-stone-300">{analysis.reasons.map((r) => <li key={r.en}>{lang === 'es' ? r.es : r.en}</li>)}</ul>}
+      <p className="mt-2 break-all text-[11px] text-stone-500">{t('as.sources')}: {analysis.sources.map((s) => <a key={s} className="mr-2 text-brass-300 hover:underline" href={s} target="_blank" rel="noreferrer">{new URL(s).hostname}</a>)}</p>
+    </div>
+  );
+}
+
 function Shell() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('recommend');
@@ -102,7 +116,28 @@ function Shell() {
     api.catalog().then(setCatalog).catch((e) => setError(String(e)));
   }, []);
 
+  const [external, setExternal] = useState<{ hit: PodcastHit; analysis: FeedAnalysisSummary | null } | null>(null);
+
+  // A show found through the open search (not in the catalog): analyzed from its live RSS feed.
+  const analyzeHit = async (hit: PodcastHit) => {
+    setSelected(`ext:${hit.feedUrl}`);
+    setExternal({ hit, analysis: null });
+    setResult(null);
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await api.analyzeFeed(hit);
+      setExternal({ hit, analysis: r.analysis });
+      setResult(r.result);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const analyze = async (id: string) => {
+    setExternal(null);
     setSelected(id);
     setResult(null);
     setLoading(true);
@@ -116,7 +151,23 @@ function Shell() {
     }
   };
 
-  const show = shows.find((s) => s.id === selected) ?? null;
+  const show: ShowSummary | null =
+    shows.find((s) => s.id === selected) ??
+    (external && result
+      ? {
+          id: result.showId,
+          name: external.hit.name,
+          host: external.hit.publisher,
+          language: '',
+          description: '',
+          source: { feedUrl: external.hit.feedUrl ?? '', website: external.hit.appleUrl ?? '', retrievedAt: '', retrievedVia: '', note: '' },
+          episodeCount: external.analysis?.stats?.episodes ?? 0,
+          withGuests: external.analysis?.stats?.withGuestNames ?? 0,
+          firstEpisode: null,
+          lastEpisode: external.analysis?.stats?.last ?? null,
+          recent: [],
+        }
+      : null);
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8">
@@ -153,15 +204,16 @@ function Shell() {
             {!selected && (
               <section>
                 {!catalog && !error && <p className="text-sm text-stone-400">{t('state.loadingShows')}</p>}
-                {catalog && <CatalogPicker catalog={catalog} selected={selected} onSelect={analyze} />}
+                {catalog && <CatalogPicker catalog={catalog} selected={selected} onSelect={analyze} onAnalyzeHit={analyzeHit} />}
               </section>
             )}
             {selected && (
-              <button className="btn-ghost" onClick={() => (setSelected(null), setResult(null))}>
+              <button className="btn-ghost" onClick={() => (setSelected(null), setResult(null), setExternal(null))}>
                 {t('cat.change')}
               </button>
             )}
             {loading && <p className="text-sm text-stone-400">{t('state.analyzing')}</p>}
+            {external?.analysis && <AnalysisStatus hit={external.hit} analysis={external.analysis} />}
             {show && result && (
               <section>
                 <h2 className="mb-3 text-xs uppercase tracking-widest text-stone-500">{t('step.results')} {show.name}</h2>

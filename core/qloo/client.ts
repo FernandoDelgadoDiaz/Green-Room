@@ -79,6 +79,12 @@ export function parseEntity(raw: unknown): QlooEntity | null {
     : undefined;
   const props = (r.properties && typeof r.properties === 'object' ? r.properties : {}) as Record<string, unknown>;
   const description = [props.short_description, props.description, r.disambiguation].find((d): d is string => typeof d === 'string' && d.length > 0);
+  const types = Array.isArray(r.types) ? (r.types as unknown[]).filter((x): x is string => typeof x === 'string') : typeof r.type === 'string' ? [r.type] : undefined;
+  // Tolerant: external.wikidata may be a list of {id} objects or of strings.
+  const ext = (r.external && typeof r.external === 'object' ? (r.external as Record<string, unknown>).wikidata : undefined) as unknown;
+  const wikidataIds = (Array.isArray(ext) ? ext : ext ? [ext] : [])
+    .map((x) => (x && typeof x === 'object' ? (x as Record<string, unknown>).id : x))
+    .filter((x): x is string => typeof x === 'string' && /^Q\d+$/.test(x));
   return {
     entityId,
     name,
@@ -87,6 +93,8 @@ export function parseEntity(raw: unknown): QlooEntity | null {
     affinity: num(query.affinity) ?? num(r.affinity),
     tags,
     ...(description ? { description } : {}),
+    ...(types?.length ? { types } : {}),
+    ...(wikidataIds.length ? { wikidataIds } : {}),
   };
 }
 

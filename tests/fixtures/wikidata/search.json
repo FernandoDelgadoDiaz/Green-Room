@@ -1,0 +1,180 @@
+{
+"retrievedAt": "2026-10-23",
+"source": "https://www.wikidata.org/w/api.php (wbsearchentities, wbgetentities); search results trimmed to id/label/description/match",
+"search": {
+"Andrew Yang": [
+{
+"id": "Q28723576",
+"label": "Andrew Yang",
+"description": "American entrepreneur, attorney and political candidate (born 1975)",
+"match": {
+"type": "label",
+"text": "Andrew Yang"
+}
+},
+{
+"id": "Q89947651",
+"label": "Andrew D Y Yang",
+"description": "medical scientist",
+"match": {
+"type": "alias",
+"text": "Andrew Yang"
+}
+},
+{
+"id": "Q63112961",
+"label": "Andrew Yang",
+"description": "film producer",
+"match": {
+"type": "label",
+"text": "Andrew Yang"
+}
+},
+{
+"id": "Q102373772",
+"label": "Andrew Yang",
+"description": "Ph.D. Princeton University 2009",
+"match": {
+"type": "label",
+"text": "Andrew Yang"
+}
+},
+{
+"id": "Q11118258",
+"label": "Andrew Nien-dzu Yang",
+"description": "Taiwanese politician",
+"match": {
+"type": "alias",
+"text": "Andrew Yang"
+}
+},
+{
+"id": "Q56273482",
+"label": "Andrew Yang",
+"description": "Wikimedia disambiguation page",
+"match": {
+"type": "label",
+"text": "Andrew Yang"
+}
+},
+{
+"id": "Q55603945",
+"label": "Andrew Yang",
+"description": "American artist",
+"match": {
+"type": "label",
+"text": "Andrew Yang"
+}
+}
+],
+"Santiago Korovsky": [
+{
+"id": "Q117071274",
+"label": "Santiago Korovsky",
+"description": "actor, director y guionista argentino",
+"match": {
+"type": "label",
+"text": "Santiago Korovsky"
+}
+}
+],
+"Charly García": [
+{
+"id": "Q467940",
+"label": "Charly García",
+"description": "cantautor y músico argentino",
+"match": {
+"type": "label",
+"text": "Charly García"
+}
+},
+{
+"id": "Q119686510",
+"label": "Carlos Alberto García",
+"description": "waterpolista argentino",
+"match": {
+"type": "alias",
+"text": "Charly García"
+}
+},
+{
+"id": "Q6347074",
+"label": "discografía de Charly García",
+"description": "Discos de Charly García",
+"match": {
+"type": "label",
+"text": "Charly García discography"
+}
+},
+{
+"id": "Q16490842",
+"label": "Charly García Oro",
+"description": "1995 live album by Charly García",
+"match": {
+"type": "label",
+"text": "Charly García Oro"
+}
+}
+],
+"Khruangbin": [
+{
+"id": "Q54555985",
+"label": "Khruangbin",
+"description": "American psychedelia band from Texas",
+"match": {
+"type": "label",
+"text": "Khruangbin"
+}
+},
+{
+"id": "Q108473593",
+"label": "Khruangbin discography",
+"description": "Wikimedia band discography",
+"match": {
+"type": "label",
+"text": "Khruangbin discography"
+}
+}
+],
+"Rodrigo y Gabriela": [
+{
+"id": "Q1469093",
+"label": "Rodrigo y Gabriela",
+"description": "Mexican guitar duo",
+"match": {
+"type": "label",
+"text": "Rodrigo y Gabriela"
+}
+},
+{
+"id": "Q3438484",
+"label": "Rodrigo y Gabriela",
+"description": "2006 album by Rodrigo y Gabriela",
+"match": {
+"type": "label",
+"text": "Rodrigo y Gabriela"
+}
+}
+],
+"Tulsi Gabbard": [
+{
+"id": "Q32620",
+"label": "Tulsi Gabbard",
+"description": "American politician (born 1981)",
+"match": {
+"type": "label",
+"text": "Tulsi Gabbard"
+}
+},
+{
+"id": "Q60569761",
+"label": "Tulsi Gabbard presidential campaign, 2020",
+"description": "unsuccessful 2020 United States presidential campaign of Tulsi Gabbard",
+"match": {
+"type": "label",
+"text": "Tulsi Gabbard presidential campaign, 2020"
+}
+}
+]
+}
+}

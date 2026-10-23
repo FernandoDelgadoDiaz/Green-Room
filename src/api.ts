@@ -1,5 +1,14 @@
 import type { AgentResult } from '../core/agent/agent';
 import type { BaselineComparison } from '../core/discovery';
+import type { PodcastHit, ResolveResult } from '../core/podcasts/open-search';
+
+export type { PodcastHit, ResolveResult };
+export interface FeedAnalysisSummary {
+  level: 'complete' | 'limited' | 'insufficient';
+  reasons: Array<{ en: string; es: string }>;
+  sources: string[];
+  stats: { episodes: number; withGuestNames: number; coverage: number; last: string | null } | null;
+}
 import type { BacktestResult } from '../core/backtest';
 import type { PodcastSource } from '../core/types';
 import type { GuestProfile } from '../core/profiles';
@@ -50,7 +59,7 @@ export const liveToken = {
   },
 };
 
-async function post<T>(path: '/api/agent' | '/api/live', body: unknown, token?: string): Promise<{ ok: boolean; status: number; json: T & { error?: string; reason?: string } }> {
+async function post<T>(path: '/api/agent' | '/api/live' | '/api/podcasts', body: unknown, token?: string): Promise<{ ok: boolean; status: number; json: T & { error?: string; reason?: string } }> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(path, { method: 'POST', headers, body: JSON.stringify(body) });
@@ -62,6 +71,12 @@ async function call<T>(body: unknown): Promise<T> {
   // With a private token, analyses go to /api/live; the public endpoint is always MOCK.
   const token = liveToken.get();
   const { ok, status, json } = await post<T>(token ? '/api/live' : '/api/agent', body, token ?? undefined);
+  if (!ok) throw new Error(json?.error ?? `HTTP ${status}`);
+  return json as T;
+}
+
+async function podcasts<T>(body: unknown): Promise<T> {
+  const { ok, status, json } = await post<T>('/api/podcasts', body);
   if (!ok) throw new Error(json?.error ?? `HTTP ${status}`);
   return json as T;
 }
@@ -78,6 +93,16 @@ export const api = {
     return r.json;
   }),
   recommend: (showId: string) => call<RecommendResult>({ action: 'recommend', showId, k: 5 }),
+  searchPodcasts: (term: string, store?: string) => podcasts<{ hits: PodcastHit[] }>({ action: 'search', term, store }),
+  resolveLink: (url: string) => podcasts<ResolveResult>({ action: 'resolve', url }),
+  /** Analysis of a show outside the catalog: LIVE through the private endpoint when a token is active. */
+  analyzeFeed: async (hit: PodcastHit) => {
+    const body = { action: 'analyze', feedUrl: hit.feedUrl, appleUrl: hit.appleUrl, host: hit.publisher };
+    const token = liveToken.get();
+    const { ok, status, json } = await post<{ analysis: FeedAnalysisSummary; result: RecommendResult | null }>(token ? '/api/live' : '/api/podcasts', body, token ?? undefined);
+    if (!ok) throw new Error(json?.error ?? `HTTP ${status}`);
+    return json;
+  },
   backtest: (showId: string, cutoff: string) => call<BacktestResult>({ action: 'backtest', showId, cutoff, horizonMonths: 24 }),
   liveStatus: async (token: string): Promise<LiveStatus> => {
     const r = await post<{ mode?: string }>('/api/live', { action: 'status' }, token).catch((e) => ({ ok: false, status: 0, json: { error: String(e) } as { error?: string; reason?: string } }));

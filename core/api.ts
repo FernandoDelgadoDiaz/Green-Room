@@ -9,7 +9,9 @@ import { runAgent } from './agent/agent';
 import { runBacktest } from './backtest';
 import { LiveQlooAdapter, summarizeMetrics, type QlooLimits } from './qloo/client';
 import { MockQlooAdapter, NoQlooAdapter } from './qloo/mock';
-import { compareWithBaseline } from './discovery';
+import { compareArms, compareWithBaseline } from './discovery';
+import { WikidataVerifier } from './verify/external';
+import { safeJson } from './net/safe-fetch';
 import { QlooError, type QlooAdapter } from './qloo/types';
 import { HourlyQuota, limitsFromEnv, liveSwitch, verifyBearer, type LiveEnv } from './access';
 import { runComparison, runCoverage, runOriginality, summarizeComparison, summarizeCoverage } from './experiment';
@@ -30,6 +32,8 @@ export const ORIGIN_OF = new Map(CATALOG.shows.filter((s) => s.origin.status ===
 export interface Env extends LiveEnv {
   /** Set to "0" to skip live Wikipedia lookups (tests, offline environments). */
   PROFILE_LOOKUP?: string;
+  /** Set to "0" to skip the Wikidata/Wikipedia verification of Qloo proposals (LIVE only). */
+  EXTERNAL_VERIFY?: string;
 }
 
 /** Private, server-side Qloo response cache shared by requests on a warm instance (allowed by the developer guide). */
@@ -108,6 +112,39 @@ export async function handleApi(req: ApiRequest, env: Env): Promise<{ status: nu
   return runAction(req, env, () => new MockQlooAdapter());
 }
 
+const WIKI_HOSTS = ['www.wikidata.org', 'en.wikipedia.org', 'es.wikipedia.org'];
+
+/** Wikidata/Wikipedia verifier, used only with LIVE Qloo (it verifies Qloo's proposals). */
+export function makeVerifier(env: Env) {
+  if (env.EXTERNAL_VERIFY === '0') return undefined;
+  return new WikidataVerifier({ fetchJson: (u) => safeJson(u, { allowHosts: WIKI_HOSTS, timeoutMs: 5000 }), maxCandidates: 12 });
+}
+
+/** One analysis: agent run, Wikipedia photos/profiles, and (LIVE) the baseline comparison. */
+export async function recommendFor(target: PodcastDataset, others: PodcastDataset[], qloo: QlooAdapter, env: Env, k: number, origin: unknown) {
+  const live = qloo.mode === 'LIVE';
+  const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, verifier: live ? makeVerifier(env) : undefined });
+  // LIVE: also run the baseline (no Qloo, no API calls) on the same data and rules, to show what Qloo added.
+  const comparison = live ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF }), result) : null;
+  const profiles = await profilesFor(result.recommendations, env.PROFILE_LOOKUP !== '0');
+  // "Probable" language: an identity-checked Wikipedia article exists in the show's language.
+  // Indirect evidence only; it never becomes "confirmed".
+  for (const rec of result.recommendations) {
+    const p = profiles[rec.key];
+    const lang = target.language as 'en' | 'es';
+    if (rec.language.status === 'unknown' && p && p.extract?.[lang]) {
+      rec.language = {
+        ...rec.language,
+        status: 'probable',
+        basis: 'wikipedia',
+        evidenceEn: `${rec.language.evidenceEn}; Wikipedia article in “${lang}” (identity-checked)`,
+        evidenceEs: `${rec.language.evidenceEs}; artículo de Wikipedia en “${lang}” (identidad verificada)`,
+      };
+    }
+  }
+  return { ...result, ranked: undefined, profiles, comparison, origin };
+}
+
 async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter): Promise<{ status: number; body: unknown }> {
   if (req.action === 'catalog') return { status: 200, body: CATALOG };
   if (req.action === 'shows') return { status: 200, body: { qlooMode: qlooFor().mode === 'LIVE' ? 'LIVE' : 'MOCK', shows: showSummaries() } };
@@ -116,26 +153,8 @@ async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter):
   const others = DATASETS.filter((d) => d.id !== target.id);
   if (req.action === 'recommend') {
     const k = Math.min(Math.max(req.k ?? 5, 1), 10);
-    const qloo = qlooFor();
-    const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF });
-    // LIVE: also run the baseline (no Qloo, no API calls) on the same data and rules, to show what Qloo added.
-    const comparison = qloo.mode === 'LIVE' ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF }), result) : null;
-    const profiles = await profilesFor(result.recommendations, env.PROFILE_LOOKUP !== '0');
-    // "Probable" language: an identity-checked Wikipedia article exists in the show's language.
-    // Indirect evidence only; it never becomes "confirmed".
-    for (const rec of result.recommendations) {
-      const p = profiles[rec.key];
-      const lang = target.language as 'en' | 'es';
-      if (rec.language.status === 'unknown' && p && p.extract?.[lang]) {
-        rec.language = {
-          ...rec.language,
-          status: 'probable',
-          evidenceEn: `${rec.language.evidenceEn}; Wikipedia article in “${lang}” (identity-checked)`,
-          evidenceEs: `${rec.language.evidenceEs}; artículo de Wikipedia en “${lang}” (identidad verificada)`,
-        };
-      }
-    }
-    return { status: 200, body: { ...result, ranked: undefined, profiles, comparison, origin: CATALOG.shows.find((s) => s.id === target.id)?.origin ?? null } };
+    const body = await recommendFor(target, others, qlooFor(), env, k, CATALOG.shows.find((s) => s.id === target.id)?.origin ?? null);
+    return { status: 200, body };
   }
   if (req.action === 'backtest') {
     if (!/^\d{4}-\d{2}-\d{2}/.test(req.cutoff)) return { status: 400, body: { error: 'cutoff must be YYYY-MM-DD' } };
@@ -160,7 +179,11 @@ async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter):
 export type LiveRequest =
   | ApiRequest
   | { action: 'status' }
-  | { action: 'diagnose'; test: 'auth' | 't2' | 't4' | 't5'; showId?: string; cutoff?: string };
+  | { action: 'diagnose'; test: 'auth' | 't2' | 't4' | 't5'; showId?: string; cutoff?: string }
+  /** Four controlled arms on the same data: A baseline, B +discovery, C +affinity, D both. */
+  | { action: 'compare'; showId: string; k?: number }
+  /** LIVE analysis of a show found through the open search (feed URL). */
+  | { action: 'analyze'; feedUrl: string; appleUrl?: string | null; host?: string | null };
 
 const quota = new HourlyQuota();
 
@@ -182,7 +205,7 @@ export async function handleLive(req: LiveRequest, env: Env, authorization: stri
   const q = quota.take(tokenId, maxPerHour);
   if (!q.ok) return { status: 429, body: { error: `Hourly limit of ${maxPerHour} LIVE requests reached.`, retryAfterS: q.retryAfterS } };
 
-  const kind = req.action === 'diagnose' ? 'diagnostic' : 'analysis';
+  const kind = req.action === 'diagnose' || req.action === 'compare' ? 'diagnostic' : 'analysis';
   const limits = limitsFromEnv(env, kind);
   const budget = { networkCalls: 0, startedAt: Date.now() };
   const adapters: LiveQlooAdapter[] = [];
@@ -206,6 +229,25 @@ export async function handleLive(req: LiveRequest, env: Env, authorization: stri
   };
 
   try {
+    if (req.action === 'analyze') {
+      const { handlePodcasts } = await import('./podcasts-api');
+      const r = await handlePodcasts(req, env, {}, make);
+      return { status: r.status, body: r.body && typeof r.body === 'object' ? { ...(r.body as object), qlooMetrics: metrics() } : r.body };
+    }
+    if (req.action === 'compare') {
+      const target = DATASETS.find((d) => d.id === req.showId);
+      if (!target) return { status: 404, body: { error: `Unknown show ${req.showId}` } };
+      const others = DATASETS.filter((d) => d.id !== target.id);
+      const k = Math.min(Math.max(req.k ?? 5, 1), 10);
+      const verifier = makeVerifier(env);
+      // Arms share the private Qloo cache, so repeated lookups are not paid twice.
+      const arm = (qloo: QlooAdapter, discovery: boolean, affinity: boolean) => runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, qlooDiscovery: discovery, qlooAffinity: affinity, verifier: discovery ? verifier : undefined });
+      const A = await arm(new NoQlooAdapter(), false, false);
+      const B = await arm(make(), true, false);
+      const C = await arm(make(), false, true);
+      const D = await arm(make(), true, true);
+      return { status: 200, body: { showId: target.id, ...compareArms({ A, B, C, D }), qlooMetrics: metrics() } };
+    }
     if (req.action !== 'diagnose') {
       const r = await runAction(req, env, make);
       return { status: r.status, body: r.body && typeof r.body === 'object' ? { ...(r.body as object), qlooMetrics: metrics() } : r.body };

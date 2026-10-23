@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { Catalog, CatalogShow } from '../api';
+import type { Catalog, CatalogShow, PodcastHit } from '../api';
+import { OpenSearch } from './OpenSearch';
 import { useI18n } from '../i18n';
 import { showsFromCountry, unclassifiedShows } from '../../core/catalog';
 
@@ -96,7 +97,7 @@ function ShowCard({ s, onSelect, selected }: { s: CatalogShow; onSelect: (id: st
 
 const STATUS_ORDER: Record<string, number> = { analyzable: 0, limited: 1, not_analyzable: 2 };
 
-export function CatalogPicker({ catalog, selected, onSelect }: { catalog: Catalog; selected: string | null; onSelect: (id: string) => void }) {
+export function CatalogPicker({ catalog, selected, onSelect, onAnalyzeHit }: { catalog: Catalog; selected: string | null; onSelect: (id: string) => void; onAnalyzeHit: (hit: PodcastHit) => void }) {
   const { lang, t } = useI18n();
   const [country, setCountry] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -151,6 +152,7 @@ export function CatalogPicker({ catalog, selected, onSelect }: { catalog: Catalo
       {country === UNVERIFIED && !q && <p className="text-xs text-stone-500">{t('cat.unverifiedNote')}</p>}
       {!country && !q && <p className="text-sm text-stone-400">{t('cat.pickCountry')}</p>}
       {(country || q) && shows.length === 0 && <p className="text-sm text-stone-400">{t('cat.noResults')}</p>}
+      <OpenSearch store={country} onAnalyze={(h) => (h.catalogId ? onSelect(h.catalogId) : onAnalyzeHit(h))} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {shows.map((s) => (
           <ShowCard key={s.id} s={s} onSelect={onSelect} selected={selected === s.id} />

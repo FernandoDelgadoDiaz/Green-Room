@@ -1,0 +1,58 @@
+{
+ "retrievedAt": "2026-10-23",
+ "source": "Wikipedia REST page/summary (CC BY-SA 4.0); Charly García extract truncated to its first two sentences",
+ "pages": {
+  "en:Andrew Yang": {
+   "type": "standard",
+   "title": "Andrew Yang",
+   "lang": "en",
+   "wikibase_item": "Q28723576",
+   "description": "American businessman and politician (born 1975)",
+   "extract": "Andrew Yang is an American businessman, lobbyist and political commentator. He founded the political party and action committee Forward Party in 2021, for which he serves as co-chair alongside former New Jersey Governor Christine Todd Whitman and Michael S. Willner.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Andrew_Yang"
+    }
+   }
+  },
+  "es:Santiago Korovsky": {
+   "type": "standard",
+   "title": "Santiago Korovsky",
+   "lang": "es",
+   "wikibase_item": "Q117071274",
+   "description": "actor, director y guionista argentino",
+   "extract": "Santiago Korovsky es un actor, director, guionista y docente argentino. Es licenciado en Ciencias de la Comunicación Social por la Universidad de Buenos Aires y también cursó materias de Diseño de Imagen y Sonido en la Universidad de Buenos Aires.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://es.wikipedia.org/wiki/Santiago_Korovsky"
+    }
+   }
+  },
+  "es:Charly García": {
+   "type": "standard",
+   "title": "Charly García",
+   "lang": "es",
+   "wikibase_item": "Q467940",
+   "description": "cantautor y músico argentino",
+   "extract": "Carlos Alberto García Moreno, más conocido por su nombre artístico Charly García, es un músico, cantautor, multinstrumentista, compositor y productor discográfico argentino, considerado una de las figuras más importantes de la música popular argentina, latinoamericana y del rock en español. Nombrado frecuentemente el «padre del rock argentino» junto a Luis Alberto Spinetta, García es aclamado por su extensa obra discográfica, tanto en sus múltiples agrupaciones y como solista, por la complejidad compositiva de su música.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://es.wikipedia.org/wiki/Charly_García"
+    }
+   }
+  },
+  "en:Tulsi Gabbard": {
+   "type": "standard",
+   "title": "Tulsi Gabbard",
+   "lang": "en",
+   "wikibase_item": "Q32620",
+   "description": "American politician and military officer (born 1981)",
+   "extract": "Tulsi Gabbard is an American politician and U.S. Army officer who served as the eighth Director of National Intelligence (DNI) from 2025 to 2026. She previously served as U.S. representative for Hawaii's 2nd congressional district from 2013 to 2021 and in the Hawaii House of Representatives from 2002 to 2004. Gabbard was a member of the Democratic Party until 2022, after which she became independent before joining the Republican Party in 2024.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Tulsi_Gabbard"
+    }
+   }
+  }
+ }
+}
