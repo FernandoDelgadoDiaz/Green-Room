@@ -1,23 +1,34 @@
-# Judge access to live Qloo (prepared, not active)
+# Judge access
 
 What the rules say (qloo.devpost.com/rules, read 2026-10-23):
-- "Access must be provided to an Entrant's working Project for judging and testing."
-- "If Entrant's website is private, Entrant must include login credentials in its testing instructions."
-- The project must be available "free of charge and without any restriction … until the Judging Period ends."
+- Access must be provided to a working project for judging and testing.
+- The project must be available "free of charge and without any restriction … until the Judging Period ends".
 - Judging period: Nov 2, 2026 12:00 ET to Nov 5, 2026 23:45 ET.
 
-## Proposed setup (no paid services)
-1. **The whole app stays public in MOCK mode.** Judges can use every screen without credentials: countries, catalog, agent trace and recommendations. MOCK values are labeled.
-2. **LIVE Qloo through `/api/live` with a dedicated judge token.**
-   - Run `npm run live:token` once for the judges; it must not be your personal token.
-   - Add its hash to `LIVE_ACCESS_TOKEN_SHA256` (comma-separated, next to yours), so each token can be revoked on its own.
-   - In Devpost's testing instructions: "Open https://greenroom1.netlify.app/?private=1 and enter the access token: …". The token appears only there.
-3. **Limits.** Netlify allows 6 LIVE requests per minute per IP (code-based rule, available on all plans). Each analysis is capped at 80 Qloo calls and 45 s. `LIVE_MAX_ANALYSES_PER_HOUR=30` per token is held in each instance's memory, so it is a soft limit.
-4. **Turn on** `QLOO_LIVE_ENABLED=true` on Nov 2 at the latest, and redeploy.
-5. **Turn off** after Nov 5 23:45 ET: set `false`, remove the judge hash, redeploy.
+## Setup for the judging period
+- **No login.** The public demo at https://greenroom1.netlify.app uses the real Qloo API for every analysis, so judges need no token.
+- **Cache warmed before judging (Nov 1).**
+  - All 20 catalog shows are analyzed with Qloo once, and their results are cached for 7 days (`PUBLIC_CACHE_HOURS=168`).
+  - Judges then see real Qloo results instantly. Opening a cached show costs no Qloo call.
+- **Budget raised for Nov 2–5.**
+  - `PUBLIC_DAILY_QLOO_CALLS` goes up from 200, and the per-visitor cap goes up, so new analyses (open search) are not blocked.
+  - The global Qloo call ceiling, one-at-a-time background jobs, the 429-aware pacing and the emergency pause stay on.
+  - Qloo's own key quota: ask in Discord #api-help to confirm or raise it for the judging period, as the developer guide suggests.
+- **After Nov 5 23:45 ET:**
+  - set `QLOO_PUBLIC_ENABLED=false` and redeploy;
+  - the key is deactivated by Qloo after the event anyway.
 
-## Risks to decide on
-- **Rate limits vs. "without any restriction."** The per-IP and per-analysis limits protect the shared Qloo key, and MOCK mode stays fully open, so this seems reasonable. A strict reading of the rule could object. Recommendation: say it plainly in the testing instructions.
-- **Who can see the testing instructions on Devpost** has not been verified. If they are public, anyone can use the judge token until it is revoked; the limits above bound the damage.
-- **The Qloo key's quota** is the event's; ask in Discord #api-help if more headroom is needed.
-- **The live behavior has not been verified from this environment**, which cannot reach hackathon.api.qloo.com. Test it on Netlify with your token before giving one to judges.
+## Testing instructions (paste into Devpost)
+
+> **No login needed.** Open https://greenroom1.netlify.app.
+>
+> 1. **Pick a podcast.** Choose a country, then a podcast, and press **Analyze**. Or search any podcast by name; shows listed in Apple Podcasts can be analyzed.
+>    - The 20 catalog shows open instantly from a cached Qloo analysis made for judging (the banner says when it was computed).
+>    - A podcast analyzed for the first time runs live against Qloo in the background and usually takes 20–90 seconds.
+> 2. **Read "What Qloo added"** at the top of the results:
+>    - new people that only Qloo's taste graph surfaced, each verified (identity, theme, not a past guest, language);
+>    - Qloo's cultural conversation hooks (music, films, books).
+> 3. **Read the five recommended guests below.** They are ranked on verifiable evidence: real interviews on comparable shows. Each card links its sources and drafts an invitation.
+> 4. **Open "What the agent did"** to see every step of the agent loop, why it ran and how it re-planned. Open the discovery panel to see every person Qloo proposed and why each one was kept or set aside.
+>
+> Language switch (ES/EN) is at the top right. If Qloo is ever unavailable, the app says so and offers a retry; it never silently replaces live results with simulated ones. A clearly labeled demo without Qloo exists only if you choose it.

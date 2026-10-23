@@ -3,36 +3,49 @@
 ## Status checklist (2026-10-23)
 | Requirement (rules page) | Status |
 |---|---|
-| Working app integrating the Qloo API, agentic | App deployed at https://greenroom1.netlify.app (MOCK public). The agent loop is implemented. **LIVE Qloo has been tested from Netlify earlier, but not with this version.** |
-| Link to a functional demo | Ready once LIVE is re-tested |
-| **Public** repo with an **open-source license** visible in About | **Pending your decision**: the repo is private and has no LICENSE. MIT is suggested |
-| English text description | Draft below |
-| Testing instructions (credentials if private) | See docs/JUDGE_ACCESS.md |
-| Demo video | Script in docs/DEMO.md. The rules mention judging on "text description, images, and video"; check the exact video requirement on the overview page before recording |
-| Deadline | **Oct 30, 2026, 11:45 pm EDT** (verified on the rules page on Oct 23) |
+| Working agentic app integrating the Qloo API | **Done.** https://greenroom1.netlify.app runs on the real Qloo API (validated on Netlify, Oct 23). |
+| Link to a functional demo | https://greenroom1.netlify.app |
+| **Public** repo with an **open-source license** visible in About | MIT `LICENSE` added. **Pending: switch the repository to public** (GitHub → Settings → General → Danger Zone → Change visibility). Audit done: no secrets in history, no Qloo responses stored. |
+| English text description | Below |
+| Testing instructions | [docs/JUDGE_ACCESS.md](JUDGE_ACCESS.md) (ready to paste) |
+| Demo video | Script in [docs/DEMO.md](DEMO.md). Judges may decide on the video and text alone, so record it with the live app. |
+| Deadline | **Oct 30, 2026, 11:45 pm EDT** |
+| Before judging (Nov 1) | Warm the cache for all catalog shows (7-day cache) and raise the daily budget; see JUDGE_ACCESS.md |
 
-## Text description (draft)
+## Text description
 
-**Green Room — an agent that finds podcast guests you can defend.**
+**Green Room — the guest your audience is waiting for.**
 
-Podcast producers book from the same small circle. Green Room picks a real show (from Apple Podcasts' charts in the US, Mexico, the UK, Argentina and Spain), reads its public RSS history and proposes guests with evidence for every claim.
+**The problem.** Podcast producers book guests from the same small circle, and the "who should we invite?" question is answered from memory and gut feeling. Booking the wrong guest costs a whole episode. Green Room gives producers a shortlist they can defend.
 
-**How the agent works.** A planner chooses each next tool from what it has observed.
-- If a show's titles name enough past guests, it confirms their identities in Qloo, using context and never a name alone, and uses them as the audience's taste signal.
-- If they don't, it re-plans: it looks up the show itself as a Qloo podcast entity, then maps the show's themes to Qloo tags. If nothing works, it continues without Qloo and says so.
-- It builds a candidate pool from verified interviews on 17 other shows, removes past guests, scores the candidates, and blends in Qloo affinity where identities are confirmed.
-- It checks language, verifies the shortlist (and re-selects when, for example, a pick's name already appears in one of the show's titles), and writes an invitation from evidence only.
+**What it does.** Pick a podcast: one of 20 interview shows from Apple Podcasts' charts in the US, Mexico, the UK, Argentina and Spain, or any show found by name. Green Room reads its public RSS history and recommends five guests who have never been on the show. Each guest comes with verified evidence, the themes they share with the show and a draft invitation. It also shows **what Qloo's taste graph adds**:
+- new people the show's own history could never surface;
+- cultural conversation hooks.
 
-The planner is deterministic and rule-based. Every step in the trace says why it ran.
+**How the agent works.** A planner chooses each next tool from what it has observed, and every step records why it ran.
+- **Audience signal.** If a show's titles name enough past guests, the agent confirms their identities in Qloo, by context and never by name alone, and uses them as the audience's taste signal.
+  - If they don't, it re-plans: it tries the show itself as a Qloo podcast entity, then maps the show's themes to Qloo tags, translating Spanish themes to Qloo's English tags.
+- **Discovery.** It asks Qloo for people with affinity to that signal. It verifies each one: Qloo entity type, a Wikidata/Wikipedia record matched by context, theme fit, not a past guest, interview language.
+- **Ranking.** It builds a candidate pool from verified interviews on comparable shows and ranks on evidence.
+  - Qloo affinity can reorder only candidates who are already comparable, inside an editorial band. It never lifts a weaker candidate above a stronger one.
+- **Final checks.** It checks language, re-selects when a pick fails verification, and writes the invitation from evidence only.
 
-**What Qloo adds.**
-- An audience signal built from the show's past guests, the show itself or its themes.
-- Cross-domain cultural hooks.
-- **Unexpected guests**: people outside our sources with affinity to the show's audience. They are shown apart, pending verification.
+**What Qloo adds (measured on the live app, Oct 23).**
+- Qloo's Insights API (`/search`, `/v2/tags`, `/v2/insights` for people, artists, films and books) runs about 40–70 calls per analysis.
+- 15–21 Qloo proposals per show were verified and documented as real, on-theme people outside our sources.
+- They are shown in "What Qloo added" with their real position and reason.
+- On the three shows we validated, none outranked the five evidence-based picks. Green Room says so instead of forcing them in.
+
+**Engineering for a real, public demo.**
+- Analyses run as Netlify background jobs, with results persisted in Netlify Blobs.
+- The Qloo client is rate-aware: it paces requests, honors Retry-After and adapts concurrency. Validation runs had 0 lost answers to rate limits.
+- A shared daily call budget and a 24 h result cache protect the hackathon key.
+- An emergency pause stops new Qloo calls without a redeploy.
+- Every value is labeled by provenance, and the app never claims to know a show's listeners.
 
 **Honest limits.**
-- In our live backtests on three shows, Qloo did not improve historical hit rates; we report that.
 - Qloo describes aggregate taste, not individual listeners.
-- Guest names in new catalog shows are extracted automatically (about 92% precision in a spot check) and are flagged accordingly.
+- In historical backtests, Qloo did not improve hit rates on our three core shows; we report it.
+- Guest names in some catalog shows are extracted automatically and are flagged.
 
-**Built with:** TypeScript, React, Vite, Netlify Functions, Qloo Insights API (`/search`, `/v2/insights`, `/v2/tags`), Apple Podcasts public chart and lookup APIs, official RSS feeds, Wikipedia/Wikidata (CC0/CC BY-SA) for photos and bios.
+**Built with:** TypeScript, React, Vite, Netlify Functions (incl. background functions) and Netlify Blobs, Qloo Insights API, Apple Podcasts public APIs, official RSS feeds, Wikidata and Wikipedia.
