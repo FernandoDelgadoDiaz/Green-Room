@@ -1,7 +1,14 @@
+# Netlify configuration. Prepared, not deployed. Steps and variables: docs/NETLIFY.md.
+# Secrets (QLOO_API_KEY) are set in the Netlify UI, never in this file.
+
 [build]
   command = "npm run build"
   publish = "dist"
   functions = "netlify/functions"
+
+[build.environment]
+  # The official Qloo harness and our scripts require Node 22.19+.
+  NODE_VERSION = "22"
 
 [functions]
   node_bundler = "esbuild"
@@ -10,3 +17,23 @@
   from = "/api/agent"
   to = "/.netlify/functions/agent"
   status = 200
+
+# Single-page app: keep deep links working.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Photos are hotlinked from Wikimedia, fonts come from Google Fonts, the API is same-origin.
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data: https://upload.wikimedia.org https://thumb.wikimedia.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store"
