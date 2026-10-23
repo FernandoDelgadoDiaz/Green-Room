@@ -4,7 +4,7 @@
 
 Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/). Qloo's taste graph is the audience signal: past guests become the taste fingerprint of the show, and Qloo finds and scores people with affinity to it.
 
-> **Status (2026-10-23): MOCK mode.** The Qloo hackathon key has arrived but has not been validated yet (the development container cannot reach the Qloo host). Phase 3 protocol and pre-registered criteria: [docs/QLOO_PHASE3.md](docs/QLOO_PHASE3.md). Agent audit: [docs/AGENT_AUDIT.md](docs/AGENT_AUDIT.md). Podcasts, episodes, dates and guests are real (official RSS feeds). Every Qloo value is simulated, labeled **MOCK**, shown in pink, and has **weight 0** in the ranking. The live client is implemented and unit-tested against the documented API, but it is **not validated against the real API yet**.
+> **Status (2026-10-23): live with the real Qloo API.** The public demo at https://greenroom1.netlify.app runs every analysis against Qloo's hackathon API, in a background job with a shared daily budget and a result cache. Validated end to end on Netlify with real Qloo: complete results with no rate-limit errors (see [docs/LIVE_ENGINE_FIX.md](docs/LIVE_ENGINE_FIX.md) and [docs/PUBLIC_LIVE.md](docs/PUBLIC_LIVE.md)). Podcasts, episodes, dates and guests come from official RSS feeds. Anything not returned by Qloo is labeled; a MOCK demo exists only when the visitor chooses it.
 
 ## What it does
 
@@ -48,7 +48,7 @@ Green Room has no listener data and never claims to. Qloo affinities describe ta
 |---|---|---|---|
 | Random pick from the same pool (expected) | 0.20 | 0.40 | 1.01 |
 | Without Qloo (themes + verified track record) | 2 | 2 | 2 |
-| With Qloo | pending live API | | |
+| With Qloo | not re-measured with the current engine | | |
 
 Only 7 of the 59 later first-time guests were reachable: they had appeared on a comparison show before the cutoff. That is the ceiling for any method here. These are small numbers. A hit means agreement with the host's real choices, not audience impact.
 
@@ -72,7 +72,7 @@ npm install --global @qloo/qloo-harness && qloo setup --qloo   # official kit, h
 npm run qloo:experiment   # T2 coverage, T4 originality, T5 with vs. without Qloo; stops if auth fails
 ```
 
-The public endpoint `/api/agent` is always MOCK. LIVE runs only through the private `/api/live` endpoint, with `QLOO_LIVE_ENABLED=true`, the key and an access token (`npm run live:token`, then open the app with `?private=1`). Netlify setup, limits and variables: [docs/NETLIFY.md](docs/NETLIFY.md).
+Public LIVE analyses go through `/api/discover` (queues a background job; the browser polls). It is controlled by `QLOO_PUBLIC_ENABLED`, a daily Qloo call budget and an emergency pause; see [docs/PUBLIC_LIVE.md](docs/PUBLIC_LIVE.md). `/api/agent` stays MOCK, and `/api/live` is the private diagnostics endpoint (token-protected). Netlify setup, limits and variables: [docs/NETLIFY.md](docs/NETLIFY.md).
 
 ## Architecture
 
@@ -80,4 +80,4 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DATA_SOURCES.md](docs
 
 ## License
 
-Not yet licensed: the repository is private during development. Before the hackathon submission it must become public with an OSI-approved license (rules section 4).
+MIT — see [LICENSE](LICENSE). Qloo API responses are never stored in this repository (Qloo hackathon developer guide); they are cached privately on the server only.

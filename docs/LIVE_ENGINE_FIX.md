@@ -124,9 +124,10 @@ Preview limits during the test: 80 calls per analysis, concurrency 1, shared pau
 
 Before this engine, production showed a 502 at 30 s and 17 × 429, and no complete or cacheable result.
 
-**Verified Qloo discoveries.** None entered the top 5. In every case the reason is shown and nobody is forced in.
-- DOAC: Andrew Yang and Howard Schultz, both below the editorial band.
-- Marco Regil: David Bach, Sara Blakely, Mark Hyman and Kelly McGonigal. Their Spanish is not confirmed, while at least 5 candidates have it.
+**Verified Qloo discoveries.** None entered the top 5. In every case the reason is shown and nobody is forced in. Names are not listed here: Qloo's responses are not stored in this public repository (developer guide).
+- DOAC: 2 people new to our corpus, both below the editorial band.
+- Marco Regil: 4 people new to our corpus. Their Spanish is not confirmed, while at least 5 candidates have it.
+- CREATIVO (re-run after the follow-ups: complete, 70 calls, 0 × 429, 71 s): 21 people verified and documented; 1 can be interviewed in Spanish and ranks 15th, just below the band.
 
 **Follow-ups fixed after this run:**
 - the background per-call timeout goes from 10 s to 25 s (the CREATIVO timeouts);

@@ -1,6 +1,7 @@
 {
   "name": "green-room-qloo",
   "private": true,
+  "license": "MIT",
   "version": "0.1.0",
   "type": "module",
   "description": "Green Room — an AI agent that recommends podcast guests using cultural affinities (Qloo Agentic Hackathon 2026)",
