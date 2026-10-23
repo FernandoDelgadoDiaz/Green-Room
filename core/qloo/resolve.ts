@@ -36,8 +36,18 @@ export type IdentityCheck = { status: 'confirmed'; entity: QlooEntity; evidence:
 export function checkIdentity(hits: QlooEntity[], name: string, interviewTitles: string[]): IdentityCheck {
   const r = resolvePerson(hits, name);
   if (r.status === 'none') return { status: 'not_found' };
-  if (r.status === 'ambiguous') return { status: 'pending', reason: 'ambiguous' };
   if (r.status === 'fuzzy') return { status: 'pending', reason: 'fuzzy' };
+  if (r.status === 'ambiguous') {
+    // Several Qloo records with this exact name: the one whose description/tags share context with the
+    // person's interviews wins only if it is strictly better than every other (namesakes are never
+    // merged; equal or no evidence stays ambiguous).
+    const byId = new Map<string, QlooEntity>();
+    for (const h of r.candidates) if (!byId.has(h.entityId)) byId.set(h.entityId, h);
+    const scored = [...byId.values()].map((e) => ({ e, ev: identityEvidence(e, name, interviewTitles) })).sort((a, b) => b.ev.length - a.ev.length);
+    if (scored[0].ev.length && scored[0].ev.length > (scored[1]?.ev.length ?? 0))
+      return { status: 'confirmed', entity: scored[0].e, evidence: [...scored[0].ev, `chosen over ${scored.length - 1} same-name record(s) by context`] };
+    return { status: 'pending', reason: 'ambiguous' };
+  }
   const evidence = identityEvidence(r.entity, name, interviewTitles);
   return evidence.length ? { status: 'confirmed', entity: r.entity, evidence } : { status: 'pending', reason: 'no_context' };
 }

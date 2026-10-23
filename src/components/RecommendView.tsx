@@ -200,6 +200,10 @@ function TechnicalDetails({ rec, mode }: { rec: Recommendation; mode: RecommendR
             {rec.assessment.evidence.kind === 'external' ? t('tech.a.external') : t('tech.a.evidenceDetail', { n: rec.assessment.evidence.appearances, s: rec.assessment.evidence.shows })}
             {rec.assessment.evidence.automaticNamesOnly && ` · ${t('tech.a.automatic')}`}
           </li>
+          <li className="rounded-lg bg-white/5 p-2 sm:col-span-3">
+            <p className="text-stone-500">{t('tech.a.potential')}</p>
+            {t('tech.a.potentialDetail', { n: rec.assessment.editorialPotential.interviewsOnRecord, s: rec.assessment.editorialPotential.showsOnRecord })} · {t('tech.a.availability')}
+          </li>
         </ul>
       </div>
       <div>

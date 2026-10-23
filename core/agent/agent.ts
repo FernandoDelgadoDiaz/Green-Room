@@ -4,10 +4,12 @@
 import type { Appearance, Episode, PodcastDataset, Provenance } from '../types';
 import { looksLikeSegmentName, nameKey } from '../names';
 import { checkIdentity, identityEvidence } from '../qloo/resolve';
+import { contextOverlap } from '../profiles';
 import { appearanceLanguage, detectTitleLanguage, languageProfile, type LanguageProfile } from '../language';
 import type { ExternalCheck } from '../verify/external';
-import { buildTagQueries, showNameVariants } from '../qloo/signals';
-import { THEMES, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
+import { buildTagQueries, compactKey, GENERIC_WORDS, showNameVariants } from '../qloo/signals';
+import { externalThemes } from '../verify/occupations';
+import { THEMES, THEME_IDS, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
 import { qlooKind, type QlooAdapter, type QlooEntity } from '../qloo/types';
 
 export interface TraceStep {
@@ -91,6 +93,13 @@ export interface Assessment {
   editorialRelevance: number;
   /** How solid the public evidence is. */
   evidence: { level: 'high' | 'medium' | 'low'; appearances: number; shows: number; automaticNamesOnly: boolean; kind: 'interviews' | 'external' };
+  /**
+   * Editorial potential, as evidence only (never a score, never fame): long-form interviews on record
+   * in our sources, and whether a documented public profile exists.
+   */
+  editorialPotential: { interviewsOnRecord: number; showsOnRecord: number; documentedProfile: boolean };
+  /** Availability or viability as a guest: no source provides it, so it is never assumed. */
+  availability: 'not_assessed';
 }
 
 /** Why a Qloo-proposed person did not reach the ranking. */
@@ -147,10 +156,28 @@ export interface DiscoveryFunnel {
   diagnosisTextEs: string;
 }
 
+export interface DiscoveryPosition {
+  name: string;
+  qlooRank: number;
+  source: Recommendation['source'];
+  identity: string;
+  themeFit: number;
+  editorialRelevance: number;
+  qlooAffinity: number | null;
+  inBand: boolean;
+  languageConfirmed: boolean;
+  /** Missing measurements, never imputed (e.g. no interviews in our RSS → no momentum/recency). */
+  notMeasured: string[];
+  finalRank: number;
+  inTopK: boolean;
+  reason: string;
+  reasonEs: string;
+}
+
 export interface SignalDiagnostics {
   guests: { searched: number; withResults: number; confirmed: number; ambiguous: number; noContext: number; fuzzyOnly: number; notFound: number; errors: number };
   podcast: Array<{ query: string; results: number; exactMatches: number; sample: string[] }>;
-  tags: Array<{ word: string; query: string; results: number; accepted: string | null; sample: string[] }>;
+  tags: Array<{ word: string; query: string; results: number; accepted: string | null; acceptedIds?: string[]; sample: string[] }>;
   skippedGeneric: string[];
   /**
    * ok: a usable signal; none_in_qloo: lookups returned nothing; unrecognized: Qloo returned results
@@ -234,6 +261,10 @@ export interface AgentResult {
   languageProfile: LanguageProfile;
   /** What each Qloo signal lookup returned, to tell "nothing in Qloo" from "not recognized" and "ambiguous". */
   signalDiagnostics: SignalDiagnostics;
+  /** Every Qloo proposal that entered the ranking: where it ended and the specific reason it is or is not in the top k. */
+  discoveryPositions: DiscoveryPosition[];
+  /** The last pick of the top k (the bar a discovery must clear). */
+  cutoff: { name: string; score: number; editorialRelevance: number; themeFit: number } | null;
   /** Planner decisions in order: which tool and why (deterministic rule planner, no language model). */
   plan: Array<{ tool: ToolName; why: string; whyEs: string }>;
   /** Which audience signal the agent ended up using after replanning. */
@@ -398,7 +429,25 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const discoveries: Discovery[] = [];
   let affinityRank = new Map<string, number>();
   let minFit = 0.35;
-  const eligible = () => [...pool.values()].filter((c) => c.themeFit >= minFit);
+  // Pertinence is not the same as cosine fit. A guest whose interviews (or documented occupation) sit
+  // mostly in ONE of the show's established themes (≥ 10% of its titles) is pertinent even when the
+  // cosine against the show's whole theme mix is low (e.g. a business guest on a multi-theme show).
+  // This only widens eligibility; the score keeps using the cosine fit, unchanged.
+  const establishedTheme = (c: Candidate) => {
+    const total = THEME_IDS.reduce((s, id) => s + c.vector[id], 0);
+    if (!total) return null;
+    const best = THEME_IDS.reduce((a, b) => (c.vector[b] > c.vector[a] ? b : a));
+    const th = themes.find((x) => x.id === best);
+    return c.vector[best] / total >= 0.5 && th && th.share >= 0.1 ? th : null;
+  };
+  const pertinent = (c: Candidate) => c.themeFit >= minFit || Boolean(establishedTheme(c));
+  const themeCheck = (c: Candidate, what: Bi): QlooProposal['checks'][number] => {
+    const th = establishedTheme(c);
+    if (c.themeFit >= minFit) return { check: 'theme', ok: true, detail: `${what[0]} fit the show’s theme mix at ${c.themeFit.toFixed(2)} ≥ ${minFit}.`, detailEs: `${what[1]} encaja con la mezcla temática del programa en ${c.themeFit.toFixed(2)} ≥ ${minFit}.` };
+    if (th) return { check: 'theme', ok: true, detail: `${what[0]} sit mainly in “${th.label}”, an established theme of the show (${Math.round(th.share * 100)}% of titles); overall fit ${c.themeFit.toFixed(2)}.`, detailEs: `${what[1]} se ubica principalmente en “${th.labelEs}”, un tema establecido del programa (${Math.round(th.share * 100)}% de los títulos); ajuste global ${c.themeFit.toFixed(2)}.` };
+    return { check: 'theme', ok: false, detail: `${what[0]} fit the show’s themes at ${c.themeFit.toFixed(2)} < ${minFit}, and their main theme is not one of the show’s established themes.`, detailEs: `${what[1]} encaja con los temas del programa en ${c.themeFit.toFixed(2)} < ${minFit}, y su tema principal no es uno de los temas establecidos del programa.` };
+  };
+  const eligible = () => [...pool.values()].filter(pertinent);
   const targetLang = target.language;
   const langOf = new Map(others.map((o) => [o.id, o.language]));
   // Habitual languages of the show (from its own titles); until profiled, the declared language.
@@ -723,19 +772,21 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       let hits: QlooEntity[] = [];
       // Exact-title variants of the show's name (subtitle, "Podcast", "con …" removed); never fuzzy.
       const variants = showNameVariants(target.name, target.host);
-      const variantKeys = new Set(variants.map(nameKey));
+      const variantKeys = new Set(variants.map(compactKey));
+      // A hit matches when its own exact-title variants ("X Podcast" → "X") meet ours, after normalization.
+      const hitMatches = (name: string) => showNameVariants(name).some((v) => variantKeys.has(compactKey(v)));
       for (const v of variants) {
         try {
           const got = await qloo.searchPodcast(v);
           hits = [...hits, ...got];
-          sig.podcast.push({ query: v, results: got.length, exactMatches: got.filter((h) => variantKeys.has(nameKey(h.name))).length, sample: got.slice(0, 3).map((h) => h.name) });
+          sig.podcast.push({ query: v, results: got.length, exactMatches: got.filter((h) => hitMatches(h.name)).length, sample: got.slice(0, 3).map((h) => h.name) });
         } catch (err) {
           warn([`Qloo podcast search failed: ${String(err)}`, `Falló la búsqueda del podcast en Qloo: ${String(err)}`]);
         }
-        if (hits.some((h) => variantKeys.has(nameKey(h.name)))) break;
+        if (hits.some((h) => hitMatches(h.name))) break;
       }
       // Same identity policy as for people: exact, unique title only.
-      const exact = hits.filter((h) => variantKeys.has(nameKey(h.name)));
+      const exact = hits.filter((h) => hitMatches(h.name));
       if (new Set(exact.map((h) => h.entityId)).size === 1) {
         // After the signals are settled this runs only to replan the discovery: kept apart from scoring.
         if (signalsSettled) altPodcast = exact[0];
@@ -765,10 +816,14 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         try {
           const tags = await qloo.findTags(q);
           // Accept a tag only when its name equals the word or its English form (exact-or-choose rule).
-          const exact = tags.filter((t) => accepts.includes(nameKey(t.name)));
-          sig.tags.push({ word, query: q, results: tags.length, accepted: exact.length === 1 ? exact[0].name : null, sample: tags.slice(0, 3).map((x) => x.name) });
+          // Several results with the same normalized name ("Stand Up Comedy" / "stand up comedy", or one
+          // concept as genre and keyword) are the SAME cultural signal: accepted together (ids kept), not
+          // rejected as ambiguous. Results that only resemble the query are not accepted.
+          const exact = tags.filter((t) => accepts.includes(compactKey(t.name)) && !GENERIC_WORDS.has(compactKey(t.name)));
+          const ids = [...new Map(exact.map((x) => [x.entityId, x])).values()].slice(0, 2);
+          sig.tags.push({ word, query: q, results: tags.length, accepted: ids.length ? ids[0].name : null, acceptedIds: ids.map((x) => x.entityId), sample: tags.slice(0, 3).map((x) => x.name) });
           const into = signalsSettled ? altTags : tagSignals;
-          if (exact.length === 1 && !into.some((x) => x.entityId === exact[0].entityId)) into.push(exact[0]);
+          for (const x of ids) if (!into.some((y) => y.entityId === x.entityId)) into.push(x);
         } catch (err) {
           warn([`Qloo tag search failed for “${q}”: ${String(err)}`, `Falló la búsqueda de etiquetas en Qloo para “${q}”: ${String(err)}`]);
         }
@@ -964,12 +1019,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           continue;
         }
         checks.push({ check: 'identity', ok: true, detail: `Confirmed: ${c.appearances.length} verified interview(s); shared context: ${ev.slice(0, 4).join(', ')}.`, detailEs: `Confirmada: ${c.appearances.length} entrevista(s) verificada(s); contexto compartido: ${ev.slice(0, 4).join(', ')}.` });
-        if (c.themeFit < minFit) {
-          checks.push({ check: 'theme', ok: false, detail: `Topical fit ${c.themeFit.toFixed(2)} < ${minFit}: their interviews are about other subjects.`, detailEs: `Ajuste temático ${c.themeFit.toFixed(2)} < ${minFit}: sus entrevistas tratan otros temas.` });
+        const tc = themeCheck(c, ['Their interviews', 'Sus entrevistas']);
+        checks.push(tc);
+        if (!tc.ok) {
           out({ outcome: 'discarded', failure: 'theme', reason: 'Verified, but off the show’s themes', reasonEs: 'Verificado, pero fuera de los temas del programa' });
           continue;
         }
-        checks.push({ check: 'theme', ok: true, detail: `Topical fit ${c.themeFit.toFixed(2)} ≥ ${minFit}.`, detailEs: `Ajuste temático ${c.themeFit.toFixed(2)} ≥ ${minFit}.` });
         const langs = [...new Set(c.appearances.map(appLang).filter(Boolean))];
         const okLang = speaksTarget(c);
         checks.push(
@@ -1077,11 +1132,51 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         // Documented identity: placed in the show's themes from its documented background.
         prop.checks.push({ check: 'external', ok: true, detail: `${ch.reason} ${ch.identityEvidence.join('; ')}. ${src}`, detailEs: `${ch.reasonEs} ${ch.identityEvidence.join('; ')}. ${src}` });
         prop.checks.push({ check: 'identity', ok: true, detail: `Documented outside our RSS: Wikidata ${ch.wikidataId}.`, detailEs: `Documentada fuera de nuestro RSS: Wikidata ${ch.wikidataId}.` });
-        const key = nameKey(ch.name);
-        const { vector, matched } = themesOfTitle(ch.backgroundText, [ch.name]);
+        // Shown and keyed under Wikidata's label ("Lex Fridman"), whatever spelling Qloo used.
+        const key = nameKey(ch.canonicalName);
+        if (key !== nameKey(ch.name)) prop.checks.push({ check: 'identity', ok: true, detail: `Qloo’s “${ch.name}” is Wikidata’s “${ch.canonicalName}” (${ch.wikidataId}).`, detailEs: `“${ch.name}” de Qloo es “${ch.canonicalName}” en Wikidata (${ch.wikidataId}).` });
+        // The same person under another spelling (Wikidata labels/aliases): a past guest is a repeat, and
+        // someone we already have in our RSS is the same candidate, never a second one.
+        const variantKeys = [...new Set([...ch.names, ch.name].map(nameKey))].filter((x) => x && x !== key);
+        // The canonical name itself may be a past guest (Qloo spelled it differently).
+        if (pastGuests.has(key) || targetHostKeys.has(key)) variantKeys.unshift(key);
+        const pastVariant = variantKeys.find((x) => pastGuests.has(x) || targetHostKeys.has(x));
+        if (pastVariant) {
+          const why: Bi = [`Same person as “${ch.names.find((n) => nameKey(n) === pastVariant)}”, already on ${target.name} or its host (Wikidata ${ch.wikidataId})`, `Misma persona que “${ch.names.find((n) => nameKey(n) === pastVariant)}”, que ya participó en ${target.name} o es su conductor (Wikidata ${ch.wikidataId})`];
+          prop.checks.push({ check: 'repeat', ok: false, detail: why[0], detailEs: why[1] });
+          Object.assign(prop, { outcome: 'discarded', failure: 'repeat', reason: why[0], reasonEs: why[1] });
+          removeDiscovery(primaryId);
+          continue;
+        }
+        // Includes the canonical key itself: never overwrite someone we already have in our RSS.
+        const rssVariant = [key, ...variantKeys].map((x) => pool.get(x)).find((x): x is Candidate => Boolean(x));
+        if (rssVariant) {
+          // Merge only with shared context between the Wikidata record and that person's RSS interviews.
+          const ctx = contextOverlap(rssVariant.name, ch.backgroundText, titlesByKey.get(rssVariant.key) ?? rssVariant.appearances.map((a) => a.title));
+          if (ctx.length) {
+            prop.checks.push({ check: 'identity', ok: true, detail: `Same person as “${rssVariant.name}” in our RSS (Wikidata ${ch.wikidataId} lists both spellings; shared context: ${ctx.slice(0, 3).join(', ')}).`, detailEs: `Misma persona que “${rssVariant.name}” en nuestro RSS (Wikidata ${ch.wikidataId} registra ambas grafías; contexto compartido: ${ctx.slice(0, 3).join(', ')}).` });
+            const tc = themeCheck(rssVariant, ['Their interviews', 'Sus entrevistas']);
+            prop.checks.push(tc);
+            if (!tc.ok) {
+              Object.assign(prop, { outcome: 'discarded', failure: 'theme', reason: 'Verified, but off the show’s themes', reasonEs: 'Verificado, pero fuera de los temas del programa' });
+            } else {
+              admitPoolCandidate(rssVariant, primaryId, prop.qlooRank, [`Wikidata ${ch.wikidataId}`, ...ctx]);
+              Object.assign(prop, { outcome: 'ranked', failure: undefined, reason: `Verified as “${rssVariant.name}” (name variant): competes in the main ranking`, reasonEs: `Verificado como “${rssVariant.name}” (variante del nombre): compite en el ranking principal` });
+            }
+            removeDiscovery(primaryId);
+            continue;
+          }
+        }
+        if (rssVariant) {
+          // Same name as someone in our RSS but no shared context: possibly a namesake, never merged or overwritten.
+          prop.checks.push({ check: 'identity', ok: false, detail: `Same name as “${rssVariant.name}” in our RSS, but no shared context with their interviews: possible namesake.`, detailEs: `Mismo nombre que “${rssVariant.name}” en nuestro RSS, pero sin contexto compartido con sus entrevistas: posible homónimo.` });
+          Object.assign(prop, { outcome: 'pending', failure: 'identity', reason: 'Identity not confirmed (possible namesake)', reasonEs: 'Identidad no confirmada (posible homónimo)' });
+          continue;
+        }
+        const { vector, matched } = externalThemes(ch);
         const c: Candidate = {
           key,
-          name: ch.name,
+          name: ch.canonicalName,
           appearances: [],
           vector,
           matched: new Map([...matched].map(([id, w]) => [id, new Set(w)])),
@@ -1097,13 +1192,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           base: 0,
           score: 0,
         };
-        if (c.themeFit < minFit) {
-          prop.checks.push({ check: 'theme', ok: false, detail: `Documented background fits the show’s themes at ${c.themeFit.toFixed(2)} < ${minFit}.`, detailEs: `Su trayectoria documentada encaja con los temas del programa en ${c.themeFit.toFixed(2)} < ${minFit}.` });
+        const tc = themeCheck(c, ['Their documented description and occupations', 'Su descripción y ocupaciones documentadas']);
+        prop.checks.push(tc);
+        if (!tc.ok) {
           Object.assign(prop, { outcome: 'discarded', failure: 'theme', reason: 'Documented, but off the show’s themes', reasonEs: 'Documentado, pero fuera de los temas del programa' });
           removeDiscovery(primaryId);
           continue;
         }
-        prop.checks.push({ check: 'theme', ok: true, detail: `Documented background fits the show’s themes at ${c.themeFit.toFixed(2)} ≥ ${minFit}.`, detailEs: `Su trayectoria documentada encaja con los temas del programa en ${c.themeFit.toFixed(2)} ≥ ${minFit}.` });
         const okLang = speaksTarget(c);
         prop.checks.push(
           okLang
@@ -1423,6 +1518,54 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   // Ranking used by the backtest: confirmed-language candidates first; nobody removed for an unknown language.
   applyEditorialBand();
   const ranked = [...pool.values()].sort((a, b) => (languageFilter ? Number(speaksTarget(b)) - Number(speaksTarget(a)) : 0) || byRank(a, b));
+  // Why each admitted Qloo discovery is (or is not) in the top k, from the same values the ranking used.
+  const rankOf = new Map(ranked.map((c, i) => [c.key, i + 1]));
+  const last = picks[picks.length - 1];
+  const f2 = (x: number) => x.toFixed(2);
+  const discoveryPositions: DiscoveryPosition[] = proposals
+    .filter((p) => p.outcome === 'ranked' && pool.has(p.key))
+    .map((p) => {
+      const c = pool.get(p.key)!;
+      const inTopK = picks.some((x) => x.key === c.key);
+      const langOk = speaksTarget(c);
+      let why: Bi;
+      if (inTopK) why = ['In the top list.', 'En la lista principal.'];
+      else if (rejected.has(c.key)) why = [`Rejected at verification: ${rejected.get(c.key)![0]}.`, `Rechazado en la verificación: ${rejected.get(c.key)![1]}.`];
+      else if (!pertinent(c)) why = [`Topical fit ${f2(c.themeFit)} below the eligibility bar ${minFit}.`, `Ajuste temático ${f2(c.themeFit)} por debajo del mínimo ${minFit}.`];
+      else if (languageFilter && !langOk) why = [`Language not confirmed for “${acceptedLabel()}” while at least ${k} eligible candidates have it: the shortlist is drawn from those.`, `Idioma no confirmado para “${acceptedLabel()}” mientras al menos ${k} candidatos elegibles lo tienen: la lista corta sale de ellos.`];
+      else if (c.inBand === false) why = [`Editorial relevance ${f2(c.base)} is outside the band (floor ${f2(bandFloor)}): Qloo affinity cannot lift it over more relevant candidates.`, `Relevancia editorial ${f2(c.base)} fuera de la banda (piso ${f2(bandFloor)}): la afinidad de Qloo no puede subirlo por encima de candidatos más pertinentes.`];
+      else if (last && c.score < last.score) {
+        why = [
+          `Score ${f2(c.score)} below the last pick, ${last.name} (${f2(last.score)}; editorial ${f2(last.base)} vs ${f2(c.base)}).`,
+          `Puntaje ${f2(c.score)} por debajo del último elegido, ${last.name} (${f2(last.score)}; editorial ${f2(last.base)} contra ${f2(c.base)}).`,
+        ];
+        // Counterfactual, never used for ranking: even with maximal (unmeasured) activity and recency.
+        if (c.external) {
+          const ceiling = WEIGHTS.themeFit * c.themeFit + WEIGHTS.momentum + WEIGHTS.recency;
+          why = ceiling < last.base
+            ? [`${why[0]} Even assuming maximal activity and recency (not measured), it would reach only ${f2(ceiling)}: the gap is topical, not missing history.`, `${why[1]} Aun suponiendo actividad y recencia máximas (no medidas), llegaría solo a ${f2(ceiling)}: la brecha es temática, no de historial.`]
+            : [`${why[0]} With maximal activity and recency it could reach ${f2(ceiling)}: missing history (not imputed) may be what keeps it out.`, `${why[1]} Con actividad y recencia máximas podría llegar a ${f2(ceiling)}: la falta de historial (no imputada) puede ser lo que lo deja afuera.`];
+        }
+      }
+      else why = ['Comparable score, but left out by the diversity rule (too similar to a pick already in the list).', 'Puntaje comparable, pero quedó afuera por la regla de diversidad (demasiado parecido a alguien ya elegido).'];
+      return {
+        name: c.name,
+        qlooRank: p.qlooRank,
+        source: c.source,
+        identity: c.external ? `Wikidata ${c.external.wikidataId} (${c.external.status})` : `RSS interviews: ${c.appearances.length}`,
+        themeFit: c.themeFit,
+        editorialRelevance: c.base,
+        qlooAffinity: c.qlooAffinity,
+        inBand: c.inBand !== false,
+        languageConfirmed: langOk,
+        notMeasured: c.external ? ['momentum', 'recency'] : [],
+        finalRank: rankOf.get(c.key) ?? 0,
+        inTopK,
+        reason: why[0],
+        reasonEs: why[1],
+      };
+    })
+    .sort((a, b) => a.finalRank - b.finalRank);
 
 
   currentWhy = ['Shortlist verified: write each justification only from the evidence collected.', 'Lista corta verificada: escribo cada justificación solo con la evidencia reunida.'];
@@ -1575,6 +1718,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         qlooAffinity: blend > 0 ? c.qlooAffinity : null,
         editorialRelevance: c.base,
         evidence: evidenceQuality(c.appearances, c.external),
+        editorialPotential: { interviewsOnRecord: c.appearances.length, showsOnRecord: new Set(c.appearances.map((a) => a.showId)).size, documentedProfile: Boolean(c.external?.wikipedia) },
+        availability: 'not_assessed',
       },
     };
   });
@@ -1602,6 +1747,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     discoveries,
     qlooProposals: proposals,
     signalDiagnostics: sig,
+    discoveryPositions,
+    cutoff: last ? { name: last.name, score: last.score, editorialRelevance: last.base, themeFit: last.themeFit } : null,
     funnel: { attempts, ...funnelCounts(), ...funnelDiagnosis },
     languageProfile: langProfile,
     plan: planLog,

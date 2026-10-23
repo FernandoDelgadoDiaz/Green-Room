@@ -175,6 +175,161 @@
 "text": "Tulsi Gabbard presidential campaign, 2020"
 }
 }
+],
+"Howard Schultz": [
+{
+"id": "Q472330",
+"label": "Howard Schultz",
+"description": "American businessman",
+"match": {
+"type": "label",
+"text": "Howard Schultz"
+}
+},
+{
+"id": "Q18702995",
+"label": "Howard Schultz",
+"description": "American television producer",
+"match": {
+"type": "label",
+"text": "Howard Schultz"
+}
+},
+{
+"id": "Q1607305",
+"label": "Howie Schultz",
+"description": "Major League Baseball player; National Basketball Association player (1922–2009)",
+"match": {
+"type": "label",
+"text": "Howard Schultz"
+}
+}
+],
+"Steven M. Greer": [
+{
+"id": "Q2428144",
+"label": "Steven M. Greer",
+"description": "American ufologist",
+"match": {
+"type": "label",
+"text": "Steven M. Greer"
+}
+}
+],
+"Dan Price": [
+{
+"id": "Q20963736",
+"label": "Dan Price",
+"description": "American Internet entrepreneur",
+"match": {
+"type": "label",
+"text": "Dan Price"
+}
+},
+{
+"id": "Q126848621",
+"label": "Dan Price",
+"description": "candidate in the 2024 United Kingdom general election",
+"match": {
+"type": "label",
+"text": "Dan Price"
+}
+},
+{
+"id": "Q124539250",
+"label": "Dan Price",
+"description": "American visual artist",
+"match": {
+"type": "label",
+"text": "Dan Price"
+}
+},
+{
+"id": "Q63929112",
+"label": "Dan Price",
+"description": "Police and Crime Commissioner for Cheshire",
+"match": {
+"type": "label",
+"text": "Dan Price"
+}
+},
+{
+"id": "Q133614625",
+"label": "Dan Price",
+"match": {
+"type": "label",
+"text": "Dan Price"
+}
+}
+],
+"Saagar Enjeti": [
+{
+"id": "Q81703688",
+"label": "Saagar Enjeti",
+"description": "American political podcaster and journalist",
+"match": {
+"type": "label",
+"text": "Saagar Enjeti"
+}
+},
+{
+"id": "Q110188844",
+"label": "Lex Fridman Podcast #167 – Saagar Enjeti: Politics, History, and Power",
+"description": "podcast episode of the Lex Fridman Podcast",
+"match": {
+"type": "alias",
+"text": "Saagar Enjeti: Politics, History, and Power | Lex Fridman Podcast #167"
+}
+}
+],
+"Lex Friedman": [
+{
+"id": "Q119266625",
+"label": "Lex Friedman",
+"description": "American podcast entrepreneur and host",
+"match": {
+"type": "label",
+"text": "Lex Friedman"
+}
+},
+{
+"id": "Q109248984",
+"label": "Lex Fridman Podcast",
+"description": "Interview style podcast produced by Lex Fridman",
+"match": {
+"type": "alias",
+"text": "Lex Friedman Podcast"
+}
+},
+{
+"id": "Q76448707",
+"label": "Lex Fridman",
+"description": "American computer scientist and podcaster",
+"match": {
+"type": "label",
+"text": "Lex Friedman"
+}
+}
+],
+"Joe Biden": [
+{
+"id": "Q6279",
+"label": "Joe Biden",
+"description": "46th President of the United States (2021–2025)",
+"match": {
+"type": "label",
+"text": "Joe Biden"
+}
+},
+{
+"id": "Q65053339",
+"label": "Joe Biden",
+"description": "fictional parody character from The Onion loosely based on the real Joe Biden",
+"match": {
+"type": "label",
+"text": "Joe Biden"
+}
+}
 ]
 }
 }

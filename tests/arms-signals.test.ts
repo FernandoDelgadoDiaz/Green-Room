@@ -98,7 +98,7 @@ describe('Qloo signals from documented themes', () => {
     const { queries, skippedGeneric } = buildTagQueries([{ words: ['musica', 'tv', 'comediantes'] }, { words: ['inteligencia', 'artificial', 'tecnologia'] }]);
     expect(skippedGeneric).toEqual(['musica', 'tv']);
     expect(queries.map((q) => q.query)).toEqual(['stand-up comedy', 'artificial intelligence', 'technology']);
-    expect(queries[1].accepts).toEqual(['inteligencia', 'artificial intelligence']);
+    expect(queries[1].accepts).toEqual(['inteligencia', 'artificialintelligence']);
   });
 
   it('never invents themes: no words, no queries', () => {
@@ -107,7 +107,7 @@ describe('Qloo signals from documented themes', () => {
   });
 
   it('exact-title variants of a show name, never fuzzy', () => {
-    expect(showNameVariants('Santiago Bilinkis – Futuro en Construcción', 'Santiago Bilinkis')).toEqual(['Santiago Bilinkis – Futuro en Construcción', 'Santiago Bilinkis']);
+    expect(showNameVariants('Santiago Bilinkis – Futuro en Construcción', 'Santiago Bilinkis')).toEqual(['Santiago Bilinkis – Futuro en Construcción', 'Futuro en Construcción', 'Santiago Bilinkis']);
     expect(showNameVariants('LO QUE TÚ DIGAS con Alex Fidalgo')).toEqual(['LO QUE TÚ DIGAS con Alex Fidalgo', 'LO QUE TÚ DIGAS']);
     expect(showNameVariants('The Joe Rogan Experience')).toEqual(['The Joe Rogan Experience']);
   });

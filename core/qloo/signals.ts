@@ -5,6 +5,12 @@
 
 import { nameKey, stripAccents } from '../names';
 
+/**
+ * Comparison key for tag and title names: case, accents, spaces and punctuation removed, so
+ * "Stand Up Comedy", "stand-up comedy" and "Stand-Up Comedy" are the same tag name.
+ */
+export const compactKey = (s: string) => stripAccents(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+
 /** Too general to characterize an audience: never used alone as a tag signal. */
 export const GENERIC_WORDS = new Set(
   'music musica musico musicos tv film films movie movies cine pelicula peliculas life vida love amor family familia money dinero health salud sport sports deporte comedy comedia youtube redes fama fame power poder exito success people gente world mundo tech news life time'.split(' '),
@@ -67,7 +73,7 @@ export interface TagQuery {
   word: string;
   /** What is sent to Qloo (English form when one exists). */
   query: string;
-  /** Tag names accepted as an exact match (the word or its English form). */
+  /** Tag names accepted as an exact match (the word or its English form), as compact keys. */
   accepts: string[];
 }
 
@@ -88,7 +94,7 @@ export function buildTagQueries(themes: Array<{ words: string[] }>, max = 6): { 
       const query = en ?? w;
       if (seen.has(nameKey(query))) continue;
       seen.add(nameKey(query));
-      queries.push({ word: w, query, accepts: [...new Set([nameKey(w), nameKey(query)])] });
+      queries.push({ word: w, query, accepts: [...new Set([compactKey(w), compactKey(query)])] });
       perTheme++;
     }
   }
@@ -98,7 +104,10 @@ export function buildTagQueries(themes: Array<{ words: string[] }>, max = 6): { 
 /** Exact-title variants of a show name ("X – subtitle", "X Podcast", "X con Host"): never fuzzy. */
 export function showNameVariants(name: string, host?: string): string[] {
   const v = new Set<string>([name.trim()]);
-  const main = name.split(/\s[–—-]\s|:\s|\s\|\s/)[0].trim();
+  const parts = name.split(/\s[–—-]\s|:\s|\s\|\s/).map((s) => s.trim());
+  let main = parts[0];
+  // "Host – Title" (e.g. "Santiago Bilinkis – Futuro en Construcción"): the title is the show's name.
+  if (host && parts.length > 1 && parts[1].length > 2 && nameKey(parts[0]) === nameKey(host)) (v.add(parts[1]), v.add(host), (main = parts[1]));
   if (main.length > 2) v.add(main);
   const noPodcast = main.replace(/\b(el|the)?\s*podcast\b/gi, '').replace(/\s{2,}/g, ' ').trim();
   if (noPodcast.length > 2) v.add(noPodcast);

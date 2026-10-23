@@ -53,6 +53,84 @@
      "page": "https://en.wikipedia.org/wiki/Tulsi_Gabbard"
     }
    }
+  },
+  "en:Howard Schultz": {
+   "type": "standard",
+   "title": "Howard Schultz",
+   "lang": "en",
+   "wikibase_item": "Q472330",
+   "description": "American businessman (born 1953)",
+   "extract": "Howard D. Schultz is an American businessman and author who was the chairman and chief executive officer of Starbucks from 1986 to 2000, and from 2008 to 2017, and interim CEO from 2022 to 2023. Schultz owned the Seattle SuperSonics basketball team from 2001 to 2006.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Howard_Schultz"
+    }
+   }
+  },
+  "en:Saagar Enjeti": {
+   "type": "standard",
+   "title": "Saagar Enjeti",
+   "lang": "en",
+   "wikibase_item": "Q81703688",
+   "description": "American political podcaster and journalist",
+   "extract": "Saagar Enjeti is an American journalist and political podcast host currently co-hosting the American political news and opinion series Breaking Points alongside Krystal Ball. He previously hosted The Realignment with Marshall Kosloff.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Saagar_Enjeti"
+    }
+   }
+  },
+  "en:Steven M. Greer": {
+   "type": "standard",
+   "title": "Steven M. Greer",
+   "lang": "en",
+   "wikibase_item": "Q2428144",
+   "description": "American ufologist (born 1955)",
+   "extract": "Steven Macon Greer is an American ufologist and a retired physician. He founded the Center for the Study of Extraterrestrial Intelligence (CSETI) and the Disclosure Project, which claims to seek the disclosure of alleged classified UFO information.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Steven_M._Greer"
+    }
+   }
+  },
+  "en:Dan Price": {
+   "type": "standard",
+   "title": "Dan Price",
+   "lang": "en",
+   "wikibase_item": "Q20963736",
+   "description": "American entrepreneur and businessman (born 1984)",
+   "extract": "Daniel Joseph Price is an American entrepreneur, businessman, and media personality. He is the co-founder and former chief executive officer of Gravity Payments, a credit card processing and financial services company, of which he is the sole shareholder and board member.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Dan_Price"
+    }
+   }
+  },
+  "en:Joe Biden": {
+   "type": "standard",
+   "title": "Joe Biden",
+   "lang": "en",
+   "wikibase_item": "Q6279",
+   "description": "President of the United States from 2021 to 2025",
+   "extract": "Joseph Robinette Biden Jr. is an American retired politician who was the 46th president of the United States from 2021 to 2025. A member of the Democratic Party, he represented Delaware in the United States Senate from 1973 to 2009 and also served as the 47th vice president under President Barack Obama from 2009 to 2017.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Joe_Biden"
+    }
+   }
+  },
+  "en:Lex Fridman": {
+   "type": "standard",
+   "title": "Lex Fridman",
+   "lang": "en",
+   "wikibase_item": "Q76448707",
+   "description": "American scientist and podcast host (born 1983)",
+   "extract": "Alexei \"Lex\" Fridman is an American computer scientist and podcaster. Since 2018, he has hosted the Lex Fridman Podcast, where he interviews notable figures from various fields such as science, technology, sports, the arts, and politics.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Lex_Fridman"
+    }
+   }
   }
  }
 }

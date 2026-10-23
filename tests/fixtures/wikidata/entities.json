@@ -1222,6 +1222,1648 @@
 }
 ]
 }
+},
+"Q472330": {
+"id": "Q472330",
+"labels": {
+"en": {
+"language": "en",
+"value": "Howard Schultz"
+},
+"es": {
+"language": "es",
+"value": "Howard Schultz"
+}
+},
+"aliases": {
+"en": [
+{
+"language": "en",
+"value": "Howard D. Schultz"
+}
+],
+"es": [
+{
+"language": "es",
+"value": "Howard D. Schultz"
+}
+]
+},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American businessman"
+},
+"es": {
+"language": "es",
+"value": "empresario estadounidense"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Howard Schultz",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Howard Schultz",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 131524,
+"id": "Q131524"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 36180,
+"id": "Q36180"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1979607,
+"id": "Q1979607"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 43845,
+"id": "Q43845"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1860,
+"id": "Q1860"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q18702995": {
+"id": "Q18702995",
+"labels": {
+"en": {
+"language": "en",
+"value": "Howard Schultz"
+},
+"es": {
+"language": "es",
+"value": "Howard Schultz"
+}
+},
+"aliases": {},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American television producer"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Howard Schultz (producer)",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 578109,
+"id": "Q578109"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q1607305": {
+"id": "Q1607305",
+"labels": {
+"en": {
+"language": "en",
+"value": "Howie Schultz"
+},
+"es": {
+"language": "es",
+"value": "Howie Schultz"
+}
+},
+"aliases": {
+"en": [
+{
+"language": "en",
+"value": "Howard Henry \"Howie\" Schultz"
+},
+{
+"language": "en",
+"value": "Howard Henry Schultz"
+}
+]
+},
+"descriptions": {
+"es": {
+"language": "es",
+"value": "baloncestista y beisbolista estadounidense"
+},
+"en": {
+"language": "en",
+"value": "Major League Baseball player; National Basketball Association player (1922–2009)"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Howie Schultz",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Howie Schultz",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 3665646,
+"id": "Q3665646"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 10871364,
+"id": "Q10871364"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5137571,
+"id": "Q5137571"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q2428144": {
+"id": "Q2428144",
+"labels": {
+"en": {
+"language": "en",
+"value": "Steven M. Greer"
+},
+"es": {
+"language": "es",
+"value": "Steven M. Greer"
+}
+},
+"aliases": {
+"en": [
+{
+"language": "en",
+"value": "Steven Macon Greer"
+},
+{
+"language": "en",
+"value": "Steven Greer"
+},
+{
+"language": "en",
+"value": "Dr. Steven Greer"
+}
+],
+"es": [
+{
+"language": "es",
+"value": "Steven Macon Greer"
+}
+]
+},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American ufologist"
+},
+"es": {
+"language": "es",
+"value": "médico traumatólogo y ufólogo estadounidense"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Steven M. Greer",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Steven M. Greer",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 18921227,
+"id": "Q18921227"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 39631,
+"id": "Q39631"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1860,
+"id": "Q1860"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q20963736": {
+"id": "Q20963736",
+"labels": {
+"en": {
+"language": "en",
+"value": "Dan Price"
+},
+"es": {
+"language": "es",
+"value": "Dan Price"
+}
+},
+"aliases": {
+"en": [
+{
+"language": "en",
+"value": "Daniel Joseph Price"
+}
+]
+},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American Internet entrepreneur"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Dan Price",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 43845,
+"id": "Q43845"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q126848621": {
+"id": "Q126848621",
+"labels": {
+"en": {
+"language": "en",
+"value": "Dan Price"
+}
+},
+"aliases": {},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "candidate in the 2024 United Kingdom general election"
+}
+},
+"sitelinks": {},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 145,
+"id": "Q145"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q124539250": {
+"id": "Q124539250",
+"labels": {
+"en": {
+"language": "en",
+"value": "Dan Price"
+}
+},
+"aliases": {},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American visual artist"
+}
+},
+"sitelinks": {},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 3391743,
+"id": "Q3391743"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q63929112": {
+"id": "Q63929112",
+"labels": {
+"en": {
+"language": "en",
+"value": "Dan Price"
+}
+},
+"aliases": {},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "Police and Crime Commissioner for Cheshire"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Dan Price (police commissioner)",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 82955,
+"id": "Q82955"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 2101758,
+"id": "Q2101758"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 145,
+"id": "Q145"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q133614625": {
+"id": "Q133614625",
+"labels": {},
+"aliases": {},
+"descriptions": {},
+"sitelinks": {},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 42973,
+"id": "Q42973"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q81703688": {
+"id": "Q81703688",
+"labels": {
+"en": {
+"language": "en",
+"value": "Saagar Enjeti"
+},
+"es": {
+"language": "es",
+"value": "Saagar Enjeti"
+}
+},
+"aliases": {},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American political podcaster and journalist"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Saagar Enjeti",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 11499163,
+"id": "Q11499163"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 947873,
+"id": "Q947873"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 36180,
+"id": "Q36180"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1642960,
+"id": "Q1642960"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1860,
+"id": "Q1860"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q119266625": {
+"id": "Q119266625",
+"labels": {
+"en": {
+"language": "en",
+"value": "Lex Friedman"
+},
+"es": {
+"language": "es",
+"value": "Lex Friedman"
+}
+},
+"aliases": {},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American podcast entrepreneur and host"
+}
+},
+"sitelinks": {},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 15077007,
+"id": "Q15077007"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 36180,
+"id": "Q36180"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5482740,
+"id": "Q5482740"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q76448707": {
+"id": "Q76448707",
+"labels": {
+"en": {
+"language": "en",
+"value": "Lex Fridman"
+},
+"es": {
+"language": "es",
+"value": "Lex Fridman"
+}
+},
+"aliases": {
+"es": [
+{
+"language": "es",
+"value": "Алексей Фридман"
+}
+],
+"en": [
+{
+"language": "en",
+"value": "Alexei \"Lex\" Fridman"
+},
+{
+"language": "en",
+"value": "Alexei Fridman"
+}
+]
+},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "American computer scientist and podcaster"
+},
+"es": {
+"language": "es",
+"value": "Investigador y podcaster estadounidense de origen ucraniano"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Lex Fridman",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Lex Fridman",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 82594,
+"id": "Q82594"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 15976092,
+"id": "Q15976092"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 15077007,
+"id": "Q15077007"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1860,
+"id": "Q1860"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 7737,
+"id": "Q7737"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q6279": {
+"id": "Q6279",
+"labels": {
+"en": {
+"language": "en",
+"value": "Joe Biden"
+}
+},
+"aliases": {
+"en": [
+{
+"language": "en",
+"value": "Joseph Robinette Biden Jr."
+}
+],
+"es": [
+{
+"language": "es",
+"value": "Robin Ware"
+},
+{
+"language": "es",
+"value": "Robert L. Peters"
+},
+{
+"language": "es",
+"value": "JRB Ware"
+}
+]
+},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "46th President of the United States (2021–2025)"
+},
+"es": {
+"language": "es",
+"value": "46.º presidente de los Estados Unidos"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Joe Biden",
+"badges": []
+},
+"eswiki": {
+"site": "eswiki",
+"title": "Joe Biden",
+"badges": []
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 5,
+"id": "Q5"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 82955,
+"id": "Q82955"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 40348,
+"id": "Q40348"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1622272,
+"id": "Q1622272"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 36180,
+"id": "Q36180"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 193391,
+"id": "Q193391"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 185351,
+"id": "Q185351"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P1412": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P1412",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1860,
+"id": "Q1860"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
+},
+"Q65053339": {
+"id": "Q65053339",
+"labels": {
+"en": {
+"language": "en",
+"value": "Joe Biden"
+},
+"es": {
+"language": "es",
+"value": "Joe Biden"
+}
+},
+"aliases": {
+"en": [
+{
+"language": "en",
+"value": "Diamond Joe"
+},
+{
+"language": "en",
+"value": "Uncle Joe"
+},
+{
+"language": "en",
+"value": "The Onion's Joe Biden"
+}
+]
+},
+"descriptions": {
+"en": {
+"language": "en",
+"value": "fictional parody character from The Onion loosely based on the real Joe Biden"
+}
+},
+"sitelinks": {
+"enwiki": {
+"site": "enwiki",
+"title": "Joe Biden (The Onion)",
+"badges": [
+"Q17437798"
+]
+}
+},
+"claims": {
+"P31": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 15632617,
+"id": "Q15632617"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P31",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 3658341,
+"id": "Q3658341"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P106": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 17221,
+"id": "Q17221"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 2675537,
+"id": "Q2675537"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 465501,
+"id": "Q465501"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 13590141,
+"id": "Q13590141"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 10384029,
+"id": "Q10384029"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 811122,
+"id": "Q811122"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 1039099,
+"id": "Q1039099"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 685433,
+"id": "Q685433"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 9286830,
+"id": "Q9286830"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 131512,
+"id": "Q131512"
+},
+"type": "wikibase-entityid"
+}
+}
+},
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P106",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 2380299,
+"id": "Q2380299"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+],
+"P27": [
+{
+"mainsnak": {
+"snaktype": "value",
+"property": "P27",
+"datavalue": {
+"value": {
+"entity-type": "item",
+"numeric-id": 30,
+"id": "Q30"
+},
+"type": "wikibase-entityid"
+}
+}
+}
+]
+}
 }
 }
 }

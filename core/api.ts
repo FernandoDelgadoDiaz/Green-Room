@@ -10,6 +10,7 @@ import { runBacktest } from './backtest';
 import { LiveQlooAdapter, summarizeMetrics, type QlooLimits } from './qloo/client';
 import { MockQlooAdapter, NoQlooAdapter } from './qloo/mock';
 import { compareArms, compareWithBaseline } from './discovery';
+import { BLIND_RUBRIC, blindNames, blindSheetCsv, buildBlindSet, sha256 } from './editorial';
 import { WikidataVerifier } from './verify/external';
 import { safeJson } from './net/safe-fetch';
 import { QlooError, type QlooAdapter } from './qloo/types';
@@ -188,6 +189,8 @@ export type LiveRequest =
   | { action: 'diagnose'; test: 'auth' | 't2' | 't4' | 't5'; showId?: string; cutoff?: string }
   /** Four controlled arms on the same data: A baseline, B +discovery, C +affinity, D both. */
   | { action: 'compare'; showId: string; k?: number }
+  /** Blind editorial set (Qloo-admitted vs baseline) for independent raters; the key is returned separately. */
+  | { action: 'editorial'; showId: string }
   /** LIVE analysis of a show found through the open search (feed URL). */
   | { action: 'analyze'; feedUrl: string; appleUrl?: string | null; host?: string | null };
 
@@ -239,6 +242,28 @@ export async function handleLive(req: LiveRequest, env: Env, authorization: stri
       const { handlePodcasts } = await import('./podcasts-api');
       const r = await handlePodcasts(req, env, {}, make);
       return { status: r.status, body: r.body && typeof r.body === 'object' ? { ...(r.body as object), qlooMetrics: metrics() } : r.body };
+    }
+    if (req.action === 'editorial') {
+      const target = DATASETS.find((d) => d.id === req.showId);
+      if (!target) return { status: 404, body: { error: `Unknown show ${req.showId}` } };
+      const others = DATASETS.filter((d) => d.id !== target.id);
+      const baseline = await runAgent({ target, others, qloo: new NoQlooAdapter(), k: 10, originOf: ORIGIN_OF });
+      const enriched = await runAgent({ target, others, qloo: make(), k: 10, originOf: ORIGIN_OF, verifier: makeVerifier(env) });
+      // Same Wikidata lookup for every name, baseline and Qloo alike (no provenance in the descriptions).
+      const names = blindNames(baseline, enriched);
+      const checks = await new WikidataVerifier({ fetchJson: (u) => safeJson(u, { allowHosts: WIKI_HOSTS, timeoutMs: 5000 }), maxCandidates: Math.min(names.length, 30) }).verify(names.map((n) => ({ entity: { entityId: `blind:${nameKey(n)}`, name: n } })), { targetLang: target.language });
+      const descriptions = Object.fromEntries(checks.filter((c) => c.status === 'documented').map((c) => [nameKey(c.name), c.description.en ?? c.description.es ?? null]));
+      const { items, key } = buildBlindSet({ id: target.id, name: target.name }, baseline, enriched, descriptions);
+      return {
+        status: 200,
+        body: {
+          instructions: 'Give ONLY sheetCsv and rubric to the raters. Keep key private until all ratings are in.',
+          sheetCsv: blindSheetCsv(items),
+          rubric: BLIND_RUBRIC,
+          key: { ...key, sheetSha256: sha256(blindSheetCsv(items)) },
+          qlooMetrics: metrics(),
+        },
+      };
     }
     if (req.action === 'compare') {
       const target = DATASETS.find((d) => d.id === req.showId);

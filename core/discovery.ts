@@ -93,7 +93,8 @@ export interface ArmMetrics {
   /** Mean editorial relevance (topical fit, momentum, recency from evidence; no Qloo) of the top-k. */
   meanEditorialRelevance: number;
   /** Top-k people not in the baseline top-k, and how many of them Qloo proposed. */
-  originality: { newVsBaseline: number; proposedByQloo: number };
+  /** proposedByQloo: Qloo proposed them; newToCorpus: of those, people with no interviews in our RSS (true discoveries, not reorderings). */
+  originality: { newVsBaseline: number; proposedByQloo: number; newToCorpus: number };
   evidence: Record<'high' | 'medium' | 'low', number>;
   /** Top-k people whose identity is pending verification. */
   identityIssues: number;
@@ -126,7 +127,7 @@ export function compareArms(arms: Record<ArmId, AgentResult>) {
       })),
       overlapWithBaseline: recs.filter((x) => baseTop.has(x.key)).length,
       meanEditorialRelevance: recs.length ? round(recs.reduce((s, x) => s + x.assessment.editorialRelevance, 0) / recs.length) : 0,
-      originality: { newVsBaseline: recs.filter((x) => !baseTop.has(x.key)).length, proposedByQloo: recs.filter((x) => x.assessment.qlooProposedRank !== null).length },
+      originality: { newVsBaseline: recs.filter((x) => !baseTop.has(x.key)).length, proposedByQloo: recs.filter((x) => x.assessment.qlooProposedRank !== null).length, newToCorpus: recs.filter((x) => x.source === 'qloo-external').length },
       evidence: ev,
       identityIssues: recs.filter((x) => x.identity.status === 'pending').length,
       languageConfirmed: recs.filter((x) => x.language.status === 'confirmed').length,
@@ -137,6 +138,8 @@ export function compareArms(arms: Record<ArmId, AgentResult>) {
   // Attribution: which Qloo effect changed the top list.
   const changedByDiscovery = by.B.overlapWithBaseline < by.A.top.length;
   const changedByAffinity = by.C.overlapWithBaseline < by.A.top.length;
+  // Only people Qloo brought in from outside our corpus are discoveries; anything else is a reordering.
+  const discoveredInTop = by.D.originality.newToCorpus;
   const attribution = {
     en: `${changedByDiscovery ? `Discovery changed ${by.B.originality.newVsBaseline} of the top ${by.A.top.length}` : 'Discovery alone did not change the top list'}; ${changedByAffinity ? `affinity weighting alone changed ${by.C.originality.newVsBaseline}, by reordering candidates we already had` : 'affinity weighting alone did not change it'}.`,
     es: `${changedByDiscovery ? `El descubrimiento cambió ${by.B.originality.newVsBaseline} de los ${by.A.top.length} primeros` : 'El descubrimiento solo no cambió la lista principal'}; ${changedByAffinity ? `la ponderación por afinidad sola cambió ${by.C.originality.newVsBaseline}, reordenando candidatos que ya teníamos` : 'la ponderación por afinidad sola no la cambió'}.`,
@@ -144,6 +147,11 @@ export function compareArms(arms: Record<ArmId, AgentResult>) {
   return {
     arms: metrics,
     attribution,
+    /** True only when Qloo brought someone from outside our corpus into the final top list (arm D). */
+    qlooImprovedTopWithNewPeople: discoveredInTop > 0,
+    verdict: discoveredInTop
+      ? { en: `${discoveredInTop} person(s) from outside our corpus reached the top list through Qloo. Whether they are better guests needs the blind editorial evaluation.`, es: `${discoveredInTop} persona(s) de fuera de nuestro corpus llegaron a la lista principal gracias a Qloo. Si son mejores invitados lo dirá la evaluación editorial ciega.` }
+      : { en: 'No person from outside our corpus reached the top list; any change came from reordering candidates we already had. Qloo did not improve the top list with new people.', es: 'Ninguna persona de fuera de nuestro corpus llegó a la lista principal; cualquier cambio vino de reordenar candidatos que ya teníamos. Qloo no mejoró la lista principal con personas nuevas.' },
     notes: [
       { en: 'Same show, data, candidate checks and k in every arm. Only the two Qloo effects are switched on or off.', es: 'Mismo programa, datos, controles y k en todas las variantes. Solo se prenden o apagan los dos efectos de Qloo.' },
       { en: 'Editorial relevance is our evidence-based score without Qloo; it is not a probability that a guest accepts, nor a measure of editorial quality.', es: 'La relevancia editorial es nuestro puntaje basado en evidencia, sin Qloo; no es la probabilidad de que un invitado acepte ni una medida de calidad editorial.' },

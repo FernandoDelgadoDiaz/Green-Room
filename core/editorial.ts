@@ -18,6 +18,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { PodcastDataset } from './types';
 import { runAgent } from './agent/agent';
 import { NoQlooAdapter } from './qloo/mock';
+import { nameKey } from './names';
 import type { QlooAdapter } from './qloo/types';
 
 export const LIST_SIZE = 10;
@@ -203,4 +204,91 @@ export function scoreEditorial(key: EditorialKey, ratings: Rating[]) {
       raters.length < 2 ? 'Only one rater: no agreement check is possible.' : `${raters.length} raters.`,
     ],
   };
+}
+
+// ================================================================== Phase 8: blind set, Qloo vs baseline
+// Pools the baseline top list (no Qloo) with every Qloo-proposed person the agent ADMITTED (verified
+// identity, on-theme), whatever their final rank. Raters see the same fields for everyone and no
+// provenance. Known leak: Qloo-only people have no interviews in our RSS; the scoring step reports
+// them separately so a rater who guesses provenance cannot hide inside the average.
+import type { AgentResult } from './agent/agent';
+
+export const BLIND_COLUMNS = [
+  'item_id',
+  'show',
+  'name',
+  'documented_description',
+  'verified_interviews',
+  'relevance_1_5',
+  'novelty_1_5',
+  'conversation_potential_1_5',
+  'evidence_sufficient_yes_no',
+  'repeat_risk_low_medium_high',
+  'language_ok_yes_probable_no_unknown',
+  'would_invite_yes_no',
+  'notes',
+] as const;
+
+export const BLIND_RUBRIC = {
+  relevance_1_5: 'Fit with what this show actually talks about (1 = unrelated, 5 = squarely in its core themes).',
+  novelty_1_5: 'Would this guest bring something the show has not already covered with past guests? (1 = repetitive, 5 = fresh).',
+  conversation_potential_1_5: 'Likely to sustain a long, substantive conversation for this audience (1 = unlikely, 5 = very likely).',
+  evidence_sufficient_yes_no: 'Is the evidence shown enough to know who this is and why they are suggested?',
+  repeat_risk_low_medium_high: 'Risk that the person already appeared on the show (check the show if unsure).',
+  language_ok_yes_probable_no_unknown: 'Can the person be interviewed in the show’s language?',
+  would_invite_yes_no: 'Overall: would you put this person on the booking shortlist?',
+};
+
+export interface BlindItem {
+  itemId: string;
+  showId: string;
+  showName: string;
+  name: string;
+  description: string;
+  interviews: string;
+}
+
+export interface BlindKey {
+  createdAt: string;
+  showId: string;
+  baseline: string[];
+  qloo: string[];
+  /** Qloo-proposed people with no RSS interviews (the provenance-leak group). */
+  qlooExternal: string[];
+}
+
+export function buildBlindSet(show: { id: string; name: string }, baseline: AgentResult, enriched: AgentResult, descriptions: Record<string, string | null> = {}) {
+  const items = new Map<string, BlindItem>();
+  const key: BlindKey = { createdAt: new Date().toISOString(), showId: show.id, baseline: [], qloo: [], qlooExternal: [] };
+  const add = (k: string, name: string, desc: string | null, apps: Array<{ showName: string; published: string; title: string }>) => {
+    if (!items.has(k))
+      items.set(k, {
+        itemId: randomId(),
+        showId: show.id,
+        showName: show.name,
+        name,
+        description: desc ?? 'No documented description available',
+        interviews: apps.length ? apps.slice(0, 3).map((a) => `${a.showName} ${a.published.slice(0, 10)}: ${a.title}`).join(' | ') : 'No verified interviews in our sources',
+      });
+    return items.get(k)!.itemId;
+  };
+  // Descriptions come ONLY from `descriptions`, looked up the same way for every name (see
+  // blindNames); using the run's own Wikidata data would describe Qloo people and not the baseline.
+  for (const r of baseline.recommendations) key.baseline.push(add(r.key, r.name, descriptions[r.key] ?? null, r.appearances));
+  // Every admitted Qloo proposal (verified, on-theme), whatever its final rank.
+  for (const p of enriched.discoveryPositions) {
+    const rec = enriched.recommendations.find((r) => nameKey(r.name) === nameKey(p.name));
+    const id = add(nameKey(p.name), p.name, descriptions[nameKey(p.name)] ?? null, rec?.appearances ?? []);
+    key.qloo.push(id);
+    if (p.source === 'qloo-external') key.qlooExternal.push(id);
+  }
+  return { items: shuffle([...items.values()]), key };
+}
+
+/** Every name that will go into the blind set, to describe them all through one identical lookup. */
+export const blindNames = (baseline: AgentResult, enriched: AgentResult) => [...new Map([...baseline.recommendations.map((r) => r.name), ...enriched.discoveryPositions.map((p) => p.name)].map((n) => [nameKey(n), n])).values()];
+
+export function blindSheetCsv(items: BlindItem[]): string {
+  const rows = items.map((i) => [i.itemId, i.showName, i.name, i.description, i.interviews, ...BLIND_COLUMNS.slice(5).map(() => '')]);
+  return [BLIND_COLUMNS as unknown as string[], ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
 }

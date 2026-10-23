@@ -337,6 +337,448 @@
 "value": "político"
 }
 }
+},
+"Q10384029": {
+"id": "Q10384029",
+"labels": {
+"en": {
+"language": "en",
+"value": "drug trafficker"
+},
+"es": {
+"language": "es",
+"value": "narcotraficante"
+}
+}
+},
+"Q1039099": {
+"id": "Q1039099",
+"labels": {
+"en": {
+"language": "en",
+"value": "tour guide"
+},
+"es": {
+"language": "es",
+"value": "guía de turismo"
+}
+}
+},
+"Q10871364": {
+"id": "Q10871364",
+"labels": {
+"en": {
+"language": "en",
+"value": "baseball player"
+},
+"es": {
+"language": "es",
+"value": "beisbolista"
+}
+}
+},
+"Q131512": {
+"id": "Q131512",
+"labels": {
+"en": {
+"language": "en",
+"value": "farmer"
+},
+"es": {
+"language": "es",
+"value": "agricultor"
+}
+}
+},
+"Q13590141": {
+"id": "Q13590141",
+"labels": {
+"en": {
+"language": "en",
+"value": "presenter"
+},
+"es": {
+"language": "es",
+"value": "presentador"
+}
+}
+},
+"Q15077007": {
+"id": "Q15077007",
+"labels": {
+"en": {
+"language": "en",
+"value": "podcaster"
+},
+"es": {
+"language": "es",
+"value": "podcaster"
+}
+}
+},
+"Q15632617": {
+"id": "Q15632617",
+"labels": {
+"en": {
+"language": "en",
+"value": "fictional human"
+},
+"es": {
+"language": "es",
+"value": "ser humano ficticio"
+}
+}
+},
+"Q15976092": {
+"id": "Q15976092",
+"labels": {
+"en": {
+"language": "en",
+"value": "artificial intelligence researcher"
+},
+"es": {
+"language": "es",
+"value": "investigador de la inteligencia artificial"
+}
+}
+},
+"Q1622272": {
+"id": "Q1622272",
+"labels": {
+"en": {
+"language": "en",
+"value": "university teacher"
+},
+"es": {
+"language": "es",
+"value": "profesor universitario"
+}
+}
+},
+"Q1642960": {
+"id": "Q1642960",
+"labels": {
+"en": {
+"language": "en",
+"value": "pundit"
+},
+"es": {
+"language": "es",
+"value": "comentarista"
+}
+}
+},
+"Q17221": {
+"id": "Q17221",
+"labels": {
+"en": {
+"language": "en",
+"value": "spokesperson"
+},
+"es": {
+"language": "es",
+"value": "portavoz"
+}
+}
+},
+"Q185351": {
+"id": "Q185351",
+"labels": {
+"en": {
+"language": "en",
+"value": "jurist"
+},
+"es": {
+"language": "es",
+"value": "jurista"
+}
+}
+},
+"Q18921227": {
+"id": "Q18921227",
+"labels": {
+"en": {
+"language": "en",
+"value": "ufologist"
+},
+"es": {
+"language": "es",
+"value": "ufólogo"
+}
+}
+},
+"Q193391": {
+"id": "Q193391",
+"labels": {
+"en": {
+"language": "en",
+"value": "diplomat"
+},
+"es": {
+"language": "es",
+"value": "diplomático"
+}
+}
+},
+"Q1979607": {
+"id": "Q1979607",
+"labels": {
+"en": {
+"language": "en",
+"value": "financier"
+},
+"es": {
+"language": "es",
+"value": "financiero"
+}
+}
+},
+"Q2101758": {
+"id": "Q2101758",
+"labels": {
+"en": {
+"language": "en",
+"value": "police commissioner"
+},
+"es": {
+"language": "es",
+"value": "comisario de policía"
+}
+}
+},
+"Q2380299": {
+"id": "Q2380299",
+"labels": {
+"en": {
+"language": "en",
+"value": "presidential candidate"
+},
+"es": {
+"language": "es",
+"value": "candidato a la presidencia"
+}
+}
+},
+"Q2675537": {
+"id": "Q2675537",
+"labels": {
+"en": {
+"language": "en",
+"value": "music teacher"
+},
+"es": {
+"language": "es",
+"value": "profesor de música"
+}
+}
+},
+"Q3391743": {
+"id": "Q3391743",
+"labels": {
+"en": {
+"language": "en",
+"value": "visual artist"
+},
+"es": {
+"language": "es",
+"value": "artista visual"
+}
+}
+},
+"Q36180": {
+"id": "Q36180",
+"labels": {
+"en": {
+"language": "en",
+"value": "writer"
+},
+"es": {
+"language": "es",
+"value": "escritor"
+}
+}
+},
+"Q3658341": {
+"id": "Q3658341",
+"labels": {
+"en": {
+"language": "en",
+"value": "literary character"
+},
+"es": {
+"language": "es",
+"value": "personaje literario"
+}
+}
+},
+"Q3665646": {
+"id": "Q3665646",
+"labels": {
+"en": {
+"language": "en",
+"value": "basketball player"
+},
+"es": {
+"language": "es",
+"value": "baloncestista"
+}
+}
+},
+"Q39631": {
+"id": "Q39631",
+"labels": {
+"en": {
+"language": "en",
+"value": "physician"
+},
+"es": {
+"language": "es",
+"value": "médico"
+}
+}
+},
+"Q42973": {
+"id": "Q42973",
+"labels": {
+"en": {
+"language": "en",
+"value": "architect"
+},
+"es": {
+"language": "es",
+"value": "arquitecto"
+}
+}
+},
+"Q43845": {
+"id": "Q43845",
+"labels": {
+"en": {
+"language": "en",
+"value": "businessperson"
+},
+"es": {
+"language": "es",
+"value": "empresario"
+}
+}
+},
+"Q465501": {
+"id": "Q465501",
+"labels": {
+"en": {
+"language": "en",
+"value": "stunt performer"
+},
+"es": {
+"language": "es",
+"value": "especialista de cine"
+}
+}
+},
+"Q5137571": {
+"id": "Q5137571",
+"labels": {
+"en": {
+"language": "en",
+"value": "basketball coach"
+},
+"es": {
+"language": "es",
+"value": "entrenador de baloncesto"
+}
+}
+},
+"Q5482740": {
+"id": "Q5482740",
+"labels": {
+"en": {
+"language": "en",
+"value": "programmer"
+},
+"es": {
+"language": "es",
+"value": "programador"
+}
+}
+},
+"Q685433": {
+"id": "Q685433",
+"labels": {
+"en": {
+"language": "en",
+"value": "salesperson"
+},
+"es": {
+"language": "es",
+"value": "vendedor"
+}
+}
+},
+"Q7737": {
+"id": "Q7737",
+"labels": {
+"en": {
+"language": "en",
+"value": "Russian"
+},
+"es": {
+"language": "es",
+"value": "ruso"
+}
+}
+},
+"Q811122": {
+"id": "Q811122",
+"labels": {
+"en": {
+"language": "en",
+"value": "construction worker"
+},
+"es": {
+"language": "es",
+"value": "trabajador de la construcción"
+}
+}
+},
+"Q82594": {
+"id": "Q82594",
+"labels": {
+"en": {
+"language": "en",
+"value": "computer scientist"
+},
+"es": {
+"language": "es",
+"value": "informático teórico"
+}
+}
+},
+"Q9286830": {
+"id": "Q9286830",
+"labels": {
+"en": {
+"language": "en",
+"value": "gambler"
+},
+"es": {
+"language": "es",
+"value": "jugador"
+}
+}
+},
+"Q947873": {
+"id": "Q947873",
+"labels": {
+"en": {
+"language": "en",
+"value": "television presenter"
+},
+"es": {
+"language": "es",
+"value": "presentador de televisión"
+}
+}
 }
 }
 }

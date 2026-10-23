@@ -43,6 +43,10 @@ export interface ExternalCheck {
   languages: { spoken: string[]; articles: string[] };
   /** Same-name people found and not chosen. */
   namesakes: Array<{ wikidataId: string; description: string | null }>;
+  /** Labels and aliases of the chosen item (en/es): used to catch the same person under another spelling. */
+  names: string[];
+  /** Wikidata label of the chosen item (the name shown); Qloo's spelling may differ. */
+  canonicalName: string;
   limitations: string[];
   limitationsEs: string[];
 }
@@ -63,6 +67,7 @@ interface WdEntity {
   missing?: string;
   descriptions?: Record<string, { value: string }>;
   labels?: Record<string, { value: string }>;
+  aliases?: Record<string, Array<{ value: string }>>;
   sitelinks?: Record<string, { title: string }>;
   claims?: Record<string, Array<{ mainsnak: { datavalue?: { value: unknown } } }>>;
 }
@@ -121,7 +126,7 @@ export class WikidataVerifier {
     const allIds = [...new Set(candidatesByProposal.flatMap((c) => c.ids))].slice(0, 50);
     const entities = new Map<string, WdEntity>();
     if (allIds.length) {
-      const res = (await this.get(`${WD_API}?action=wbgetentities&format=json&props=descriptions|claims|sitelinks&languages=en|es&sitefilter=enwiki|eswiki&ids=${allIds.join('|')}`).catch(() => null)) as { entities?: Record<string, WdEntity> } | null;
+      const res = (await this.get(`${WD_API}?action=wbgetentities&format=json&props=labels|aliases|descriptions|claims|sitelinks&languages=en|es&sitefilter=enwiki|eswiki&ids=${allIds.join('|')}`).catch(() => null)) as { entities?: Record<string, WdEntity> } | null;
       for (const [id, e] of Object.entries(res?.entities ?? {})) if (!e.missing) entities.set(id, e);
     }
     const refIds = [...new Set([...entities.values()].flatMap((e) => [...claimIds(e, 'P31'), ...claimIds(e, 'P106')]))].filter((q) => q !== HUMAN).slice(0, 50);
@@ -158,6 +163,8 @@ export class WikidataVerifier {
         wikipedia: null,
         languages: { spoken: e ? claimIds(e, 'P1412').map((q) => LANG_CODES[q]).filter(Boolean) : [], articles: e ? Object.keys(e.sitelinks ?? {}).map((s) => s.replace('wiki', '')) : [] },
         namesakes: [],
+        canonicalName: e?.labels?.en?.value ?? e?.labels?.es?.value ?? entity.name,
+        names: e ? [...new Set([entity.name, ...Object.values(e.labels ?? {}).map((l) => l.value), ...Object.values(e.aliases ?? {}).flatMap((a) => a.map((x) => x.value))])] : [entity.name],
         limitations: [],
         limitationsEs: [],
       });
