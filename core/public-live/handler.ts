@@ -170,11 +170,16 @@ export async function handlePublicLive(req: unknown, env: PublicLiveEnv, deps: P
   }
   if (!lease.ok) return refuse(lease.reason, prior);
 
-  const limits: QlooLimits = { maxCalls: cfg.callsPerAnalysis, concurrency: 4, timeoutMs: 8000, deadlineMs: 40_000, retries: 1 };
+  // The public synchronous function was observed timing out at 30 s. Reserve time for
+  // external verification, baseline comparison, settlement and the HTTP response.
+  // Prioritize discovering people over optional cultural/affinity enrichment.
+  const limits: QlooLimits = { maxCalls: Math.min(cfg.callsPerAnalysis, 24), concurrency: 2, timeoutMs: 2500, deadlineMs: 15_000, retries: 0 };
   const adapter = deps.qlooFactory ? deps.qlooFactory(limits) : new LiveQlooAdapter({ apiKey: env.QLOO_API_KEY!, baseUrl: env.QLOO_BASE_URL, limits });
   let result;
   try {
-    result = await recommendFor(target, DATASETS.filter((d) => d.id !== target!.id), adapter, env, 5, origin);
+    result = await recommendFor(target, DATASETS.filter((d) => d.id !== target!.id), adapter,
+      { ...env, EXTERNAL_VERIFY_MAX: String(Math.min(4, Math.max(1, Number(env.EXTERNAL_VERIFY_MAX) || 4))), PROFILE_LOOKUP: '0' },
+      5, origin, { publicFast: true, deadlineMs: 20_000 });
   } catch {
     await guard.settle(lease.leaseId, adapter.metrics?.networkCalls ?? cfg.callsPerAnalysis).catch(() => undefined);
     return { status: 502, body: { code: 'analysis_failed', message: msg('The analysis failed before finishing. Nothing was substituted.', 'El análisis falló antes de terminar. No se reemplazó por otro resultado.'), retry: true } };
