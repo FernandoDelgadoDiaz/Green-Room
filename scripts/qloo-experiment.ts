@@ -72,7 +72,9 @@ async function cachedFetch(url: string, init?: { headers?: Record<string, string
   }
 }
 
-const makeQloo = () => new LiveQlooAdapter({ apiKey: creds.apiKey, baseUrl: creds.baseUrl, fetchImpl: cachedFetch });
+// The serverless per-analysis limits do not apply here: this run has its own --max-calls budget.
+const makeQloo = () =>
+  new LiveQlooAdapter({ apiKey: creds.apiKey, baseUrl: creds.baseUrl, fetchImpl: cachedFetch, limits: { maxCalls: 1e9, deadlineMs: 6 * 3600_000, concurrency: 4, timeoutMs: 20000, retries: 0 } });
 
 // ------------------------------------------------------------------ 1. authentication (uncached)
 function describeBody(b: unknown): string {

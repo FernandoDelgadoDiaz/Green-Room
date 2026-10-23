@@ -13,16 +13,7 @@
 [functions]
   node_bundler = "esbuild"
 
-[[redirects]]
-  from = "/api/agent"
-  to = "/.netlify/functions/agent"
-  status = 200
-
-# Single-page app: keep deep links working.
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# /api/agent (public, MOCK) and /api/live (private) are routed by each function's `config.path`.
 
 [[headers]]
   for = "/*"

@@ -14,7 +14,10 @@
     "backtest": "tsx scripts/run-backtest.ts",
     "qloo:smoke": "tsx scripts/qloo-smoke.ts",
     "profiles:build": "tsx scripts/build-profiles.ts",
-    "qloo:experiment": "tsx scripts/qloo-experiment.ts"
+    "qloo:experiment": "tsx scripts/qloo-experiment.ts",
+    "live:token": "tsx scripts/live-token.ts",
+    "live:diagnose": "tsx scripts/live-diagnose.ts",
+    "perf:sim": "tsx scripts/perf-sim.ts"
   },
   "devDependencies": {
     "@netlify/functions": "^2.8.2",

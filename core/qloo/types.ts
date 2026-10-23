@@ -58,10 +58,13 @@ export interface QlooAdapter {
   categoryInsights(args: { signalIds: string[]; type: InsightsEntityType; take: number }): Promise<QlooEntity[]>;
 }
 
+export type QlooErrorKind = 'http' | 'network' | 'timeout' | 'budget' | 'deadline' | 'config';
+
 export class QlooError extends Error {
   constructor(
     message: string,
     readonly status: number | null,
+    readonly kind: QlooErrorKind = status ? 'http' : 'network',
   ) {
     super(message);
     this.name = 'QlooError';

@@ -50,7 +50,7 @@ function classify(res: Resolution, titles: string[], name: string): Pick<Coverag
 }
 
 /** People the agent would look up in Qloo: recent past guests (signals) and top baseline candidates. */
-export async function coverageSample(datasets: PodcastDataset[], cutoffs: string[] = DEFAULT_CUTOFFS) {
+export async function coverageSample(datasets: PodcastDataset[], cutoffs: string[] = DEFAULT_CUTOFFS, targets?: string[]) {
   const titles = new Map<string, string[]>();
   for (const d of datasets) for (const e of d.episodes) for (const g of e.guests) titles.set(nameKey(g.name), [...(titles.get(nameKey(g.name)) ?? []), e.title]);
   const rows: Array<{ name: string; showId: string; role: CoverageRow['role'] }> = [];
@@ -62,7 +62,7 @@ export async function coverageSample(datasets: PodcastDataset[], cutoffs: string
       rows.push({ name, showId, role });
     }
   };
-  for (const t of datasets) {
+  for (const t of datasets.filter((d) => !targets || targets.includes(d.id))) {
     const others = datasets.filter((d) => d.id !== t.id);
     for (const asOf of [undefined, ...cutoffs.map((c) => new Date(c).toISOString())]) {
       const limit = asOf ?? new Date().toISOString();
@@ -84,13 +84,14 @@ export async function coverageSample(datasets: PodcastDataset[], cutoffs: string
   return { rows, titles };
 }
 
-export async function runCoverage(qloo: QlooAdapter, datasets: PodcastDataset[], cutoffs?: string[]): Promise<CoverageRow[]> {
-  const { rows, titles } = await coverageSample(datasets, cutoffs);
+export async function runCoverage(qloo: QlooAdapter, datasets: PodcastDataset[], cutoffs?: string[], targets?: string[]): Promise<CoverageRow[]> {
+  const { rows, titles } = await coverageSample(datasets, cutoffs, targets);
   const byName = new Map<string, Promise<QlooEntity[] | Error>>();
   const out: CoverageRow[] = [];
+  // Start every lookup first (the adapter bounds concurrency), then read them back in order.
+  for (const r of rows) if (!byName.has(nameKey(r.name))) byName.set(nameKey(r.name), qloo.searchPerson(r.name).catch((e: Error) => e));
   for (const r of rows) {
     const k = nameKey(r.name);
-    if (!byName.has(k)) byName.set(k, qloo.searchPerson(r.name).catch((e: Error) => e));
     const hits = await byName.get(k)!;
     if (hits instanceof Error) out.push({ ...r, status: 'error' });
     else out.push({ ...r, ...classify(resolvePerson(hits, r.name), titles.get(k) ?? [], r.name) });
@@ -141,10 +142,10 @@ const median = (xs: number[]) => {
   return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
 };
 
-export async function runOriginality(qloo: QlooAdapter, datasets: PodcastDataset[]): Promise<OriginalityResult[]> {
+export async function runOriginality(qloo: QlooAdapter, datasets: PodcastDataset[], targets?: string[]): Promise<OriginalityResult[]> {
   const everyGuest = new Set(datasets.flatMap((d) => d.episodes.flatMap((e) => e.guests.map((g) => nameKey(g.name)))));
   const out: OriginalityResult[] = [];
-  for (const t of datasets) {
+  for (const t of datasets.filter((d) => !targets || targets.includes(d.id))) {
     const others = datasets.filter((d) => d.id !== t.id);
     const now = new Date().toISOString();
     const past = new Map<string, { name: string; published: string }>();
@@ -153,10 +154,12 @@ export async function runOriginality(qloo: QlooAdapter, datasets: PodcastDataset
       if (!prev || e.published > prev.published) past.set(nameKey(g.name), { name: g.name, published: e.published });
     }
     const signals: QlooEntity[] = [];
-    for (const g of [...past.values()].sort((a, b) => b.published.localeCompare(a.published)).slice(0, 25)) {
-      const r = resolvePerson(await qloo.searchPerson(g.name).catch(() => []), g.name);
+    const recent = [...past.values()].sort((a, b) => b.published.localeCompare(a.published)).slice(0, 25);
+    const recentHits = await Promise.all(recent.map((g) => qloo.searchPerson(g.name).catch(() => [])));
+    recent.forEach((g, i) => {
+      const r = resolvePerson(recentHits[i], g.name);
       if (r.status === 'exact') signals.push(r.entity);
-    }
+    });
     const baseline = await runAgent({ target: t, others, qloo: new NoQlooAdapter() });
     const top25 = new Set(baseline.ranked.slice(0, 25).map((r) => r.key));
     const pool = new Set(baseline.ranked.map((r) => r.key));
@@ -172,14 +175,16 @@ export async function runOriginality(qloo: QlooAdapter, datasets: PodcastDataset
         else if (pool.has(k) || everyGuest.has(k)) res.inVerifiedPool.push(p.name);
         else res.newToUs.push({ name: p.name, popularity: p.popularity, affinity: p.affinity, description: p.description });
       }
-      for (const type of ['urn:entity:artist', 'urn:entity:movie', 'urn:entity:book', 'urn:entity:podcast'] as const) {
-        res.culturalHooks[type] = (await qloo.categoryInsights({ signalIds: ids, type, take: 10 }).catch(() => [])).length;
-      }
+      const hookTypes = ['urn:entity:artist', 'urn:entity:movie', 'urn:entity:book', 'urn:entity:podcast'] as const;
+      const hooks = await Promise.all(hookTypes.map((type) => qloo.categoryInsights({ signalIds: ids, type, take: 10 }).catch(() => [])));
+      hookTypes.forEach((type, i) => (res.culturalHooks[type] = hooks[i].length));
       const ours: number[] = [];
-      for (const c of baseline.ranked.slice(0, 25)) {
-        const r = resolvePerson(await qloo.searchPerson(c.name).catch(() => []), c.name);
+      const top = baseline.ranked.slice(0, 25);
+      const topHits = await Promise.all(top.map((c) => qloo.searchPerson(c.name).catch(() => [])));
+      top.forEach((c, i) => {
+        const r = resolvePerson(topHits[i], c.name);
         if (r.status === 'exact' && r.entity.popularity !== undefined) ours.push(r.entity.popularity);
-      }
+      });
       res.medianPopularity = { qlooNew: median(res.newToUs.map((p) => p.popularity).filter((x): x is number => x !== undefined)), ourTop25Resolved: median(ours) };
     }
     out.push(res);
@@ -213,9 +218,9 @@ function affinityStats(calls: QlooAdapter['calls']) {
   };
 }
 
-export async function runComparison(makeQloo: () => QlooAdapter, datasets: PodcastDataset[], cutoffs: string[] = DEFAULT_CUTOFFS): Promise<ComparisonCell[]> {
+export async function runComparison(makeQloo: () => QlooAdapter, datasets: PodcastDataset[], cutoffs: string[] = DEFAULT_CUTOFFS, targets?: string[]): Promise<ComparisonCell[]> {
   const cells: ComparisonCell[] = [];
-  for (const t of datasets) {
+  for (const t of datasets.filter((d) => !targets || targets.includes(d.id))) {
     const others = datasets.filter((d) => d.id !== t.id);
     for (const c of cutoffs) {
       const cutoff = new Date(c).toISOString();

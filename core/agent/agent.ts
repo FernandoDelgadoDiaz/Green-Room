@@ -229,15 +229,22 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       provenance: 'INFERRED',
     });
   } else {
-    for (const g of recentGuests) {
-      try {
-        const r = resolvePerson(await qloo.searchPerson(g.name), g.name);
-        if (r.status === 'exact') resolved.push(r.entity);
-        else if (r.status === 'ambiguous') ambiguousGuests.push(g.name);
-      } catch (err) {
-        warn([`Qloo search failed for ${g.name}: ${String(err)}`, `Falló la búsqueda en Qloo de ${g.name}: ${String(err)}`]);
-      }
-    }
+    // Lookups run concurrently (the adapter bounds concurrency); results are consumed in list order,
+    // so the outcome does not depend on response timing.
+    const lookups = await Promise.all(recentGuests.map((g) => qloo.searchPerson(g.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
+    const guestErrors: string[] = [];
+    recentGuests.forEach((g, i) => {
+      const l = lookups[i];
+      if ('err' in l) return void guestErrors.push(String(l.err));
+      const r = resolvePerson(l.hits, g.name);
+      if (r.status === 'exact') resolved.push(r.entity);
+      else if (r.status === 'ambiguous') ambiguousGuests.push(g.name);
+    });
+    if (guestErrors.length)
+      warn([
+        `${guestErrors.length} Qloo guest lookups failed (first: ${guestErrors[0]}).`,
+        `Fallaron ${guestErrors.length} búsquedas de invitados en Qloo (primera: ${guestErrors[0]}).`,
+      ]);
     qlooUsable = resolved.length >= 3;
     step({
       title: ['Resolve past guests in Qloo’s taste graph', 'Ubicar a los invitados anteriores en el grafo de gustos de Qloo'],
@@ -253,14 +260,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     });
     if (qlooUsable) {
       const signalIds = resolved.map((r) => r.entityId);
-      for (const type of ['urn:entity:artist', 'urn:entity:movie', 'urn:entity:book'] as const) {
-        try {
-          const entities = await qloo.categoryInsights({ signalIds, type, take: 6 });
-          culturalAffinities.push({ type, entities, provenance: qloo.mode });
-        } catch (err) {
-          warn([`Qloo ${type} insights failed: ${String(err)}`, `Falló la consulta de Qloo (${type}): ${String(err)}`]);
-        }
-      }
+      const types = ['urn:entity:artist', 'urn:entity:movie', 'urn:entity:book'] as const;
+      const got = await Promise.all(types.map((type) => qloo.categoryInsights({ signalIds, type, take: 6 }).then((entities) => ({ entities }), (err: unknown) => ({ err }))));
+      types.forEach((type, i) => {
+        const g = got[i];
+        if ('err' in g) warn([`Qloo ${type} insights failed: ${String(g.err)}`, `Falló la consulta de Qloo (${type}): ${String(g.err)}`]);
+        else culturalAffinities.push({ type, entities: g.entities, provenance: qlooProvenance });
+      });
       const total = culturalAffinities.reduce((s, c) => s + c.entities.length, 0);
       step({
         title: ['Map the cross-domain taste of that audience', 'Mapear el gusto de esa audiencia en otros dominios'],
@@ -401,15 +407,20 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
   if (qlooUsable) {
     const shortlist = [...pool.values()].sort((a, b) => b.base - a.base).slice(0, 40);
-    for (const c of shortlist) {
-      if (c.qlooEntityId) continue;
-      try {
-        const r = resolvePerson(await qloo.searchPerson(c.name), c.name);
-        if (r.status === 'exact') c.qlooEntityId = r.entity.entityId;
-      } catch (err) {
-        warn([`Qloo search failed for candidate ${c.name}: ${String(err)}`, `Falló la búsqueda en Qloo del candidato ${c.name}: ${String(err)}`]);
-      }
-    }
+    const toResolve = shortlist.filter((c) => !c.qlooEntityId);
+    const found = await Promise.all(toResolve.map((c) => qloo.searchPerson(c.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
+    const candidateErrors: string[] = [];
+    toResolve.forEach((c, i) => {
+      const f = found[i];
+      if ('err' in f) return void candidateErrors.push(String(f.err));
+      const r = resolvePerson(f.hits, c.name);
+      if (r.status === 'exact') c.qlooEntityId = r.entity.entityId;
+    });
+    if (candidateErrors.length)
+      warn([
+        `${candidateErrors.length} Qloo candidate lookups failed (first: ${candidateErrors[0]}).`,
+        `Fallaron ${candidateErrors.length} búsquedas de candidatos en Qloo (primera: ${candidateErrors[0]}).`,
+      ]);
     const ids = shortlist.map((c) => c.qlooEntityId).filter((x): x is string => Boolean(x));
     let affinities = new Map<string, number>();
     try {

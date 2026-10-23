@@ -53,7 +53,7 @@ Only 7 of the 59 later first-time guests were reachable: they had appeared on a 
 ```bash
 npm install
 npm run dev           # http://localhost:5173 (API served by the same handler as the Netlify Function)
-npm test              # 56 tests: extraction, agent decisions, leakage, Qloo client, secrets, i18n, profiles, unchanged ranking, experiment
+npm test              # 70 tests: extraction, agent, leakage, Qloo client and limits, LIVE access control, secrets, i18n, profiles, unchanged ranking, experiment
 npm run typecheck
 npm run build
 npm run backtest -- <showId> <YYYY-MM-DD>
@@ -67,7 +67,7 @@ npm install --global @qloo/qloo-harness && qloo setup --qloo   # official kit, h
 npm run qloo:experiment   # T2 coverage, T4 originality, T5 with vs. without Qloo; stops if auth fails
 ```
 
-For the app itself, set `QLOO_API_KEY` in the server environment (never `VITE_`-prefixed) and run `npm run dev`; the header badge switches to LIVE.
+The public endpoint `/api/agent` is always MOCK. LIVE runs only through the private `/api/live` endpoint, with `QLOO_LIVE_ENABLED=true`, the key and an access token (`npm run live:token`, then open the app with `?private=1`). Netlify setup, limits and variables: [docs/NETLIFY.md](docs/NETLIFY.md).
 
 ## Architecture
 

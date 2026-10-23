@@ -5,17 +5,55 @@ import { QlooError, type InsightsEntityType, type QlooAdapter, type QlooCall, ty
 
 export const QLOO_HACKATHON_BASE_URL = 'https://hackathon.api.qloo.com';
 
-type FetchLike = (input: string, init?: { headers?: Record<string, string> }) => Promise<{
+type FetchLike = (input: string, init?: { headers?: Record<string, string>; signal?: AbortSignal }) => Promise<{
   status: number;
   ok: boolean;
+  headers?: { get(name: string): string | null };
   json(): Promise<unknown>;
 }>;
+
+export interface QlooLimits {
+  /** Hard cap on network calls for this adapter (one analysis). Cached answers do not count. */
+  maxCalls: number;
+  /** Requests in flight at the same time. */
+  concurrency: number;
+  /** Per-request timeout. */
+  timeoutMs: number;
+  /** Wall-clock budget for the whole analysis; no new request starts after it. */
+  deadlineMs: number;
+  /** Extra attempts for 429/5xx/network errors (bounded by the deadline). */
+  retries: number;
+}
+
+export const DEFAULT_LIMITS: QlooLimits = { maxCalls: 80, concurrency: 6, timeoutMs: 8000, deadlineMs: 45000, retries: 1 };
 
 export interface LiveQlooOptions {
   apiKey: string;
   baseUrl?: string;
   fetchImpl?: FetchLike;
-  timeoutMs?: number;
+  limits?: Partial<QlooLimits>;
+  /** Shared, private, server-side response cache (allowed by the developer guide). */
+  cache?: Map<string, { at: number; entities: QlooEntity[]; status: number }>;
+  cacheTtlMs?: number;
+  /** Lets several adapters (e.g. the two arms of a backtest) draw from one call and time budget. */
+  sharedBudget?: { networkCalls: number; startedAt: number };
+}
+
+export interface QlooMetrics {
+  networkCalls: number;
+  cacheHits: number;
+  retries: number;
+  errors: Record<string, number>;
+  statuses: Record<string, number>;
+  maxInFlight: number;
+  latenciesMs: number[];
+  startedAt: number;
+}
+
+export function summarizeMetrics(m: QlooMetrics) {
+  const l = [...m.latenciesMs].sort((a, b) => a - b);
+  const q = (p: number) => (l.length ? l[Math.min(l.length - 1, Math.floor(p * l.length))] : null);
+  return { networkCalls: m.networkCalls, cacheHits: m.cacheHits, retries: m.retries, errors: m.errors, statuses: m.statuses, maxInFlight: m.maxInFlight, p50Ms: q(0.5), p95Ms: q(0.95), elapsedMs: Date.now() - m.startedAt };
 }
 
 export function buildUrl(baseUrl: string, path: string, params: Record<string, string>): string {
@@ -67,43 +105,127 @@ export function parseEntities(body: unknown): QlooEntity[] {
 export class LiveQlooAdapter implements QlooAdapter {
   readonly mode = 'LIVE' as const;
   readonly calls: QlooCall[] = [];
+  readonly limits: QlooLimits;
+  readonly metrics: QlooMetrics = { networkCalls: 0, cacheHits: 0, retries: 0, errors: {}, statuses: {}, maxInFlight: 0, latenciesMs: [], startedAt: Date.now() };
   private readonly baseUrl: string;
   private readonly fetchImpl: FetchLike;
+  private inFlight = 0;
+  private readonly waiting: Array<() => void> = [];
 
   constructor(private readonly opts: LiveQlooOptions) {
-    if (!opts.apiKey) throw new QlooError('QLOO_API_KEY is not set', null);
+    if (!opts.apiKey) throw new QlooError('QLOO_API_KEY is not set', null, 'config');
     this.baseUrl = opts.baseUrl || QLOO_HACKATHON_BASE_URL;
     this.fetchImpl = opts.fetchImpl ?? (globalThis.fetch as unknown as FetchLike);
+    this.limits = { ...DEFAULT_LIMITS, ...Object.fromEntries(Object.entries(opts.limits ?? {}).filter(([, v]) => v !== undefined && Number.isFinite(v))) };
+  }
+
+  private async slot<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.inFlight >= this.limits.concurrency) await new Promise<void>((r) => this.waiting.push(r));
+    this.inFlight++;
+    this.metrics.maxInFlight = Math.max(this.metrics.maxInFlight, this.inFlight);
+    try {
+      return await fn();
+    } finally {
+      this.inFlight--;
+      this.waiting.shift()?.();
+    }
+  }
+
+  private fail(kind: string) {
+    this.metrics.errors[kind] = (this.metrics.errors[kind] ?? 0) + 1;
+  }
+
+  /** One HTTP attempt with timeout. Returns the response or throws a typed QlooError. */
+  private async attempt(url: string, path: string) {
+    const budget = this.opts.sharedBudget ?? this.metrics;
+    if (budget.networkCalls >= this.limits.maxCalls) {
+      this.fail('budget');
+      throw new QlooError(`Qloo call budget reached (${this.limits.maxCalls} per analysis)`, null, 'budget');
+    }
+    const remaining = this.limits.deadlineMs - (Date.now() - budget.startedAt);
+    if (remaining <= 0) {
+      this.fail('deadline');
+      throw new QlooError(`Analysis time budget reached (${this.limits.deadlineMs} ms)`, null, 'deadline');
+    }
+    this.metrics.networkCalls++;
+    if (this.opts.sharedBudget) this.opts.sharedBudget.networkCalls++;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), Math.min(this.limits.timeoutMs, remaining));
+    const t0 = Date.now();
+    try {
+      const res = await this.fetchImpl(url, { headers: { 'X-Api-Key': this.opts.apiKey, Accept: 'application/json' }, signal: ctrl.signal });
+      this.metrics.latenciesMs.push(Date.now() - t0);
+      this.metrics.statuses[res.status] = (this.metrics.statuses[res.status] ?? 0) + 1;
+      return res;
+    } catch (err) {
+      const kind = ctrl.signal.aborted ? 'timeout' : 'network';
+      this.fail(kind);
+      // String(err) never contains the key: it travels only in a header.
+      throw new QlooError(`Qloo ${path} ${kind === 'timeout' ? 'timed out' : `request failed: ${String(err)}`}`, null, kind);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   private async get(path: string, params: Record<string, string>): Promise<QlooEntity[]> {
     const started = Date.now();
     const url = buildUrl(this.baseUrl, path, params);
+    const ttl = this.opts.cacheTtlMs ?? 3600_000;
+    const hit = this.opts.cache?.get(url);
+    if (hit && Date.now() - hit.at < ttl) {
+      this.metrics.cacheHits++;
+      this.calls.push({ endpoint: path, params, status: hit.status, ms: 0, resultCount: hit.entities.length, note: 'cache' });
+      return hit.entities;
+    }
     try {
-      const res = await this.fetchImpl(url, { headers: { 'X-Api-Key': this.opts.apiKey, Accept: 'application/json' } });
-      if (res.status === 404) {
-        this.calls.push({ endpoint: path, params, status: 404, ms: Date.now() - started, resultCount: 0, note: 'no results' });
-        return [];
-      }
-      if (!res.ok) {
-        this.calls.push({ endpoint: path, params, status: res.status, ms: Date.now() - started, resultCount: 0 });
-        throw new QlooError(`Qloo ${path} returned HTTP ${res.status}`, res.status);
-      }
-      const entities = parseEntities(await res.json());
-      // The API silently ignores invalid params and answers 200 with no entities (developer guide).
-      this.calls.push({
-        endpoint: path,
-        params,
-        status: res.status,
-        ms: Date.now() - started,
-        resultCount: entities.length,
-        note: entities.length === 0 ? 'empty 200: check params against the Entity Type Parameter Guide' : undefined,
+      return await this.slot(async () => {
+        for (let attemptNo = 0; ; attemptNo++) {
+          const res = await this.attempt(url, path).catch((err: QlooError) => {
+            if ((err.kind === 'network' || err.kind === 'timeout') && attemptNo < this.limits.retries) return null;
+            throw err;
+          });
+          if (!res) {
+            this.metrics.retries++;
+            continue;
+          }
+          const retryable = res.status === 429 || res.status >= 500;
+          if (retryable && attemptNo < this.limits.retries) {
+            this.metrics.retries++;
+            const ra = Number(res.headers?.get('retry-after'));
+            await new Promise((r) => setTimeout(r, Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : 500 * 2 ** attemptNo, 2000)));
+            continue;
+          }
+          if (res.status === 404) {
+            this.calls.push({ endpoint: path, params, status: 404, ms: Date.now() - started, resultCount: 0, note: 'no results' });
+            this.opts.cache?.set(url, { at: Date.now(), entities: [], status: 404 });
+            return [];
+          }
+          if (!res.ok) {
+            this.fail(`http_${res.status}`);
+            this.calls.push({ endpoint: path, params, status: res.status, ms: Date.now() - started, resultCount: 0 });
+            throw new QlooError(`Qloo ${path} returned HTTP ${res.status}`, res.status, 'http');
+          }
+          const entities = parseEntities(await res.json());
+          // The API silently ignores invalid params and answers 200 with no entities (developer guide).
+          this.calls.push({
+            endpoint: path,
+            params,
+            status: res.status,
+            ms: Date.now() - started,
+            resultCount: entities.length,
+            note: entities.length === 0 ? 'empty 200: check params against the Entity Type Parameter Guide' : undefined,
+          });
+          this.opts.cache?.set(url, { at: Date.now(), entities, status: res.status });
+          return entities;
+        }
       });
-      return entities;
     } catch (err) {
-      if (err instanceof QlooError) throw err;
+      if (err instanceof QlooError) {
+        if (err.kind !== 'http') this.calls.push({ endpoint: path, params, status: 'error', ms: Date.now() - started, resultCount: 0, note: err.message });
+        throw err;
+      }
       this.calls.push({ endpoint: path, params, status: 'error', ms: Date.now() - started, resultCount: 0, note: String(err) });
-      throw new QlooError(`Qloo ${path} request failed: ${String(err)}`, null);
+      throw new QlooError(`Qloo ${path} request failed: ${String(err)}`, null, 'network');
     }
   }
 
@@ -140,7 +262,8 @@ export class LiveQlooAdapter implements QlooAdapter {
         withAffinity++;
       }
       // Entities can come back without query.affinity; record how many carried a value.
-      const last = this.calls[this.calls.length - 1];
+      const ids = batch.join(',');
+      const last = [...this.calls].reverse().find((c) => c.params['filter.results.entities'] === ids);
       if (last) last.note = `affinity values: ${withAffinity}${last.note ? `; ${last.note}` : ''}`;
     }
     return out;

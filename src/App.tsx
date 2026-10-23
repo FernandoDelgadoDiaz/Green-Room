@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, type RecommendResult, type ShowSummary } from './api';
+import { api, liveToken, type LiveStatus, type RecommendResult, type ShowSummary } from './api';
 import { Badge } from './components/Badge';
 import { RecommendView } from './components/RecommendView';
 import { BacktestView } from './components/BacktestView';
@@ -75,6 +75,43 @@ function MethodView({ shows, mode }: { shows: ShowSummary[]; mode: 'LIVE' | 'MOC
   );
 }
 
+/** Shown only with ?private in the URL or an active token. The token is typed, never bundled. */
+function PrivateLive({ onMode }: { onMode: (m: 'LIVE' | 'MOCK') => void }) {
+  const { t } = useI18n();
+  const [visible] = useState(() => new URLSearchParams(window.location.search).has('private') || Boolean(liveToken.get()));
+  const [draft, setDraft] = useState('');
+  const [status, setStatus] = useState<LiveStatus | null>(null);
+  const check = async (token: string) => {
+    const s = await api.liveStatus(token);
+    setStatus(s);
+    if (s.state === 'denied' || s.state === 'unconfigured') liveToken.set(null);
+    onMode(s.state === 'live' ? 'LIVE' : 'MOCK');
+  };
+  useEffect(() => {
+    const tok = liveToken.get();
+    if (tok) void check(tok);
+  }, []);
+  if (!visible) return null;
+  const active = Boolean(liveToken.get());
+  return (
+    <div className="mt-4 rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/5 p-3 text-xs text-stone-300">
+      <p className="font-semibold text-fuchsia-200">{t('live.title')}</p>
+      {active ? (
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <span>{status?.state === 'live' ? t('live.live') : status?.state === 'off' ? t('live.off') : status ? `${t('live.error')}: ${'message' in status ? status.message : ''}` : '…'}</span>
+          <button className="btn-ghost" onClick={() => { liveToken.set(null); setStatus(null); onMode('MOCK'); }}>{t('live.exit')}</button>
+        </div>
+      ) : (
+        <form className="mt-2 flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) { liveToken.set(draft.trim()); setDraft(''); void check(draft.trim()); } }}>
+          <input type="password" autoComplete="off" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('live.placeholder')} className="w-64 rounded-md border border-white/15 bg-black/30 px-2 py-1" />
+          <button type="submit" className="btn-ghost">{t('live.enter')}</button>
+          {status && status.state !== 'live' && <span>{status.state === 'denied' ? t('live.denied') : status.state === 'unconfigured' ? t('live.unconfigured') : status.state === 'off' ? t('live.off') : `${t('live.error')}: ${status.message}`}</span>}
+        </form>
+      )}
+    </div>
+  );
+}
+
 function Shell() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('recommend');
@@ -86,7 +123,7 @@ function Shell() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.shows().then((r) => { setShows(r.shows); setMode(r.qlooMode); }).catch((e) => setError(String(e)));
+    api.shows().then((r) => { setShows(r.shows); if (!liveToken.get()) setMode(r.qlooMode); }).catch((e) => setError(String(e)));
   }, []);
 
   const analyze = async (id: string) => {
@@ -118,6 +155,7 @@ function Shell() {
           <span className="flex items-center gap-1.5">Qloo <Badge p={mode} /></span>
         </div>
       </header>
+      <PrivateLive onMode={setMode} />
 
       <nav className="mt-6 flex flex-wrap gap-2 sm:mt-8">
         {(

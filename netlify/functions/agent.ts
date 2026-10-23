@@ -1,18 +1,24 @@
-import type { Handler } from '@netlify/functions';
+// Public endpoint: POST /api/agent. Always MOCK (see core/api.ts handleApi); never touches the Qloo key.
 import { handleApi, type ApiRequest } from '../../core/api';
 
-export const handler: Handler = async (event) => {
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: JSON.stringify({ error: 'POST only' }) };
-  let req: ApiRequest;
+export default async (req: Request): Promise<Response> => {
+  if (req.method !== 'POST') return Response.json({ error: 'POST only' }, { status: 405 });
+  let body: ApiRequest;
   try {
-    req = JSON.parse(event.body ?? '{}');
+    body = await req.json();
   } catch {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
   }
   try {
-    const { status, body } = await handleApi(req, { QLOO_API_KEY: process.env.QLOO_API_KEY, QLOO_BASE_URL: process.env.QLOO_BASE_URL, PROFILE_LOOKUP: process.env.PROFILE_LOOKUP });
-    return { statusCode: status, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+    const { status, body: out } = await handleApi(body, { PROFILE_LOOKUP: process.env.PROFILE_LOOKUP });
+    return Response.json(out, { status });
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: String(err) }) };
+    return Response.json({ error: String(err) }, { status: 500 });
   }
+};
+
+// Netlify code-based rate limit (available on all plans): per IP and domain.
+export const config = {
+  path: '/api/agent',
+  rateLimit: { windowLimit: 60, windowSize: 60, aggregateBy: ['ip', 'domain'] },
 };

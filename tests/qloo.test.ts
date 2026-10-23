@@ -75,8 +75,11 @@ describe('MOCK adapter', () => {
     expect([...a]).toEqual([...b]);
   });
 
-  it('is selected whenever QLOO_API_KEY is absent', () => {
+  it('is selected unless QLOO_LIVE_ENABLED=true and a key are both set', () => {
     expect(makeQloo({}).mode).toBe('MOCK');
-    expect(makeQloo({ QLOO_API_KEY: 'k' }).mode).toBe('LIVE');
+    // A key alone is not enough: LIVE needs the explicit switch.
+    expect(makeQloo({ QLOO_API_KEY: 'k' }).mode).toBe('MOCK');
+    expect(makeQloo({ QLOO_API_KEY: 'k', QLOO_LIVE_ENABLED: 'TRUE' }).mode).toBe('MOCK');
+    expect(makeQloo({ QLOO_API_KEY: 'k', QLOO_LIVE_ENABLED: 'true' }).mode).toBe('LIVE');
   });
 });

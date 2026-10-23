@@ -50,7 +50,7 @@ export function redact(text: string, key: string | undefined): string {
   return key && key.length >= 4 ? text.split(key).join('[redacted]') : text;
 }
 
-async function hiddenPrompt(question: string): Promise<string> {
+export async function hiddenPrompt(question: string): Promise<string> {
   const { stdin, stdout } = process;
   if (!stdin.isTTY) throw new Error('No TTY for a hidden prompt; set QLOO_API_KEY or run `qloo setup --qloo` first.');
   stdout.write(question);
