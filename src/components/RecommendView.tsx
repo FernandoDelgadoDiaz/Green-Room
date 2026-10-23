@@ -404,7 +404,6 @@ function DiscoveryPanel({ result, show, part }: { result: RecommendResult; show:
       {(f.typePending > 0 || f.externalOverCap > 0) && <p className="mt-1 text-xs text-stone-400">{t('funnel.pendingDetail', { t: f.typePending, c: f.externalOverCap })}</p>}
       {result.signalDiagnostics.verdict !== 'ok' && result.signalDiagnostics.verdict !== 'not_run' && <p className="mt-1 text-xs text-brass-300">{t(`sigv.${result.signalDiagnostics.verdict}`)}</p>}
       {f.attempts.length > 1 && <p className="mt-1 text-xs text-sky-200/80">{t('disc.replanned', { a: f.attempts.map((x) => `${x.signal} (${x.proposed})`).join(' → ') })}</p>}
-      <NewFromQloo result={result} />
       {c && (
         <div className="mt-3 rounded-lg border border-white/10 p-3">
           <p className="text-xs uppercase tracking-widest text-stone-500">{t('cmp.title')}</p>
@@ -423,28 +422,62 @@ function DiscoveryPanel({ result, show, part }: { result: RecommendResult; show:
   );
 }
 
-/** Admitted Qloo proposals with no interviews in our corpus: what only Qloo could bring, with their real position. */
-function NewFromQloo({ result }: { result: RecommendResult }) {
+/**
+ * What Qloo added to this analysis, up front: people only Qloo found (verified and on-theme, those
+ * who can be interviewed in the show's language first) and cultural conversation hooks. The ranking
+ * below is unchanged by this card; nobody is promoted.
+ */
+function QlooContribution({ result }: { result: RecommendResult }) {
   const { lang, t } = useI18n();
-  const fresh = result.discoveryPositions.filter((p) => p.source === 'qloo-external' && p.eligible).sort((a, b) => a.qlooRank - b.qlooRank).slice(0, 8);
-  if (!fresh.length) return null;
+  if (result.qlooMode !== 'LIVE') return null;
+  const fresh = result.discoveryPositions.filter((p) => p.source === 'qloo-external' && p.eligible).sort((a, b) => a.qlooRank - b.qlooRank);
+  const speaks = fresh.filter((p) => p.languageConfirmed);
+  const others = fresh.filter((p) => !p.languageConfirmed);
+  const hooks = result.culturalAffinities.filter((c) => c.entities.length);
+  const f = result.funnel;
   return (
-    <div className="mt-3 rounded-lg border border-emerald-400/20 p-3">
-      <p className="text-xs uppercase tracking-widest text-emerald-300/80">{t('disc.newTitle')}</p>
-      <p className="mt-1 text-[11px] text-stone-400">{t('disc.newNote')}</p>
-      <ul className="mt-2 space-y-2">
-        {fresh.map((p) => (
-          <li key={p.name}>
-            <p className="text-stone-100">
-              {p.name}
-              {p.inTopK && <span className="ml-2 text-xs text-emerald-300">{t('disc.newInTop')}</span>}
-              {!p.languageConfirmed && <span className="ml-2 text-xs text-brass-300">{t('disc.newLang')}</span>}
-            </p>
-            <p className="text-[11px] text-stone-500">{t('disc.newRow', { q: p.qlooRank, f: Math.round(p.themeFit * 100), p: p.finalRank ?? '—' })}</p>
-            {!p.inTopK && <p className="text-[11px] text-stone-400">{lang === 'es' ? p.reasonEs : p.reason}</p>}
-          </li>
-        ))}
-      </ul>
+    <div className="card border border-emerald-400/30 bg-emerald-500/5 p-5 text-sm">
+      <h3 className="flex items-center gap-2 font-display text-2xl">{t('qc.title')} <Badge p="LIVE" /></h3>
+      <p className="mt-1 text-xs text-stone-400">{t('qc.lead')}</p>
+
+      <p className="mt-4 text-xs uppercase tracking-widest text-emerald-300/80">{t('qc.people')}</p>
+      {speaks.length ? (
+        <ul className="mt-2 space-y-2">
+          {speaks.slice(0, 5).map((p) => (
+            <li key={p.name}>
+              <p className="font-semibold text-stone-100">
+                {p.name}
+                {p.inTopK && <span className="ml-2 text-xs font-normal text-emerald-300">{t('disc.newInTop')}</span>}
+              </p>
+              <p className="text-[11px] text-stone-500">{t('disc.newRow', { q: p.qlooRank, f: Math.round(p.themeFit * 100), p: p.finalRank ?? '—' })}</p>
+              {!p.inTopK && <p className="text-[11px] text-stone-400">{lang === 'es' ? p.reasonEs : p.reason}</p>}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-stone-300">{t('qc.none', { n: f.proposed, d: f.externalDocumented + f.identityVerified })}</p>
+      )}
+      {others.length > 0 && (
+        <details className="mt-2 text-[11px] text-stone-400">
+          <summary className="cursor-pointer">{t('qc.otherLang', { n: others.length })}</summary>
+          <p className="mt-1">{others.map((p) => p.name).join(' · ')}</p>
+        </details>
+      )}
+
+      {hooks.length > 0 && (
+        <>
+          <p className="mt-4 text-xs uppercase tracking-widest text-emerald-300/80">{t('qc.hooks')}</p>
+          <div className="mt-2 space-y-1">
+            {hooks.map((c) => (
+              <p key={c.type} className="text-stone-300">
+                <span className="text-stone-500">{t(`qc.type.${c.type.replace('urn:entity:', '')}` as Parameters<typeof t>[0])}: </span>
+                {c.entities.slice(0, 3).map((e) => e.name).join(' · ')}
+              </p>
+            ))}
+          </div>
+          <p className="mt-1 text-[11px] text-stone-500">{t('qc.hooksNote')}</p>
+        </>
+      )}
     </div>
   );
 }
@@ -570,9 +603,15 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
           <h3 className="font-display text-3xl">{t('recs.title')}</h3>
           <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
         </div>
+        <QlooContribution result={result} />
         <AnalysisSummary result={result} show={show} />
         <DiscoveryPanel result={result} show={show} part="head" />
-        {warnings.map((w) => <div key={w} className="rounded-xl border border-brass-400/30 bg-brass-400/10 px-4 py-3 text-sm text-brass-300">{w}</div>)}
+        {warnings.length > 0 && (
+          <details className="rounded-xl border border-brass-400/30 bg-brass-400/10 px-4 py-3 text-sm text-brass-300">
+            <summary className="cursor-pointer">{t('recs.warnings', { n: warnings.length })}</summary>
+            <ul className="mt-2 list-disc space-y-1 pl-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
+          </details>
+        )}
         {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
         {result.recommendations.map((r) => <RecommendationCard key={r.key} rec={r} show={show} result={result} />)}
         <DiscoveryPanel result={result} show={show} part="details" />

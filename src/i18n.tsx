@@ -123,6 +123,26 @@ const STRINGS = {
     es: 'A partir de {n} títulos de episodios. Describe de qué habla el programa, no qué le gusta a su audiencia.',
   },
   'affinities.title': { en: 'Cultural affinities inferred by Qloo', es: 'Afinidades culturales inferidas por Qloo' },
+  'qc.title': { en: 'What Qloo added', es: 'Lo que aportó Qloo' },
+  'qc.lead': {
+    en: 'Found through Qloo’s taste graph and checked by the agent. The five picks below are ranked on evidence, so Qloo never pushes anyone in.',
+    es: 'Encontrado con el grafo de gustos de Qloo y verificado por el agente. Las cinco elecciones de abajo se ordenan por evidencia: Qloo nunca mete a nadie a la fuerza.',
+  },
+  'qc.people': { en: 'New people only Qloo found', es: 'Personas nuevas que solo Qloo encontró' },
+  'qc.none': {
+    en: 'Qloo proposed {n} people and {d} passed identity checks, but none passed every check for this show (theme, repeat, language).',
+    es: 'Qloo propuso {n} personas y {d} pasaron la verificación de identidad, pero ninguna pasó todos los controles para este programa (tema, repetición, idioma).',
+  },
+  'qc.otherLang': { en: '{n} more without a confirmed language for this show', es: '{n} más sin idioma confirmado para este programa' },
+  'qc.hooks': { en: 'Conversation hooks from Qloo', es: 'Ideas para la conversación, según Qloo' },
+  'qc.hooksNote': {
+    en: 'Tastes Qloo associates with this show’s signals. Inferred, not data about its listeners.',
+    es: 'Gustos que Qloo asocia a las señales de este programa. Inferidos, no son datos de sus oyentes.',
+  },
+  'qc.type.artist': { en: 'Music', es: 'Música' },
+  'qc.type.movie': { en: 'Films', es: 'Películas' },
+  'qc.type.book': { en: 'Books', es: 'Libros' },
+  'recs.warnings': { en: 'Notes on this analysis ({n})', es: 'Avisos sobre este análisis ({n})' },
   'disc.newTitle': { en: 'New people Qloo found (verified, on-theme)', es: 'Personas nuevas que encontró Qloo (verificadas y pertinentes)' },
   'disc.newNote': {
     en: 'Nobody here has an interview in our sources: without Qloo, Green Room could not have suggested them. Each one passed identity, theme and repeat checks. They are listed apart because they did not outscore the five picks on our evidence; the reason is given, and no one is pushed into the top five.',
