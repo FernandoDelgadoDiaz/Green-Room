@@ -13,7 +13,11 @@ export interface TraceStep {
   detail: string;
   decision?: string;
   provenance: Provenance;
+  /** Spanish rendering; the English text stays in the primary fields. */
+  es: { title: string; detail: string; decision?: string };
 }
+
+type Bi = [en: string, es: string];
 
 export interface ScoreComponent {
   value: number | null;
@@ -29,16 +33,17 @@ export interface Recommendation {
   score: number;
   components: { themeFit: ScoreComponent; qlooAffinity: ScoreComponent; momentum: ScoreComponent; recency: ScoreComponent };
   appearances: Appearance[];
-  sharedThemes: Array<{ id: ThemeId; label: string; words: string[] }>;
+  sharedThemes: Array<{ id: ThemeId; label: string; labelEs: string; words: string[] }>;
   conversationTopics: string[];
   qlooEntityId: string | null;
   source: 'verified-pool' | 'qloo-person-insights';
-  rationale: Array<{ text: string; provenance: Provenance }>;
+  rationale: Array<{ text: string; textEs: string; provenance: Provenance }>;
 }
 
 export interface Discarded {
   name: string;
   reason: string;
+  reasonEs: string;
   evidence?: Appearance;
 }
 
@@ -48,7 +53,7 @@ export interface AgentResult {
   asOf: string;
   qlooMode: QlooAdapter['mode'];
   trace: TraceStep[];
-  themes: Array<{ id: ThemeId; label: string; share: number; words: string[] }>;
+  themes: Array<{ id: ThemeId; label: string; labelEs: string; share: number; words: string[] }>;
   pastGuestCount: number;
   historyEpisodeCount: number;
   culturalAffinities: Array<{ type: string; entities: QlooEntity[]; provenance: Provenance }>;
@@ -57,6 +62,7 @@ export interface AgentResult {
   ranked: Array<{ key: string; name: string; score: number }>;
   discarded: Discarded[];
   warnings: string[];
+  warningsEs: string[];
   qlooCalls: QlooAdapter['calls'];
 }
 
@@ -115,8 +121,24 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const asOf = input.asOf ?? new Date().toISOString();
   const trace: TraceStep[] = [];
   const warnings: string[] = [];
+  const warningsEs: string[] = [];
+  const warn = ([en, es]: Bi) => {
+    warnings.push(en);
+    warningsEs.push(es);
+  };
   const discarded: Discarded[] = [];
-  const step = (s: Omit<TraceStep, 'id'>) => trace.push({ id: `s${trace.length + 1}`, ...s });
+  const step = (s: { title: Bi; tool?: string; detail: Bi; decision?: Bi; provenance: Provenance }) =>
+    trace.push({
+      id: `s${trace.length + 1}`,
+      title: s.title[0],
+      tool: s.tool,
+      detail: s.detail[0],
+      decision: s.decision?.[0],
+      provenance: s.provenance,
+      es: { title: s.title[1], detail: s.detail[1], decision: s.decision?.[1] },
+    });
+  const pct = (x: number) => Math.round(x * 100);
+  const d10 = (iso: string) => iso.slice(0, 10);
 
   // 1. History ---------------------------------------------------------------------------------
   const history = target.episodes.filter((e) => e.published && e.published < asOf && !e.excluded);
@@ -133,16 +155,23 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   }
   const coverage = history.length ? withGuests.length / history.length : 0;
   step({
-    title: 'Read the show’s public episode history',
+    title: ['Read the show’s public episode history', 'Leer el historial público de episodios'],
     tool: 'load_history',
-    detail: `${history.length} episodes before ${asOf.slice(0, 10)} from the official RSS feed; guest names identified in ${withGuests.length} (${Math.round(coverage * 100)}%), ${pastGuests.size} distinct guests.`,
+    detail: [
+      `${history.length} episodes before ${d10(asOf)} from the official RSS feed; guest names identified in ${withGuests.length} (${pct(coverage)}%), ${pastGuests.size} distinct guests.`,
+      `${history.length} episodios anteriores al ${d10(asOf)} del RSS oficial; invitados identificados en ${withGuests.length} (${pct(coverage)}%), ${pastGuests.size} invitados distintos.`,
+    ],
     decision:
       coverage < 0.6
-        ? 'Guest coverage is low, so the repeat-guest check may miss people. Flagging it and continuing.'
-        : 'Coverage is enough to check for repeat guests reliably.',
+        ? ['Guest coverage is low, so the repeat-guest check may miss people. Flagging it and continuing.', 'La cobertura de invitados es baja: el control de repetidos podría no detectar a alguien. Lo señalo y continúo.']
+        : ['Coverage is enough to check for repeat guests reliably.', 'La cobertura alcanza para controlar invitados repetidos con confianza.'],
     provenance: 'VERIFIED',
   });
-  if (coverage < 0.6) warnings.push(`Only ${Math.round(coverage * 100)}% of episodes have an identified guest; some past guests may not be detected.`);
+  if (coverage < 0.6)
+    warn([
+      `Only ${pct(coverage)}% of episodes have an identified guest; some past guests may not be detected.`,
+      `Solo el ${pct(coverage)}% de los episodios tiene un invitado identificado; algunos invitados anteriores podrían no detectarse.`,
+    ]);
 
   // 2. Themes ----------------------------------------------------------------------------------
   const profile = emptyVector();
@@ -162,12 +191,17 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     words: [...(profileWords.get(t.id) ?? new Map()).entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([w]) => w),
   }));
   step({
-    title: 'Identify what the show talks about',
+    title: ['Identify what the show talks about', 'Identificar de qué habla el programa'],
     tool: 'infer_themes',
     detail: themes.length
-      ? `Top themes from recent titles (recency-weighted): ${themes.map((t) => `${t.label} ${Math.round(t.share * 100)}%`).join(', ')}.`
-      : 'No theme keywords matched the titles.',
-    decision: themes.length ? 'Using these themes to measure topical fit.' : 'Topical fit cannot be measured; ranking will lean on other signals.',
+      ? [
+          `Top themes from recent titles (recency-weighted): ${themes.map((t) => `${t.label} ${pct(t.share)}%`).join(', ')}.`,
+          `Temas principales en los títulos recientes (ponderados por recencia): ${themes.map((t) => `${t.labelEs} ${pct(t.share)}%`).join(', ')}.`,
+        ]
+      : ['No theme keywords matched the titles.', 'Ningún término temático coincidió con los títulos.'],
+    decision: themes.length
+      ? ['Using these themes to measure topical fit.', 'Uso estos temas para medir el ajuste temático.']
+      : ['Topical fit cannot be measured; ranking will lean on other signals.', 'No se puede medir el ajuste temático; el ranking se apoyará en otras señales.'],
     provenance: 'INFERRED',
   });
 
@@ -180,7 +214,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const blend = qloo.mode === 'LIVE' ? QLOO_BLEND : 0;
   const qlooProvenance: Provenance = qloo.mode === 'OFF' ? 'INFERRED' : qloo.mode;
   if (qloo.mode === 'OFF') {
-    step({ title: 'Ask Qloo about the audience’s taste', tool: 'qloo', detail: 'Qloo disabled for this run (baseline arm).', decision: 'Ranking with verified history and themes only.', provenance: 'INFERRED' });
+    step({
+      title: ['Ask Qloo about the audience’s taste', 'Consultar a Qloo sobre el gusto de la audiencia'],
+      tool: 'qloo',
+      detail: ['Qloo disabled for this run (baseline arm).', 'Qloo desactivado en esta ejecución (brazo de comparación).'],
+      decision: ['Ranking with verified history and themes only.', 'Ranking solo con historial verificado y temas.'],
+      provenance: 'INFERRED',
+    });
   } else {
     for (const g of recentGuests) {
       try {
@@ -188,17 +228,20 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         const match = hits.find((h) => sameName(h.name, g.name));
         if (match) resolved.push(match);
       } catch (err) {
-        warnings.push(`Qloo search failed for ${g.name}: ${String(err)}`);
+        warn([`Qloo search failed for ${g.name}: ${String(err)}`, `Falló la búsqueda en Qloo de ${g.name}: ${String(err)}`]);
       }
     }
     qlooUsable = resolved.length >= 3;
     step({
-      title: 'Resolve past guests in Qloo’s taste graph',
+      title: ['Resolve past guests in Qloo’s taste graph', 'Ubicar a los invitados anteriores en el grafo de gustos de Qloo'],
       tool: 'qloo.search',
-      detail: `${resolved.length} of the ${recentGuests.length} most recent guests resolved to Qloo person entities (exact name match only).`,
+      detail: [
+        `${resolved.length} of the ${recentGuests.length} most recent guests resolved to Qloo person entities (exact name match only).`,
+        `${resolved.length} de los ${recentGuests.length} invitados más recientes se encontraron como personas en Qloo (solo coincidencia exacta de nombre).`,
+      ],
       decision: qlooUsable
-        ? 'Using these guests as the taste signal for the audience.'
-        : 'Too few guests resolved (<3). Continuing without Qloo signals rather than guessing.',
+        ? ['Using these guests as the taste signal for the audience.', 'Uso a estos invitados como señal del gusto de la audiencia.']
+        : ['Too few guests resolved (<3). Continuing without Qloo signals rather than guessing.', 'Muy pocos invitados encontrados (<3). Continúo sin señales de Qloo en lugar de adivinar.'],
       provenance: qlooProvenance,
     });
     if (qlooUsable) {
@@ -208,15 +251,19 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           const entities = await qloo.categoryInsights({ signalIds, type, take: 6 });
           culturalAffinities.push({ type, entities, provenance: qloo.mode });
         } catch (err) {
-          warnings.push(`Qloo ${type} insights failed: ${String(err)}`);
+          warn([`Qloo ${type} insights failed: ${String(err)}`, `Falló la consulta de Qloo (${type}): ${String(err)}`]);
         }
       }
       const total = culturalAffinities.reduce((s, c) => s + c.entities.length, 0);
       step({
-        title: 'Map the cross-domain taste of that audience',
+        title: ['Map the cross-domain taste of that audience', 'Mapear el gusto de esa audiencia en otros dominios'],
         tool: 'qloo.insights (artist, movie, book)',
-        detail: total ? `${total} artists, films and books with affinity to this guest list.` : 'Qloo returned no cross-domain entities for these signals.',
-        decision: total ? 'Using them as conversation hooks.' : 'No cultural hooks available; explanations will rely on themes and prior appearances.',
+        detail: total
+          ? [`${total} artists, films and books with affinity to this guest list.`, `${total} artistas, películas y libros con afinidad con esta lista de invitados.`]
+          : ['Qloo returned no cross-domain entities for these signals.', 'Qloo no devolvió entidades de otros dominios para estas señales.'],
+        decision: total
+          ? ['Using them as conversation hooks.', 'Los uso como disparadores de conversación.']
+          : ['No cultural hooks available; explanations will rely on themes and prior appearances.', 'No hay referencias culturales disponibles; las explicaciones se basarán en temas y apariciones previas.'],
         provenance: qlooProvenance,
       });
     }
@@ -255,10 +302,16 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   let windowMonths = 36;
   let pool = buildPool(windowMonths);
   step({
-    title: 'Search for candidates with a verifiable public track record',
+    title: ['Search for candidates with a verifiable public track record', 'Buscar candidatos con trayectoria pública verificable'],
     tool: 'search_candidate_pool',
-    detail: `${pool.size} people who appeared on ${others.map((o) => o.name).join(' or ')} in the ${windowMonths} months before ${asOf.slice(0, 10)}.`,
-    decision: pool.size >= k ? 'Enough candidates to rank.' : 'Pool is small; will widen the time window if needed.',
+    detail: [
+      `${pool.size} people who appeared on ${others.map((o) => o.name).join(' or ')} in the ${windowMonths} months before ${d10(asOf)}.`,
+      `${pool.size} personas que participaron en ${others.map((o) => o.name).join(' o ')} en los ${windowMonths} meses anteriores al ${d10(asOf)}.`,
+    ],
+    decision:
+      pool.size >= k
+        ? ['Enough candidates to rank.', 'Hay suficientes candidatos para clasificar.']
+        : ['Pool is small; will widen the time window if needed.', 'El grupo es chico; ampliaré la ventana de tiempo si hace falta.'],
     provenance: 'VERIFIED',
   });
 
@@ -277,14 +330,19 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         added++;
       }
       step({
-        title: 'Ask Qloo who else this audience has affinity for',
+        title: ['Ask Qloo who else this audience has affinity for', 'Preguntar a Qloo con quién más tiene afinidad esta audiencia'],
         tool: 'qloo.insights (person)',
-        detail: `${people.length} people returned; ${added} new to the candidate pool.`,
-        decision: people.length ? 'Adding them; they have no verified appearance on the comparison shows, so their evidence is Qloo affinity only.' : 'Nothing returned; staying with the verified pool.',
+        detail: [`${people.length} people returned; ${added} new to the candidate pool.`, `${people.length} personas devueltas; ${added} nuevas para el grupo de candidatos.`],
+        decision: people.length
+          ? [
+              'Adding them; they have no verified appearance on the comparison shows, so their evidence is Qloo affinity only.',
+              'Las agrego; no tienen apariciones verificadas en los programas de comparación, así que su evidencia es solo la afinidad de Qloo.',
+            ]
+          : ['Nothing returned; staying with the verified pool.', 'No devolvió nada; sigo con el grupo verificado.'],
         provenance: qlooProvenance,
       });
     } catch (err) {
-      warnings.push(`Qloo person insights failed: ${String(err)}`);
+      warn([`Qloo person insights failed: ${String(err)}`, `Falló la consulta de personas en Qloo: ${String(err)}`]);
     }
   }
 
@@ -293,20 +351,30 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     for (const [key, c] of p) {
       const past = pastGuests.get(key);
       if (past) {
-        discarded.push({ name: c.name, reason: `Already a guest on ${target.name} (${past.published.slice(0, 10)})`, evidence: past });
+        discarded.push({
+          name: c.name,
+          reason: `Already a guest on ${target.name} (${d10(past.published)})`,
+          reasonEs: `Ya fue invitado en ${target.name} (${d10(past.published)})`,
+          evidence: past,
+        });
         p.delete(key);
       } else if (targetHostKeys.has(key)) {
-        discarded.push({ name: c.name, reason: `Host of ${target.name}` });
+        discarded.push({ name: c.name, reason: `Host of ${target.name}`, reasonEs: `Conductor de ${target.name}` });
         p.delete(key);
       }
     }
   };
   filterRepeats(pool);
   step({
-    title: 'Discard people who already appeared on the show',
+    title: ['Discard people who already appeared on the show', 'Descartar a quienes ya participaron en el programa'],
     tool: 'check_history',
-    detail: `${discarded.length} candidates removed because they were already guests (or the host).`,
-    decision: discarded.length ? `Example: ${discarded[0].name} — ${discarded[0].reason}.` : 'No overlap with past guests.',
+    detail: [
+      `${discarded.length} candidates removed because they were already guests (or the host).`,
+      `${discarded.length} candidatos descartados porque ya fueron invitados (o son el conductor).`,
+    ],
+    decision: discarded.length
+      ? [`Example: ${discarded[0].name} — ${discarded[0].reason}.`, `Ejemplo: ${discarded[0].name} — ${discarded[0].reasonEs}.`]
+      : ['No overlap with past guests.', 'Ninguna coincidencia con invitados anteriores.'],
     provenance: 'VERIFIED',
   });
 
@@ -333,7 +401,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         const match = hits.find((h) => sameName(h.name, c.name));
         if (match) c.qlooEntityId = match.entityId;
       } catch (err) {
-        warnings.push(`Qloo search failed for candidate ${c.name}: ${String(err)}`);
+        warn([`Qloo search failed for candidate ${c.name}: ${String(err)}`, `Falló la búsqueda en Qloo del candidato ${c.name}: ${String(err)}`]);
       }
     }
     const ids = shortlist.map((c) => c.qlooEntityId).filter((x): x is string => Boolean(x));
@@ -341,7 +409,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     try {
       affinities = await qloo.affinityFor({ signalIds: resolved.map((r) => r.entityId), candidateIds: ids });
     } catch (err) {
-      warnings.push(`Qloo affinity scoring failed: ${String(err)}`);
+      warn([`Qloo affinity scoring failed: ${String(err)}`, `Falló el cálculo de afinidad en Qloo: ${String(err)}`]);
     }
     // Rank-normalize affinities within the shortlist so the blend does not depend on Qloo's raw scale.
     const sorted = [...affinities.entries()].sort((a, b) => a[1] - b[1]);
@@ -352,13 +420,22 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       if (blend > 0) c.score = (1 - blend) * c.base + blend * (c.qlooAffinity ?? 0.5);
     }
     step({
-      title: 'Score candidates against the audience’s taste',
+      title: ['Score candidates against the audience’s taste', 'Puntuar candidatos según el gusto de la audiencia'],
       tool: 'qloo.insights (filter.entities)',
-      detail: `${ids.length} of the top ${shortlist.length} candidates resolved in Qloo; ${affinities.size} received an affinity score.`,
+      detail: [
+        `${ids.length} of the top ${shortlist.length} candidates resolved in Qloo; ${affinities.size} received an affinity score.`,
+        `${ids.length} de los ${shortlist.length} mejores candidatos se encontraron en Qloo; ${affinities.size} recibieron puntaje de afinidad.`,
+      ],
       decision:
         blend > 0
-          ? `Final score = ${1 - blend}×(topical fit, momentum, recency) + ${blend}×Qloo affinity rank.`
-          : 'MOCK affinities are computed to exercise the pipeline but are NOT used for ranking.',
+          ? [
+              `Final score = ${1 - blend}×(topical fit, momentum, recency) + ${blend}×Qloo affinity rank.`,
+              `Puntaje final = ${1 - blend}×(ajuste temático, momento, recencia) + ${blend}×posición de afinidad en Qloo.`,
+            ]
+          : [
+              'MOCK affinities are computed to exercise the pipeline but are NOT used for ranking.',
+              'Las afinidades MOCK se calculan para probar el circuito, pero NO se usan en el ranking.',
+            ],
       provenance: qlooProvenance,
     });
   }
@@ -369,7 +446,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   while (eligible().length < k && minFit > 0) {
     const before = minFit;
     minFit = Math.max(0, Math.round((minFit - 0.1) * 100) / 100);
-    step({ title: 'Too few candidates fit the show’s themes', tool: 'relax_threshold', detail: `Only ${eligible().length} candidates at topical fit ≥ ${before}.`, decision: `Lowering the minimum topical fit to ${minFit}.`, provenance: 'INFERRED' });
+    step({
+      title: ['Too few candidates fit the show’s themes', 'Pocos candidatos encajan con los temas del programa'],
+      tool: 'relax_threshold',
+      detail: [`Only ${eligible().length} candidates at topical fit ≥ ${before}.`, `Solo ${eligible().length} candidatos con ajuste temático ≥ ${before}.`],
+      decision: [`Lowering the minimum topical fit to ${minFit}.`, `Bajo el ajuste temático mínimo a ${minFit}.`],
+      provenance: 'INFERRED',
+    });
   }
   if (eligible().length < k && windowMonths < 72) {
     windowMonths = 72;
@@ -377,7 +460,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     for (const [key, c] of widened) if (!pool.has(key)) pool.set(key, c);
     filterRepeats(pool);
     score(pool);
-    step({ title: 'Widen the search window', tool: 'search_candidate_pool', detail: `Pool now ${pool.size} people across ${windowMonths} months.`, decision: 'Re-scored with the larger pool.', provenance: 'VERIFIED' });
+    step({
+      title: ['Widen the search window', 'Ampliar la ventana de búsqueda'],
+      tool: 'search_candidate_pool',
+      detail: [`Pool now ${pool.size} people across ${windowMonths} months.`, `El grupo ahora tiene ${pool.size} personas en ${windowMonths} meses.`],
+      decision: ['Re-scored with the larger pool.', 'Vuelvo a puntuar con el grupo ampliado.'],
+      provenance: 'VERIFIED',
+    });
   }
 
   // Language: prefer candidates with a verified appearance in the show's language.
@@ -388,10 +477,34 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   let languageFilter = false;
   if (sameLanguage >= k) {
     languageFilter = true;
-    step({ title: 'Check language fit', tool: 'check_language', detail: `${sameLanguage} eligible candidates have a verified appearance on a "${targetLang}" show.`, decision: 'Keeping only same-language candidates.', provenance: 'INFERRED' });
+    step({
+      title: ['Check language fit', 'Verificar el idioma'],
+      tool: 'check_language',
+      detail: [
+        `${sameLanguage} eligible candidates have a verified appearance on a "${targetLang}" show.`,
+        `${sameLanguage} candidatos elegibles tienen una aparición verificada en un programa en "${targetLang}".`,
+      ],
+      decision: ['Keeping only same-language candidates.', 'Me quedo solo con candidatos del mismo idioma.'],
+      provenance: 'INFERRED',
+    });
   } else {
-    warnings.push(`Only ${sameLanguage} verified candidates appeared on a ${targetLang.toUpperCase()}-language show. Remaining suggestions are cross-language; in-language candidates need Qloo person insights (live API).`);
-    step({ title: 'Check language fit', tool: 'check_language', detail: `Only ${sameLanguage} of ${eligible().length} eligible candidates have a verified appearance in "${targetLang}".`, decision: 'Not enough same-language candidates: allowing cross-language suggestions and flagging each one.', provenance: 'INFERRED' });
+    warn([
+      `Only ${sameLanguage} verified candidates appeared on a ${targetLang.toUpperCase()}-language show. Remaining suggestions are cross-language; in-language candidates need Qloo person insights (live API).`,
+      `Solo ${sameLanguage} candidatos verificados participaron en un programa en ${targetLang.toUpperCase()}. El resto de las sugerencias son de otro idioma; los candidatos del mismo idioma requieren las consultas de personas de Qloo (API real).`,
+    ]);
+    step({
+      title: ['Check language fit', 'Verificar el idioma'],
+      tool: 'check_language',
+      detail: [
+        `Only ${sameLanguage} of ${eligible().length} eligible candidates have a verified appearance in "${targetLang}".`,
+        `Solo ${sameLanguage} de ${eligible().length} candidatos elegibles tienen una aparición verificada en "${targetLang}".`,
+      ],
+      decision: [
+        'Not enough same-language candidates: allowing cross-language suggestions and flagging each one.',
+        'No hay suficientes candidatos del mismo idioma: permito sugerencias de otro idioma y marco cada una.',
+      ],
+      provenance: 'INFERRED',
+    });
   }
 
   // 8. Diversity-aware selection (MMR) ---------------------------------------------------------
@@ -418,10 +531,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   }
   const reordered = picks.some((p, i) => ranked[i]?.key !== p.key);
   step({
-    title: 'Pick a varied shortlist',
+    title: ['Pick a varied shortlist', 'Elegir una lista corta variada'],
     tool: 'select_shortlist',
-    detail: `Selected ${picks.length} of ${eligible().length} eligible candidates.`,
-    decision: reordered ? 'Swapped near-duplicate profiles for more varied ones (diversity re-ranking).' : 'Top-scored candidates were already varied.',
+    detail: [`Selected ${picks.length} of ${eligible().length} eligible candidates.`, `Seleccioné ${picks.length} de ${eligible().length} candidatos elegibles.`],
+    decision: reordered
+      ? ['Swapped near-duplicate profiles for more varied ones (diversity re-ranking).', 'Reemplacé perfiles casi duplicados por otros más variados (reordenamiento por diversidad).']
+      : ['Top-scored candidates were already varied.', 'Los mejor puntuados ya eran variados.'],
     provenance: 'INFERRED',
   });
 
@@ -430,25 +545,44 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const recommendations: Recommendation[] = picks.map((c, i) => {
     const sharedThemes = [...c.matched.entries()]
       .filter(([id]) => themeIdsInProfile.has(id))
-      .map(([id, words]) => ({ id, label: THEMES[id].label, words: [...words].slice(0, 4) }));
+      .map(([id, words]) => ({ id, label: THEMES[id].label, labelEs: THEMES[id].labelEs, words: [...words].slice(0, 4) }));
     const appearances = c.appearances.sort((a, b) => b.published.localeCompare(a.published));
     const conversationTopics = [...new Set(appearances.slice(0, 3).map((a) => topicPhrase(a.title, c.name)).filter(Boolean))];
     const rationale: Recommendation['rationale'] = [];
     if (appearances.length) {
       const a = appearances[0];
-      rationale.push({ text: `Appeared on ${a.showName} on ${a.published.slice(0, 10)}: “${a.title}”.`, provenance: 'VERIFIED' });
-      if (appearances.length > 1) rationale.push({ text: `${appearances.length} verified appearances on comparison shows in the search window.`, provenance: 'VERIFIED' });
+      rationale.push({ text: `Appeared on ${a.showName} on ${d10(a.published)}: “${a.title}”.`, textEs: `Participó en ${a.showName} el ${d10(a.published)}: “${a.title}”.`, provenance: 'VERIFIED' });
+      if (appearances.length > 1)
+        rationale.push({
+          text: `${appearances.length} verified appearances on comparison shows in the search window.`,
+          textEs: `${appearances.length} apariciones verificadas en programas de comparación dentro de la ventana de búsqueda.`,
+          provenance: 'VERIFIED',
+        });
     }
-    rationale.push({ text: `Not found among ${pastGuests.size} past guests of ${target.name}.`, provenance: 'VERIFIED' });
-    if (sharedThemes.length) rationale.push({ text: `Shares the show’s themes: ${sharedThemes.map((s) => s.label).join(', ')}.`, provenance: 'INFERRED' });
+    rationale.push({ text: `Not found among ${pastGuests.size} past guests of ${target.name}.`, textEs: `No figura entre los ${pastGuests.size} invitados anteriores de ${target.name}.`, provenance: 'VERIFIED' });
+    if (sharedThemes.length)
+      rationale.push({
+        text: `Shares the show’s themes: ${sharedThemes.map((s) => s.label).join(', ')}.`,
+        textEs: `Comparte temas del programa: ${sharedThemes.map((s) => s.labelEs).join(', ')}.`,
+        provenance: 'INFERRED',
+      });
     if (c.qlooAffinity !== null) {
       rationale.push({
-        text: qloo.mode === 'MOCK' ? 'Qloo affinity score is SIMULATED (no API key yet) and must not be read as evidence.' : `Qloo affinity rank ${Math.round(c.qlooAffinity * 100)}/100 within the shortlist.`,
+        text: qloo.mode === 'MOCK' ? 'Qloo affinity score is SIMULATED (no API key yet) and must not be read as evidence.' : `Qloo affinity rank ${pct(c.qlooAffinity)}/100 within the shortlist.`,
+        textEs:
+          qloo.mode === 'MOCK'
+            ? 'El puntaje de afinidad de Qloo es SIMULADO (todavía sin clave de API) y no debe leerse como evidencia.'
+            : `Posición de afinidad en Qloo: ${pct(c.qlooAffinity)}/100 dentro de la lista corta.`,
         provenance: qloo.mode === 'MOCK' ? 'MOCK' : 'LIVE',
       });
     }
     const crossLanguage = !speaksTarget(c);
-    if (crossLanguage && c.appearances.length) rationale.push({ text: `Cross-language suggestion: known appearances are not in “${targetLang}”.`, provenance: 'INFERRED' });
+    if (crossLanguage && c.appearances.length)
+      rationale.push({
+        text: `Cross-language suggestion: known appearances are not in “${targetLang}”.`,
+        textEs: `Sugerencia de otro idioma: sus apariciones conocidas no son en “${targetLang}”.`,
+        provenance: 'INFERRED',
+      });
     return {
       rank: i + 1,
       name: c.name,
@@ -479,10 +613,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     };
   });
   step({
-    title: 'Explain every recommendation with its evidence',
+    title: ['Explain every recommendation with its evidence', 'Justificar cada recomendación con su evidencia'],
     tool: 'justify',
-    detail: `${recommendations.length} recommendations, each with sources and provenance labels.`,
-    decision: qloo.mode === 'MOCK' ? 'Qloo values are labeled MOCK and excluded from any claim.' : 'Done.',
+    detail: [`${recommendations.length} recommendations, each with sources and provenance labels.`, `${recommendations.length} recomendaciones, cada una con fuentes y etiquetas de procedencia.`],
+    decision:
+      qloo.mode === 'MOCK'
+        ? ['Qloo values are labeled MOCK and excluded from any claim.', 'Los valores de Qloo están marcados como MOCK y quedan fuera de toda afirmación.']
+        : ['Done.', 'Listo.'],
     provenance: 'INFERRED',
   });
 
@@ -500,6 +637,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     ranked: ranked.map((c) => ({ key: c.key, name: c.name, score: c.score })),
     discarded,
     warnings,
+    warningsEs,
     qlooCalls: qloo.calls,
   };
 }

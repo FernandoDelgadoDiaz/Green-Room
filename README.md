@@ -18,6 +18,13 @@ Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/). Qloo's t
    - a draft interview proposal built only from that evidence.
 4. **Backtest**: hide everything after a cutoff date, recommend with earlier data only, then count how many recommended people the host really booked later. The page also shows a random baseline, a leakage audit and limitations.
 
+## Languages and guest profiles
+
+- **Español | English** selector in the header. Spanish is the default; the choice is remembered in the browser (localStorage). Switching language re-renders texts only: it does not re-run the analysis or change the ranking (checked in the browser QA run and in `tests/i18n-profiles.test.ts`).
+- Agent steps, decisions, reasons, warnings, backtest labels and interview proposals exist in both languages. Proper names, episode titles and quotes from sources stay in their original language.
+- **Guest cards** show the photo, name, specialty, score, "why we recommend them", an evidence button and an invitation button. Technical details and the VERIFIED/INFERRED/MOCK/LIVE labels are in a collapsible section; MOCK is also flagged on the collapsed summary.
+- **Photos** come from Wikimedia Commons with free licenses only. Author and license are shown in the evidence panel. A Wikipedia profile is attached only when its text matches the guest's own interview titles; otherwise the card shows initials. See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md#guest-photos-and-bios).
+
 ## Provenance labels
 
 | Label | Meaning |
@@ -46,10 +53,11 @@ Only 7 of the 59 later first-time guests were reachable: they had appeared on a 
 ```bash
 npm install
 npm run dev           # http://localhost:5173 (API served by the same handler as the Netlify Function)
-npm test              # 34 tests: extraction, agent decisions, leakage, Qloo client, secrets
+npm test              # 44 tests: extraction, agent decisions, leakage, Qloo client, secrets, i18n, profiles, unchanged ranking
 npm run typecheck
 npm run build
 npm run backtest -- <showId> <YYYY-MM-DD>
+npm run profiles:build  # refresh data/profiles.json from Wikipedia/Wikidata (needs network to those hosts)
 ```
 
 Live Qloo (when the key arrives):

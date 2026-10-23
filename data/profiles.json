@@ -1,0 +1,2008 @@
+{
+ "jd vance": {
+  "name": "JD Vance",
+  "wikipedia": {
+   "title": "JD Vance",
+   "url": "https://en.wikipedia.org/wiki/JD_Vance"
+  },
+  "wikidataId": "Q28935729",
+  "description": {
+   "en": "Vice President of the United States since 2025",
+   "es": "50.º vicepresidente de los Estados Unidos"
+  },
+  "extract": {
+   "en": "James David  Vance (born James Donald Bowman; August 2, 1984)  is an American politician, author, venture capitalist, and Marine Corps veteran serving as the 50th vice president of the United States. A member of the Republican Party, he represented the state of Ohio in the United States Senate from 2023 to 2025.",
+   "es": "James David Vance (nacido como James Donald Bowman; Middletown, Ohio, 2 de agosto de 1984), más conocido como J. D.",
+   "esUrl": "https://es.wikipedia.org/wiki/J._D._Vance"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/March_2026_Official_Vice_Presidential_Portrait_of_JD_Vance_%28medium_crop%29_%282%29.jpg/330px-March_2026_Official_Vice_Presidential_Portrait_of_JD_Vance_%28medium_crop%29_%282%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 399,
+   "filePage": "https://commons.wikimedia.org/wiki/File:March_2026_Official_Vice_Presidential_Portrait_of_JD_Vance_(medium_crop)_(2).jpg",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "Emily J. Higgins"
+  },
+  "matchEvidence": [
+   "vice",
+   "president",
+   "presidential"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "seth godin": {
+  "name": "Seth Godin",
+  "wikipedia": {
+   "title": "Seth Godin",
+   "url": "https://en.wikipedia.org/wiki/Seth_Godin"
+  },
+  "wikidataId": "Q439396",
+  "description": {
+   "en": "American entrepreneur, author and public speaker (b. 1960)",
+   "es": "empresario y autor estadounidense"
+  },
+  "extract": {
+   "en": "Seth W. Godin, also known by his pen name F.",
+   "es": "Seth Godin (10 de julio de 1960) es un empresario y autor estadounidense. Graduado en Informática y Filosofía en la Universidad de Tufts en 1982, obtuvo su título de Master en Administración de Empresas en Marketing en la Stanford Business School.",
+   "esUrl": "https://es.wikipedia.org/wiki/Seth_Godin"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/Seth_Godin_in_2009.jpg/330px-Seth_Godin_in_2009.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 481,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Seth_Godin_in_2009.jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Joi Ito"
+  },
+  "matchEvidence": [
+   "expert"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "boris johnson": {
+  "name": "Boris Johnson",
+  "wikipedia": {
+   "title": "Boris Johnson",
+   "url": "https://en.wikipedia.org/wiki/Boris_Johnson"
+  },
+  "wikidataId": "Q180589",
+  "description": {
+   "en": "Prime Minister of the United Kingdom from 2019 to 2022",
+   "es": "político británico"
+  },
+  "extract": {
+   "en": "Alexander Boris de Pfeffel Johnson (born 19 June 1964) is a British politician and writer who was Prime Minister of the United Kingdom and Leader of the Conservative Party from 2019 to 2022. He was previously Foreign Secretary from 2016 to 2018 and Mayor of London from 2008 to 2016.",
+   "es": "Alexander Boris de Pfeffel Johnson (Nueva York, 19 de junio de 1964),​ conocido como Boris Johnson, es un político y periodista británico. ​​\nFue alcalde de Londres desde 2008 hasta 2016.",
+   "esUrl": "https://es.wikipedia.org/wiki/Boris_Johnson"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Boris_Johnson_official_portrait_%28cropped%29.jpg/330px-Boris_Johnson_official_portrait_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 450,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Boris_Johnson_official_portrait_(cropped).jpg",
+   "license": "OGL 3",
+   "licenseUrl": "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3",
+   "artist": "Ben Shread"
+  },
+  "matchEvidence": [
+   "government"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "mo gawdat": {
+  "name": "Mo Gawdat",
+  "wikipedia": {
+   "title": "Mo Gawdat",
+   "url": "https://en.wikipedia.org/wiki/Mo_Gawdat"
+  },
+  "wikidataId": "Q29453031",
+  "description": {
+   "en": "Egyptian entrepreneur",
+   "es": null
+  },
+  "extract": {
+   "en": "Mohammad Gawdat (Arabic: محمد جودت; born 20 June 1967) is an Egyptian author and former technology executive. He previously served as chief business officer for Google X and is the author of the books Solve for Happy and Scary Smart.",
+   "es": "Mohammad \"Mo\" Gawdat (árabe: محمد جودت) es un empresario y autor egipcio.",
+   "esUrl": "https://es.wikipedia.org/wiki/Mo_Gawdat"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/Mo_Gawdat_2022.png/330px-Mo_Gawdat_2022.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 411,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Mo_Gawdat_2022.png",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "James English"
+  },
+  "matchEvidence": [
+   "officer",
+   "google"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "adam neumann": {
+  "name": "Adam Neumann",
+  "wikipedia": {
+   "title": "Adam Neumann",
+   "url": "https://en.wikipedia.org/wiki/Adam_Neumann"
+  },
+  "wikidataId": "Q34579349",
+  "description": {
+   "en": "Israeli-American entrepreneur",
+   "es": null
+  },
+  "extract": {
+   "en": "Adam Neumann (Hebrew: אדם נוימן) is an Israeli and American  billionaire businessman. In 2010, he co-founded WeWork with Miguel McKelvey, where he was CEO from 2010 to 2019.",
+   "es": "Adam Neumann (Tel Aviv, Israel, 25 de abril de 1979​) es un empresario israelí conocido principalmente por ser el fundador de WeWork en 2010 junto a Miguel McKelvey. Fue el director ejecutivo de esta empresa, rebautizada como The We Company, desde su creación hasta 2019.",
+   "esUrl": "https://es.wikipedia.org/wiki/Adam_Neumann"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Mr._Adam_Neumann%2C_Founder_WeWork_%28Start_Up_India_Participant%29_call_on_the_Prime_Minister%2C_Shri_Narendra_Modi%2C_in_New_Delhi_on_January_15%2C_2016_-_cropped.jpg/330px-Mr._Adam_Neumann%2C_Founder_WeWork_%28Start_Up_India_Participant%29_call_on_the_Prime_Minister%2C_Shri_Narendra_Modi%2C_in_New_Delhi_on_January_15%2C_2016_-_cropped.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 393,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Mr._Adam_Neumann,_Founder_WeWork_(Start_Up_India_Participant)_call_on_the_Prime_Minister,_Shri_Narendra_Modi,_in_New_Delhi_on_January_15,_2016_-_cropped.jpg",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "artist": "Anna Frodesiak"
+  },
+  "matchEvidence": [
+   "billionaire",
+   "wework",
+   "billion"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "mary claire haver": {
+  "name": "Mary Claire Haver",
+  "wikipedia": {
+   "title": "Mary Claire Haver",
+   "url": "https://en.wikipedia.org/wiki/Mary_Claire_Haver"
+  },
+  "wikidataId": "Q138788435",
+  "description": {
+   "en": "Board-certified OBGYN and menopause advocate",
+   "es": null
+  },
+  "extract": {
+   "en": "Mary Claire Haver is an American obstetrician-gynecologist, author, and menopause advocate known for her work calling for better clinical and cultural understanding of menopause. Her book The New Menopause appeared on The New York Times Best Sellers list, and she hosts the podcast UnPAUSED, focused on women's health and midlife wellbeing.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": null,
+  "matchEvidence": [
+   "menopause"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "bozoma saint john": {
+  "name": "Bozoma Saint John",
+  "wikipedia": {
+   "title": "Bozoma Saint John",
+   "url": "https://en.wikipedia.org/wiki/Bozoma_Saint_John"
+  },
+  "wikidataId": "Q24851630",
+  "description": {
+   "en": "businesswoman and marketing executive",
+   "es": "empresaria estadounidense"
+  },
+  "extract": {
+   "en": "Bozoma Afiba Mamekyi Saint John-Watson (née Arthur; born January 21, 1977) is a Ghanaian-American businessperson and marketing executive who was the chief marketing officer (CMO) at Netflix from August 2020 to March 2022. Previously, she served as chief brand officer (CBO) at Uber from 2017 to 2018, and CMO at Endeavor from 2018 to 2020.",
+   "es": "Boz\" Saint John (Middletown, Connecticut; 21 de enero de 1977) es una empresaria y ejecutiva de mercadeo estadounidense que fue directora de marketing (CMO) de Netflix durante diecisiete meses. Anteriormente, se desempeñó como CMO en Endeavor durante dos años y directora de marca (CBO) en Uber durante un año.",
+   "esUrl": "https://es.wikipedia.org/wiki/Bozoma_Saint_John"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Bozoma_Saint_John_at_Essence_Festival_of_Culture_July_2025_%28cropped%29.jpg/330px-Bozoma_Saint_John_at_Essence_Festival_of_Culture_July_2025_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 296,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Bozoma_Saint_John_at_Essence_Festival_of_Culture_July_2025_(cropped).jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Danielle G. Campbell"
+  },
+  "matchEvidence": [
+   "netflix",
+   "uber",
+   "apple"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "trinny woodall": {
+  "name": "Trinny Woodall",
+  "wikipedia": {
+   "title": "Trinny Woodall",
+   "url": "https://en.wikipedia.org/wiki/Trinny_Woodall"
+  },
+  "wikidataId": "Q3241033",
+  "description": {
+   "en": "English fashion advisor and designer, television presenter and author",
+   "es": "consultora de moda y periodista inglesa"
+  },
+  "extract": {
+   "en": "Sarah-Jane Duncanson \"Trinny\" Woodall (born 8 February 1964) is a British beauty entrepreneur, businesswoman, and the founder of cosmetics brand Trinny London.\nWoodall initially rose to fame as a fashion and makeover expert, television presenter and author.",
+   "es": "Trinny Woodall (Londres: 8 de febrero de 1964) es una consultora de moda, presentadora, periodista y autora inglesa. Era la presentadora de la reality show No te lo pongas (What Not to Wear) con Susannah Constantine en el canal de televisión People+Arts en España.",
+   "esUrl": "https://es.wikipedia.org/wiki/Trinny_Woodall"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Trinny_Woodall_2017.jpg/330px-Trinny_Woodall_2017.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 513,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Trinny_Woodall_2017.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Trinny London"
+  },
+  "matchEvidence": [
+   "businesswoman"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "reshma saujani": {
+  "name": "Reshma Saujani",
+  "wikipedia": {
+   "title": "Reshma Saujani",
+   "url": "https://en.wikipedia.org/wiki/Reshma_Saujani"
+  },
+  "wikidataId": "Q7315375",
+  "description": {
+   "en": "American politician",
+   "es": "político estadounidense"
+  },
+  "extract": {
+   "en": "Reshma Saujani is an American lawyer, activist, and entrepreneur known for founding Girls Who Code, a nonprofit organization focused on closing the gender disparity in computing,  and Moms First, a nonprofit organization that advocates for policy changes to support mothers.\nSaujani was born in Chicago, Illinois, to Indian immigrant parents who had left Uganda due to political unrest.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Reshma_Saujani_on_set_%28cropped%29.jpg/330px-Reshma_Saujani_on_set_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 320,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Reshma_Saujani_on_set_(cropped).jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Katie Ichtertz Cordova"
+  },
+  "matchEvidence": [
+   "girls",
+   "code",
+   "founded",
+   "women"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "derren brown": {
+  "name": "Derren Brown",
+  "wikipedia": {
+   "title": "Derren Brown",
+   "url": "https://en.wikipedia.org/wiki/Derren_Brown"
+  },
+  "wikidataId": "Q449048",
+  "description": {
+   "en": "British illusionist and writer",
+   "es": null
+  },
+  "extract": {
+   "en": "Derren Brown (born 27 February 1971) is an English mentalist, illusionist, and writer. He is a self-described \"psychological illusionist\" whose acts are often designed to expose the methods of those who claim to possess supernatural powers, such as faith healers and mediums.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/2018-09-17_Derren_Brown_at_Foyles_%28cropped%29.jpg/330px-2018-09-17_Derren_Brown_at_Foyles_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 367,
+   "filePage": "https://commons.wikimedia.org/wiki/File:2018-09-17_Derren_Brown_at_Foyles_(cropped).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Garry Knight"
+  },
+  "matchEvidence": [
+   "mind",
+   "secret"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "richard branson": {
+  "name": "Richard Branson",
+  "wikipedia": {
+   "title": "Richard Branson",
+   "url": "https://en.wikipedia.org/wiki/Richard_Branson"
+  },
+  "wikidataId": "Q194419",
+  "description": {
+   "en": "British business magnate",
+   "es": "empresario y magnate británico"
+  },
+  "extract": {
+   "en": "Sir Richard Charles Nicholas Branson (born 18 July 1950) is an English business magnate who co-founded the Virgin Group in 1970, and, as of 2016, controlled five companies.\nBranson expressed his desire to become an entrepreneur at a young age.",
+   "es": "​ En enero de 2026, el nombre de Branson apareció en una nueva tanda de documentos relacionados con Jeffrey Epstein publicados por el Departamento de Justicia de Estados Unidos. Entre los materiales divulgados figuraban correos electrónicos de 2013 en los que Branson invitaba a Epstein a visitarlo escribiendo: «Any time you're in the area would love to see you.",
+   "esUrl": "https://es.wikipedia.org/wiki/Richard_Branson"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Richard_Branson_Addresses_the_Our_Ocean_Conference_2015_in_Valpara%C3%ADso_%2821783214958%29_%28cropped%29.jpg/330px-Richard_Branson_Addresses_the_Our_Ocean_Conference_2015_in_Valpara%C3%ADso_%2821783214958%29_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 409,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Richard_Branson_Addresses_the_Our_Ocean_Conference_2015_in_Valpara%C3%ADso_(21783214958)_(cropped).jpg",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "U.S. Department of State from United States"
+  },
+  "matchEvidence": [
+   "billion"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "gary neville": {
+  "name": "Gary Neville",
+  "wikipedia": {
+   "title": "Gary Neville",
+   "url": "https://en.wikipedia.org/wiki/Gary_Neville"
+  },
+  "wikidataId": "Q348857",
+  "description": {
+   "en": "English football pundit and former playe",
+   "es": "futbolista británico"
+  },
+  "extract": {
+   "en": "Gary Alexander Neville (born 18 February 1975) is an English football pundit and former professional player. A right-back, he spent his entire career with Manchester United, serving as captain for five years.",
+   "es": "Gary Alexander Neville (Bury, Inglaterra, 18 de febrero de 1975) es un exfutbolista, exentrenador y analista deportivo británico que jugaba como lateral derecho. Jugó toda su carrera en el Manchester United F.",
+   "esUrl": "https://es.wikipedia.org/wiki/Gary_Neville"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Gary_Neville_2014_%28cropped%29.jpg/330px-Gary_Neville_2014_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Gary_Neville_2014_(cropped).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "University of Salford Press Office"
+  },
+  "matchEvidence": [
+   "footballer",
+   "football",
+   "footballers"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "ronda rousey": {
+  "name": "Ronda Rousey",
+  "wikipedia": {
+   "title": "Ronda Rousey",
+   "url": "https://en.wikipedia.org/wiki/Ronda_Rousey"
+  },
+  "wikidataId": "Q242201",
+  "description": {
+   "en": "American former mixed martial arts (MMA) fighter, professional wrestler, and judoka",
+   "es": "artista marcial mixta, luchadora profesional y judoca estadounidense"
+  },
+  "extract": {
+   "en": "Ronda Jean Rousey ( ROW-zee; born February 1, 1987) is an American actress, retired professional wrestler, former judoka, and former mixed martial artist. She is best known for her tenures in the Ultimate Fighting Championship (UFC) and WWE.",
+   "es": "Ronda Jean Rousey (Riverside, California; 1 de febrero de 1987) es una yudoca, artista marcial mixta, luchadora profesional y actriz estadounidense. Es conocida por haber trabajado para la empresa WWE.",
+   "esUrl": "https://es.wikipedia.org/wiki/Ronda_Rousey"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Rousey_HOF_2018_%28cropped%29.jpg/330px-Rousey_HOF_2018_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 491,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Rousey_HOF_2018_(cropped).jpg",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+   "artist": "Shared Account"
+  },
+  "matchEvidence": [
+   "fighting",
+   "career",
+   "women",
+   "fighter"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "jensen huang": {
+  "name": "Jensen Huang",
+  "wikipedia": {
+   "title": "Jensen Huang",
+   "url": "https://en.wikipedia.org/wiki/Jensen_Huang"
+  },
+  "wikidataId": "Q305177",
+  "description": {
+   "en": "American entrepreneur and businessman; co-founder and CEO of Nvidia",
+   "es": "empresario taiwanés-estadounidense fundador y CEO de Nvidia"
+  },
+  "extract": {
+   "en": "Jen-Hsun \"Jensen\" Huang (born February 17, 1963) is a Taiwanese and American business executive and electrical engineer who is the co-founder, president, and CEO of Nvidia, the world's most valuable company. As of October 2026, Forbes estimates his net worth at over US$200 billion, making him the seventh-wealthiest individual in the world and the wealthiest individual of Asian descent.",
+   "es": "Jensen Huang (en chino tradicional, 黃仁勳; pinyin, Huáng Rénxūn; Wade-Giles, Huang Jen-Hsün, en taiwanés N̂g Jîn-hun, nacido en Tainan, Taiwán, el 17 de febrero de 1963) es un ingeniero eléctrico y magnate tecnológico taiwanés-estadounidense. \nEs el cofundador, presidente y director ejecutivo de Nvidia, empresa especializada en el diseño de unidades de procesamiento gráfico (GPU) y en hardware para la inteligencia artificial y la computación de alto rendimiento.",
+   "esUrl": "https://es.wikipedia.org/wiki/Jensen_Huang"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e6/Jen-Hsun_Huang_2025.jpg/330px-Jen-Hsun_Huang_2025.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 416,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Jen-Hsun_Huang_2025.jpg",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "The White House"
+  },
+  "matchEvidence": [
+   "nvidia",
+   "company",
+   "trillion"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "marc andreessen": {
+  "name": "Marc Andreessen",
+  "wikipedia": {
+   "title": "Marc Andreessen",
+   "url": "https://en.wikipedia.org/wiki/Marc_Andreessen"
+  },
+  "wikidataId": "Q62882",
+  "description": {
+   "en": "American entrepreneur, investor, and software engineer",
+   "es": "empresario, inversor e ingeniero de software estadounidense"
+  },
+  "extract": {
+   "en": "Marc Lowell Andreessen ( an-DREE-sən; born July 9, 1971) is an American businessman, venture capitalist, and former software engineer. He is the co-author of Mosaic, the first web browser to display inline images; co-founder of Netscape; and co-founder and general partner of Silicon Valley venture capital firm Andreessen Horowitz.",
+   "es": "Marc Andreessen (Cedar Falls, Iowa, 9 de julio de 1971) es un empresario, inversor e ingeniero de software estadounidense, cofundador de la empresa Netscape Communications Corporation y coautor de Mosaic, uno de los primeros navegadores web con interfaz gráfica. Actualmente, es uno de los principales socios de la sociedad de capital de riesgo Andreessen Horowitz.",
+   "esUrl": "https://es.wikipedia.org/wiki/Marc_Andreessen"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Marc_Andreessen-9_%28cropped%29.jpg/330px-Marc_Andreessen-9_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 408,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Marc_Andreessen-9_(cropped).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "JD Lasica"
+  },
+  "matchEvidence": [
+   "american",
+   "trump"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "sundar pichai": {
+  "name": "Sundar Pichai",
+  "wikipedia": {
+   "title": "Sundar Pichai",
+   "url": "https://en.wikipedia.org/wiki/Sundar_Pichai"
+  },
+  "wikidataId": "Q3503829",
+  "description": {
+   "en": "Indian-American business executive, CEO of Google LLC & Alphabet Inc.",
+   "es": "Ejecutivo de negocios indio-estadounidense, director ejecutivo de Google & Alphabet Inc"
+  },
+  "extract": {
+   "en": "Pichai Sundararajan (born June 10, 1972), better known as Sundar Pichai, is an Indian–American business executive who has been the CEO of Google since 2015 and the CEO of its parent company Alphabet Inc. since 2019.",
+   "es": "​\nPichai comenzó su carrera como ingeniero de materiales.",
+   "esUrl": "https://es.wikipedia.org/wiki/Sundar_Pichai"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Sundar_Pichai_-_2023_%28cropped%29.jpg/330px-Sundar_Pichai_-_2023_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 480,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Sundar_Pichai_-_2023_(cropped).jpg",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "artist": "Photographer: Lukasz Kobus (European Commission)"
+  },
+  "matchEvidence": [
+   "alphabet",
+   "google"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "gary gallagher": {
+  "name": "Gary Gallagher",
+  "wikipedia": {
+   "title": "Gary W. Gallagher",
+   "url": "https://en.wikipedia.org/wiki/Gary_W._Gallagher"
+  },
+  "wikidataId": "Q28036945",
+  "description": {
+   "en": "American historian",
+   "es": "historiador estadounidense"
+  },
+  "extract": {
+   "en": "Gary William Gallagher (born October 8, 1950) is an American historian specializing in the history of the American Civil War.  As of 2024, Gallagher was the John L.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Gary_William_Gallagher.jpg/330px-Gary_William_Gallagher.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 379,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Gary_William_Gallagher.jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Miller Center"
+  },
+  "matchEvidence": [
+   "american",
+   "civil"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "david heinemeier hansson": {
+  "name": "David Heinemeier Hansson",
+  "wikipedia": {
+   "title": "David Heinemeier Hansson",
+   "url": "https://en.wikipedia.org/wiki/David_Heinemeier_Hansson"
+  },
+  "wikidataId": "Q719413",
+  "description": {
+   "en": "programmer, racing driver, creator of Ruby on Rails",
+   "es": "programador y piloto de automovilismo danés"
+  },
+  "extract": {
+   "en": "David Heinemeier Hansson, also known by his initials DHH, is a Danish programmer, writer, entrepreneur, and racing driver. He is the creator of Ruby on Rails, a web framework written in Ruby.",
+   "es": "David Heinemeier Hansson (conocido como DHH en las comunidades de Ruby y ALMS; Copenhague, 15 de octubre de 1979) es un programador danés y el creador del framework de desarrollo web Ruby on Rails y el wiki Instiki. Es también un inversor en la firma de desarrollo de software web 37signals.",
+   "esUrl": "https://es.wikipedia.org/wiki/David_Heinemeier_Hansson"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/David_Heinemeier_Hansson_Driver_of_Abu_Dhabi_Proton_Racing%27s_Porsche_911_RSR_%2827225732035%29_%28cropped%29.jpg/330px-David_Heinemeier_Hansson_Driver_of_Abu_Dhabi_Proton_Racing%27s_Porsche_911_RSR_%2827225732035%29_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:David_Heinemeier_Hansson_Driver_of_Abu_Dhabi_Proton_Racing%27s_Porsche_911_RSR_(27225732035)_(cropped).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "David Merrett from Daventry, England"
+  },
+  "matchEvidence": [
+   "programmer",
+   "ruby",
+   "rails"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "anthony kaldellis": {
+  "name": "Anthony Kaldellis",
+  "wikipedia": {
+   "title": "Anthony Kaldellis",
+   "url": "https://en.wikipedia.org/wiki/Anthony_Kaldellis"
+  },
+  "wikidataId": "Q92595083",
+  "description": {
+   "en": "Greek historian",
+   "es": "historiador griego"
+  },
+  "extract": {
+   "en": "Anthony Kaldellis (Greek: Αντώνιος Καλδέλλης Antonios Kaldellis; born 29 November 1971) is a Greek and American historian and Byzantinist who is Gaylord Donnelley Distinguished Service Professor in the Department of Classics and the College at the University of Chicago. He is a specialist in Greek historiography, Plato, and Byzantine studies.",
+   "es": "​ También es autor de numerosas monografías sobre la Antigüedad clásica y el Imperio bizantino, que han sido traducidas a numerosos idiomas.",
+   "esUrl": "https://es.wikipedia.org/wiki/Anthony_Kaldellis"
+  },
+  "photo": null,
+  "matchEvidence": [
+   "byzantinist",
+   "byzantine"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "dario amodei": {
+  "name": "Dario Amodei",
+  "wikipedia": {
+   "title": "Dario Amodei",
+   "url": "https://en.wikipedia.org/wiki/Dario_Amodei"
+  },
+  "wikidataId": "Q103335665",
+  "description": {
+   "en": "CEO and co-founder of Anthropic",
+   "es": "director ejecutivo y cofundador de Anthropic"
+  },
+  "extract": {
+   "en": "Dario Amodei (born 1983) is an American artificial intelligence (AI) researcher and entrepreneur. In 2021, he and his sister Daniela Amodei founded Anthropic, the company behind the large language model series Claude.",
+   "es": "Dario Amodei (San Francisco, 1983) es un investigador y emprendedor estadounidense especializado en inteligencia artificial.",
+   "esUrl": "https://es.wikipedia.org/wiki/Dario_Amodei"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Dario_Amodei_at_TechCrunch_Disrupt_2023_01_%28cropped%29.jpg/330px-Dario_Amodei_at_TechCrunch_Disrupt_2023_01_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 414,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Dario_Amodei_at_TechCrunch_Disrupt_2023_01_(cropped).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "TechCrunch"
+  },
+  "matchEvidence": [
+   "anthropic",
+   "claude"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "pavel durov": {
+  "name": "Pavel Durov",
+  "wikipedia": {
+   "title": "Pavel Durov",
+   "url": "https://en.wikipedia.org/wiki/Pavel_Durov"
+  },
+  "wikidataId": "Q149067",
+  "description": {
+   "en": "technology entrepreneur (born 1984)",
+   "es": "empresario ruso"
+  },
+  "extract": {
+   "en": "Pavel Valeryevich Durov (Russian: Павел Валерьевич Дуров; born 10 October 1984) is a technology entrepreneur who is best known as the chief executive officer (CEO) of Telegram.\nDurov was born in the Soviet Union, and he co-founded the social networking site VKontakte (VK) in 2006.",
+   "es": "Pável Valérievich Dúrov (Leningrado, 10 de octubre de 1984) es un empresario ruso radicado en el emirato árabe de Dubái conocido por fundar la red social VK (En contacto), y desarrollar, junto a su hermano Nikolái Dúrov, Telegram.",
+   "esUrl": "https://es.wikipedia.org/wiki/P%C3%A1vel_D%C3%BArov"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Pavel_Durov_sitting_portrait_%28cropped%29.jpg/330px-Pavel_Durov_sitting_portrait_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 320,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Pavel_Durov_sitting_portrait_(cropped).jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "NickLubushko"
+  },
+  "matchEvidence": [
+   "telegram",
+   "freedom"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "paul rosolie": {
+  "name": "Paul Rosolie",
+  "wikipedia": {
+   "title": "Paul Rosolie",
+   "url": "https://en.wikipedia.org/wiki/Paul_Rosolie"
+  },
+  "wikidataId": "Q64009035",
+  "description": {
+   "en": "American conservationist and author",
+   "es": null
+  },
+  "extract": {
+   "en": "Paul Rosolie is an American conservationist, author and founder of Junglekeepers, a nonprofit organization working to protect rainforest in Peru's Madre de Dios region. His 2014 memoir, Mother of God, detailed his early work in the Amazon rainforest in southeastern Peru.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": null,
+  "matchEvidence": [
+   "junglekeepers",
+   "amazon",
+   "junglekeeper"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "demis hassabis": {
+  "name": "Demis Hassabis",
+  "wikipedia": {
+   "title": "Demis Hassabis",
+   "url": "https://en.wikipedia.org/wiki/Demis_Hassabis"
+  },
+  "wikidataId": "Q3022141",
+  "description": {
+   "en": "British artificial intelligence researcher (born 1976)",
+   "es": "CEO y cofundador de DeepMind"
+  },
+  "extract": {
+   "en": "Sir Demis Hassabis (born 27 July 1976) is a British artificial intelligence (AI) researcher and entrepreneur. He is the chairman and co-founder of Google DeepMind and the chief scientist of Alphabet, as well as the chief executive officer and co-founder of Isomorphic Labs.",
+   "es": "​ También es diseñador de videojuegos y jugador de ajedrez titulado Candidate Master (CM) por la FIDE. ​​​\nHassabis es miembro de la Royal Society y ha recibido diversos premios por su labor investigadora, entre ellos el Premio Breakthrough, el Premio Internacional Gairdner de Canadá y el Premio Lasker.",
+   "esUrl": "https://es.wikipedia.org/wiki/Demis_Hassabis"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/Demis_Hassabis%2C_2024_Nobel_Prize_Laureate_in_Chemistry_7_%28cropped%29.jpg/330px-Demis_Hassabis%2C_2024_Nobel_Prize_Laureate_in_Chemistry_7_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 426,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Demis_Hassabis,_2024_Nobel_Prize_Laureate_in_Chemistry_7_(cropped).jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "John Sears"
+  },
+  "matchEvidence": [
+   "deepmind"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "dave plummer": {
+  "name": "Dave Plummer",
+  "wikipedia": {
+   "title": "Dave Plummer",
+   "url": "https://en.wikipedia.org/wiki/Dave_Plummer"
+  },
+  "wikidataId": "Q99500578",
+  "description": {
+   "en": "Canadian-American programmer and entrepreneur",
+   "es": null
+  },
+  "extract": {
+   "en": "David William Plummer (born 1968) is a Canadian-American programmer and entrepreneur.  He created the Task Manager for Windows, the Space Cadet Pinball ports to Windows NT, Zip file support for Windows, HyperCache for the Amiga and many other software products.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/Dave_Plummer-2023_%28cropped%29.jpg/330px-Dave_Plummer-2023_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 371,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Dave_Plummer-2023_(cropped).jpg",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "artist": "54rt678"
+  },
+  "matchEvidence": [
+   "programmer"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "keyu jin": {
+  "name": "Keyu Jin",
+  "wikipedia": {
+   "title": "Keyu Jin",
+   "url": "https://en.wikipedia.org/wiki/Keyu_Jin"
+  },
+  "wikidataId": "Q76713918",
+  "description": {
+   "en": "Chinese economist",
+   "es": "economista china"
+  },
+  "extract": {
+   "en": "Keyu Jin (Chinese: 金刻羽; pinyin: Jīn Kèyǔ; born 13 November 1982) is a Chinese economist. She has been a professor of finance at the Hong Kong University of Science and Technology since 2025.",
+   "es": "Jin Keyu (en chino, 金刻羽; nacida el 13 de noviembre de 1982) es una economista china.",
+   "esUrl": "https://es.wikipedia.org/wiki/Keyu_Jin"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/80/MWC_2025_-_Keyu_Jin_02.jpg/330px-MWC_2025_-_Keyu_Jin_02.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 305,
+   "filePage": "https://commons.wikimedia.org/wiki/File:MWC_2025_-_Keyu_Jin_02.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Xuthoria"
+  },
+  "matchEvidence": [
+   "economist",
+   "economics"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "javier milei": {
+  "name": "Javier Milei",
+  "wikipedia": {
+   "title": "Javier Milei",
+   "url": "https://en.wikipedia.org/wiki/Javier_Milei"
+  },
+  "wikidataId": "Q52395487",
+  "description": {
+   "en": "economist, politician and president of Argentina since 2023",
+   "es": "presidente de Argentina desde 2023"
+  },
+  "extract": {
+   "en": "Javier Gerardo Milei (born 22 October 1970) is an Argentine politician and economist who has served as the president of Argentina since 2023. He served as a member of the Chamber of Deputies from 2021 to 2023.",
+   "es": "Javier Gerardo Milei (Buenos Aires, 22 de octubre de 1970) es un economista, escritor, político y docente argentino que ejerce como presidente de la Nación Argentina desde el 10 de diciembre de 2023. ​​\nEstudió en la Universidad de Belgrano, donde obtuvo una licenciatura en Economía, y posteriormente un máster en el Instituto de Desarrollo Social y Económico.",
+   "esUrl": "https://es.wikipedia.org/wiki/Javier_Milei"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Javier_Milei_in_pull-aside_meeting_at_the_United_Nations_Headquarters_%283x4_cropped%29.jpg/330px-Javier_Milei_in_pull-aside_meeting_at_the_United_Nations_Headquarters_%283x4_cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Javier_Milei_in_pull-aside_meeting_at_the_United_Nations_Headquarters_(3x4_cropped).jpg",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "The White House"
+  },
+  "matchEvidence": [
+   "president",
+   "argentina",
+   "argentine",
+   "economist",
+   "economics",
+   "economico"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "irving finkel": {
+  "name": "Irving Finkel",
+  "wikipedia": {
+   "title": "Irving Finkel",
+   "url": "https://en.wikipedia.org/wiki/Irving_Finkel"
+  },
+  "wikidataId": "Q14655584",
+  "description": {
+   "en": "British archaeologist",
+   "es": "arqueólogo británico"
+  },
+  "extract": {
+   "en": "Irving Leonard Finkel (born 1951) is an English philologist and Assyriologist. He is the Assistant Keeper of Ancient Mesopotamian script, languages and cultures in the Department of the Middle East in the British Museum, where he specialises in cuneiform inscriptions on tablets of clay from ancient Mesopotamia.",
+   "es": "Irving Leonard Finkel (nacido en 1951) es un filólogo y asiriólogo británico.",
+   "esUrl": "https://es.wikipedia.org/wiki/Irving_Finkel"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Dr_Irving_Finkel_in_2015_%28cropped%29.jpg/330px-Dr_Irving_Finkel_in_2015_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 390,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Dr_Irving_Finkel_in_2015_(cropped).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Ádám Szedlák"
+  },
+  "matchEvidence": [
+   "ancient"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "adam frank": {
+  "name": "Adam Frank",
+  "wikipedia": {
+   "title": "Adam Frank",
+   "url": "https://en.wikipedia.org/wiki/Adam_Frank"
+  },
+  "wikidataId": "Q4679069",
+  "description": {
+   "en": "American physicist, astronomer and writer (born 1962)",
+   "es": null
+  },
+  "extract": {
+   "en": "Adam Frank  (born 1962) is an American physicist, astronomer, and writer. His scientific research has focused on computational astrophysics with an emphasis on star formation and late stages of stellar evolution.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/RochesterAcademyOfScienceAnnualSpringLecture2024DrakeEquationWithData.jpg/330px-RochesterAcademyOfScienceAnnualSpringLecture2024DrakeEquationWithData.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 240,
+   "filePage": "https://commons.wikimedia.org/wiki/File:RochesterAcademyOfScienceAnnualSpringLecture2024DrakeEquationWithData.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "DanielPenfield"
+  },
+  "matchEvidence": [
+   "civilizations"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "terence tao": {
+  "name": "Terence Tao",
+  "wikipedia": {
+   "title": "Terence Tao",
+   "url": "https://en.wikipedia.org/wiki/Terence_Tao"
+  },
+  "wikidataId": "Q295981",
+  "description": {
+   "en": "Australian-American mathematician",
+   "es": "matemático australiano"
+  },
+  "extract": {
+   "en": "Terence Chi-Shen Tao  (Chinese: 陶哲轩; pinyin: Táo Zhéxuān; born 17 July 1975) is an Australian-American mathematician and professor of mathematics at the University of California, Los Angeles (UCLA). He was awarded the Fields Medal in 2006 for his contributions to partial differential equations, combinatorics, harmonic analysis, and additive number theory.",
+   "es": "Terence Chi-Shen Tao (en chino tradicional, 陶哲軒; pinyin, Táo Zhéxuān) (Adelaida, 17 de julio de 1975) es un matemático australiano y profesor en la Universidad de California (UCLA) que trabaja principalmente en análisis armónico, ecuaciones en derivadas parciales, combinatoria, detección comprimida, teoría analítica de números y teoría de representación.​ Fue un niño prodigio y desde los 24 años trabaja como profesor titular de matemáticas en la UCLA.​ Recibió la Medalla Fields​ en agosto de 2006, y un mes después obtuvo una Beca MacArthur.​",
+   "esUrl": "https://es.wikipedia.org/wiki/Terence_Tao"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Terence_Tao_at_IPAM%27s_Fireside_Chat_2026_%2850m16s%29_%28cropped%29.jpg/330px-Terence_Tao_at_IPAM%27s_Fireside_Chat_2026_%2850m16s%29_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 426,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Terence_Tao_at_IPAM%27s_Fireside_Chat_2026_(50m16s)_(cropped).jpg",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "artist": "Institute for Pure & Applied Mathematics"
+  },
+  "matchEvidence": [
+   "mathematician",
+   "mathematics"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "jack weatherford": {
+  "name": "Jack Weatherford",
+  "wikipedia": {
+   "title": "Jack Weatherford",
+   "url": "https://en.wikipedia.org/wiki/Jack_Weatherford"
+  },
+  "wikidataId": "Q6115697",
+  "description": {
+   "en": "American anthropologist",
+   "es": "antropólogo estadounidense"
+  },
+  "extract": {
+   "en": "Jack McIver Weatherford (born 1946) is an American anthropologist and author, best known for his 2004 book, Genghis Khan and the Making of the Modern World.\nThrough his academic publications and broader writing, Weatherford has brought global attention to overlooked histories, enriching public understanding of cultural exchange, innovation, and the evolving dynamics of power throughout history.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Jack_Weatherford_2022.jpg/330px-Jack_Weatherford_2022.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 593,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Jack_Weatherford_2022.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Ortaq"
+  },
+  "matchEvidence": [
+   "genghis",
+   "khan"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "jeffrey wasserstrom": {
+  "name": "Jeffrey Wasserstrom",
+  "wikipedia": {
+   "title": "Jeffrey Wasserstrom",
+   "url": "https://en.wikipedia.org/wiki/Jeffrey_Wasserstrom"
+  },
+  "wikidataId": "Q17029938",
+  "description": {
+   "en": "American academic",
+   "es": "académico estadounidense"
+  },
+  "extract": {
+   "en": "Jeffrey N. Wasserstrom is an American historian and sinologist who is the Chancellor's Professor of History at the University of California, Irvine.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": null,
+  "matchEvidence": [
+   "china"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "andrew huberman": {
+  "name": "Andrew Huberman",
+  "wikipedia": {
+   "title": "Andrew Huberman",
+   "url": "https://en.wikipedia.org/wiki/Andrew_Huberman"
+  },
+  "wikidataId": "Q26250970",
+  "description": {
+   "en": "American neuroscientist",
+   "es": "neurocientífico estadounidense"
+  },
+  "extract": {
+   "en": "Andrew David Huberman (born September 26, 1975) is an American neuroscientist, author, and podcaster. He is an associate professor of neurobiology and ophthalmology at the Stanford University School of Medicine.",
+   "es": "Andrew David Huberman (26 de septiembre de 1975) es un neurocientífico y podcaster estadounidense. Es profesor asociado de neurobiología y oftalmología en la Facultad de Medicina de la Universidad de Stanford.",
+   "esUrl": "https://es.wikipedia.org/wiki/Andrew_Huberman"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Andrew_D._Huberman%2C_Ph.D..jpg/330px-Andrew_D._Huberman%2C_Ph.D..jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 338,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Andrew_D._Huberman,_Ph.D..jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Jamesbrianbounds"
+  },
+  "matchEvidence": [
+   "neuroscientist",
+   "neuroscience",
+   "stress"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "jonathan reisman": {
+  "name": "Jonathan Reisman",
+  "wikipedia": {
+   "title": "Jonathan Reisman",
+   "url": "https://en.wikipedia.org/wiki/Jonathan_Reisman"
+  },
+  "wikidataId": "Q117473718",
+  "description": {
+   "en": "American internist, pediatrician, ER physician, and author",
+   "es": "pediatra, médico de urgencias y autor estadounidense"
+  },
+  "extract": {
+   "en": "Jonathan Reisman (born 1981) is an American physician, author and public speaker. S.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": null,
+  "matchEvidence": [
+   "human",
+   "body"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "greg lukianoff": {
+  "name": "Greg Lukianoff",
+  "wikipedia": {
+   "title": "Greg Lukianoff",
+   "url": "https://en.wikipedia.org/wiki/Greg_Lukianoff"
+  },
+  "wikidataId": "Q5605934",
+  "description": {
+   "en": "American lawyer",
+   "es": "abogado estadounidense"
+  },
+  "extract": {
+   "en": "Gregory Christopher Lukianoff (; born 1974) is an American lawyer, journalist, author and activist who serves as the president of the Foundation for Individual Rights and Expression (FIRE). He previously served as FIRE's first director of legal and public advocacy until he was appointed president in 2006.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Greg_Lukianoff_at_TED_2025_by_Kaila_Colbin-2.jpg/330px-Greg_Lukianoff_at_TED_2025_by_Kaila_Colbin-2.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 220,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Greg_Lukianoff_at_TED_2025_by_Kaila_Colbin-2.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Kaila Colbin"
+  },
+  "matchEvidence": [
+   "free",
+   "speech"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "joscha bach": {
+  "name": "Joscha Bach",
+  "wikipedia": {
+   "title": "Joscha Bach",
+   "url": "https://en.wikipedia.org/wiki/Joscha_Bach"
+  },
+  "wikidataId": "Q56605600",
+  "description": {
+   "en": "cognitive scientist",
+   "es": null
+  },
+  "extract": {
+   "en": "Joscha Bach (born 21 December 1973) is a German cognitive scientist, AI researcher, and philosopher known for his work on cognitive architectures, artificial intelligence, mental representation, emotion, social modeling, multi-agent systems, and philosophy of mind. His research aims to bridge cognitive science and AI by studying how human intelligence and consciousness can be modeled computationally.",
+   "es": "Joscha Bach (nacido en 1973) es un científico cognitivo, investigador de inteligencia artificial y filósofo alemán, conocido por su trabajo en arquitecturas cognitivas, inteligencia artificial, representaciones mentales, modelado de emociones, modelado social, sistemas multiagente y filosofía de la mente. Su investigación busca conectar la ciencia cognitiva con la IA mediante el estudio de cómo la inteligencia y la consciencia humanas pueden modelarse computacionalmente.",
+   "esUrl": "https://es.wikipedia.org/wiki/Joscha_Bach"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a6/Joscha_Bach_%2811524872763%29.jpg/330px-Joscha_Bach_%2811524872763%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 343,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Joscha_Bach_(11524872763).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Joi Ito from Cambridge, MA, USA"
+  },
+  "matchEvidence": [
+   "artificial",
+   "intelligence",
+   "consciousness"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "annaka harris": {
+  "name": "Annaka Harris",
+  "wikipedia": {
+   "title": "Annaka Harris",
+   "url": "https://en.wikipedia.org/wiki/Annaka_Harris"
+  },
+  "wikidataId": "Q65598551",
+  "description": {
+   "en": "editor and author",
+   "es": null
+  },
+  "extract": {
+   "en": "Annaka Harris (née Gorton; born 1976) is an American writer. Her work touches on neuroscience, meditation, philosophy of mind and consciousness.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": null,
+  "matchEvidence": [
+   "consciousness",
+   "conscious"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "sam harris": {
+  "name": "Sam Harris",
+  "wikipedia": {
+   "title": "Sam Harris",
+   "url": "https://en.wikipedia.org/wiki/Sam_Harris"
+  },
+  "wikidataId": "Q296047",
+  "description": {
+   "en": "American author, philosopher and neuroscientist (born 1967)",
+   "es": "filósofo estadounidense"
+  },
+  "extract": {
+   "en": "Samuel Benjamin Harris (born April 9, 1967) is an American neuroscientist, philosopher, author, and podcast host. His work includes  a range of topics, including rationality, religion, ethics, free will, determinism, neuroscience, meditation, psychedelics, philosophy of mind, politics, terrorism, and artificial intelligence.",
+   "es": "Sam Harris (9 de abril de 1967) es un filósofo, neurocientífico, cofundador y director del Proyecto Razón. Es autor del libro El fin de la fe (The end of faith, 2004), que estuvo durante treinta y tres semanas en la lista de best sellers según el New York Times, y ganó el premio PEN/Martha Albrand de ensayo en el año 2005​ y de Carta a una nación cristiana (Letter to a Christian Nation, 2006), una respuesta a la crítica que despertó su primer libro.",
+   "esUrl": "https://es.wikipedia.org/wiki/Sam_Harris"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Sam_Harris_2016_%28cropped%29.jpg/330px-Sam_Harris_2016_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 418,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Sam_Harris_2016_(cropped).jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Cmichel67 (Christopher Michel)"
+  },
+  "matchEvidence": [
+   "free",
+   "psychedelics"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "kevin spacey": {
+  "name": "Kevin Spacey",
+  "wikipedia": {
+   "title": "Kevin Spacey",
+   "url": "https://en.wikipedia.org/wiki/Kevin_Spacey"
+  },
+  "wikidataId": "Q25144",
+  "description": {
+   "en": "American actor",
+   "es": "actor, productor y director estadounidense"
+  },
+  "extract": {
+   "en": "Kevin Spacey Fowler (born July 26, 1959) is an American actor. Known for his work on stage and screen, he has received numerous accolades, including two Academy Awards, a BAFTA Award, a Golden Globe Award, a Tony Award, and two Laurence Olivier Awards as well as nominations for twelve Primetime Emmy Awards.",
+   "es": "Kevin Spacey Fowler (South Orange, Nueva Jersey, 26 de julio de 1959) es un actor estadounidense de cine, teatro y televisión. Reconocido por su trabajo tanto en el escenario como en la pantalla, ha sido galardonado con numerosos premios a lo largo de su carrera, entre ellos dos Premios Óscar, un Premio BAFTA, un Globo de Oro, un Premio Tony y dos Premios Laurence Olivier, además de haber sido nominado en doce ocasiones a los Premios Emmy.",
+   "esUrl": "https://es.wikipedia.org/wiki/Kevin_Spacey"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Kevin_Spacey-9243.jpg/330px-Kevin_Spacey-9243.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Kevin_Spacey-9243.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Harald Krichel"
+  },
+  "matchEvidence": [
+   "film"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "kimbal musk": {
+  "name": "Kimbal Musk",
+  "wikipedia": {
+   "title": "Kimbal Musk",
+   "url": "https://en.wikipedia.org/wiki/Kimbal_Musk"
+  },
+  "wikidataId": "Q6409751",
+  "description": {
+   "en": "South African-Canadian-American entrepreneur and restaurateur (born 1972)",
+   "es": "empresario sudafricano-canadiense"
+  },
+  "extract": {
+   "en": "Kimbal James Musk (born 20 September 1972) is a businessman and restaurateur. He co-owns The Kitchen Restaurant Group, with restaurants in Colorado, Chicago, and Austin.",
+   "es": "Kimbal Musk (Pretoria, Sudáfrica; 20 de septiembre de 1972) es un empresario de restaurantes y filántropo canado-sudafricano nacionalizado estadounidense. ​​​ Musk es consejero de Tesla, Inc.",
+   "esUrl": "https://es.wikipedia.org/wiki/Kimbal_Musk"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/KIMBAL_MUSK_OFFICIAL_HEADSHOT_%28cropped%29.jpg/330px-KIMBAL_MUSK_OFFICIAL_HEADSHOT_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 426,
+   "filePage": "https://commons.wikimedia.org/wiki/File:KIMBAL_MUSK_OFFICIAL_HEADSHOT_(cropped).jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "1000x2020"
+  },
+  "matchEvidence": [
+   "tesla",
+   "spacex",
+   "zip2"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "bill ackman": {
+  "name": "Bill Ackman",
+  "wikipedia": {
+   "title": "Bill Ackman",
+   "url": "https://en.wikipedia.org/wiki/Bill_Ackman"
+  },
+  "wikidataId": "Q1586871",
+  "description": {
+   "en": "American billionaire hedge fund manager (born 1966)",
+   "es": "Gestor e inversor de fondos de cobertura estadounidenses"
+  },
+  "extract": {
+   "en": "William Albert Ackman (born May 11, 1966) is an American billionaire hedge fund manager who is the founder and chief executive of Pershing Square Capital Management, an investment management company. He has been described as an activist investor.",
+   "es": "​\nAckman es prolífico filántropista y firma de la Giving Pledge, commitiendo el directo en el 50% de su vida a la mesa de las causas. En el 2024, hay uno de los grandes honores a Planned Parenthood.",
+   "esUrl": "https://es.wikipedia.org/wiki/Bill_Ackman"
+  },
+  "photo": {
+   "thumbUrl": "https://upload.wikimedia.org/wikipedia/commons/0/07/Valeant_Pharmaceuticals%27_Business_Model_%28headshot%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+   "width": 320,
+   "height": 430,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Valeant_Pharmaceuticals%27_Business_Model_(headshot).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Senate Democrats"
+  },
+  "matchEvidence": [
+   "investment",
+   "investor"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "ivanka trump": {
+  "name": "Ivanka Trump",
+  "wikipedia": {
+   "title": "Ivanka Trump",
+   "url": "https://en.wikipedia.org/wiki/Ivanka_Trump"
+  },
+  "wikidataId": "Q239411",
+  "description": {
+   "en": "American businesswoman, socialite and political advisior (born 1981)",
+   "es": "empresaria y modelo estadounidense"
+  },
+  "extract": {
+   "en": "Ivana Marie \"Ivanka\" Trump ( iv-AHNG-kə; born October 30, 1981) is an American businesswoman. She is the second child of Donald Trump, the 45th and 47th president of the United States, and his first wife, Ivana Trump.",
+   "es": "Ivana Marie «Ivanka» Kushner nacida como Trump (Nueva York, 30 de octubre de 1981) es una empresaria, modelo y política estadounidense. ° presidente de los Estados Unidos, Donald Trump, y es la vicepresidenta de Real Estate Development and Acquisitions de la The Trump Organization.",
+   "esUrl": "https://es.wikipedia.org/wiki/Ivanka_Trump"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Ivanka_Trump_official_portrait_2020.jpg/330px-Ivanka_Trump_official_portrait_2020.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 400,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Ivanka_Trump_official_portrait_2020.jpg",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "Andrea Hanks/Official White House Photo"
+  },
+  "matchEvidence": [
+   "president",
+   "presidential",
+   "before",
+   "estate",
+   "political",
+   "family"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "rick beato": {
+  "name": "Rick Beato",
+  "wikipedia": {
+   "title": "Rick Beato",
+   "url": "https://en.wikipedia.org/wiki/Rick_Beato"
+  },
+  "wikidataId": "Q100249904",
+  "description": {
+   "en": "American YouTuber, guitarist, record producer",
+   "es": "músico, productor y personalidad de Internet estadounidense"
+  },
+  "extract": {
+   "en": "Richard John Beato ( bee-AH-toh; born April 24, 1962) is an American YouTuber, multi-instrumentalist, music producer, and educator. Since the early 1980s, he has worked variously as a musician, songwriter, audio engineer, and record producer; he has also lectured on music at universities.",
+   "es": "Richard John Beato​ (24 de abril de 1962), más conocido como Rick Beato, es un músico, compositor, ingeniero de audio, productor de discos y personalidad de YouTube estadounidense que vive en Georgia.",
+   "esUrl": "https://es.wikipedia.org/wiki/Rick_Beato"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Rick_Beato_-_Cadogan_Hall_-_Monday_3rd_November_2025.jpg/330px-Rick_Beato_-_Cadogan_Hall_-_Monday_3rd_November_2025.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 438,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Rick_Beato_-_Cadogan_Hall_-_Monday_3rd_November_2025.jpg",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "artist": "Raph_PH"
+  },
+  "matchEvidence": [
+   "music"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "oliver anthony": {
+  "name": "Oliver Anthony",
+  "wikipedia": {
+   "title": "Oliver Anthony",
+   "url": "https://en.wikipedia.org/wiki/Oliver_Anthony"
+  },
+  "wikidataId": "Q121391237",
+  "description": {
+   "en": "American singer-songwriter",
+   "es": "cantante y compositor estadounidense"
+  },
+  "extract": {
+   "en": "Christopher Anthony Lunsford (born June 30, 1992), known professionally as Oliver Anthony, is an American singer-songwriter from Farmville, Virginia. In August 2023, he released the single \"Rich Men North of Richmond\" independently, which debuted atop the Billboard Hot 100 and made him the first artist to achieve this without any prior charting history in any form.",
+   "es": "Christopher Anthony Lunsford (Farmville, Virginia, Estados Unidos; 30 de junio de 1992),​ más conocido como Oliver Anthony, es un cantante y compositor estadounidense de country.",
+   "esUrl": "https://es.wikipedia.org/wiki/Oliver_Anthony"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/OliverAnthony_PressClub_Daryl_Connor_Thompson_23-08-23_7993_8_%28cropped%29.jpg/330px-OliverAnthony_PressClub_Daryl_Connor_Thompson_23-08-23_7993_8_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 317,
+   "filePage": "https://commons.wikimedia.org/wiki/File:OliverAnthony_PressClub_Daryl_Connor_Thompson_23-08-23_7993_8_(cropped).jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Elk Mountain44 (Daryl Connor Thompson)"
+  },
+  "matchEvidence": [
+   "american"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "dana white": {
+  "name": "Dana White",
+  "wikipedia": {
+   "title": "Dana White",
+   "url": "https://en.wikipedia.org/wiki/Dana_White"
+  },
+  "wikidataId": "Q660297",
+  "description": {
+   "en": "American businessman and president of UFC (born 1969)",
+   "es": "empresario estadounidense"
+  },
+  "extract": {
+   "en": "Dana Frederick White Junior. (born July 28, 1969) is an American businessman who is the president and chief executive officer (CEO) of the Ultimate Fighting Championship (UFC), a global mixed martial arts organization.",
+   "es": "Dana Frederick White, Jr. (Manchester, Connecticut, 28 de julio de 1969) es un empresario estadounidense y actual presidente de la Ultimate Fighting Championship (UFC), una empresa de artes marciales mixtas con sede en Nevada, Estados Unidos que opera a nivel mundial.",
+   "esUrl": "https://es.wikipedia.org/wiki/Dana_White"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Ilham_Aliyev_received_Dana_White%2C_June_2025_%283x4_cropped_and_rotated_on_White%29.jpg/330px-Ilham_Aliyev_received_Dana_White%2C_June_2025_%283x4_cropped_and_rotated_on_White%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Ilham_Aliyev_received_Dana_White,_June_2025_(3x4_cropped_and_rotated_on_White).jpg",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "artist": "Press Service of the President of the Republic of Azerbaijan"
+  },
+  "matchEvidence": [
+   "businessman",
+   "fighting"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "eric weinstein": {
+  "name": "Eric Weinstein",
+  "wikipedia": {
+   "title": "Eric Weinstein",
+   "url": "https://en.wikipedia.org/wiki/Eric_Weinstein"
+  },
+  "wikidataId": "Q5387722",
+  "description": {
+   "en": "American mathematician and venture capital director",
+   "es": "matemático estadounidense"
+  },
+  "extract": {
+   "en": "Eric Ross Weinstein (; born October 26, 1965) is an American investor and podcast host. As of 2021, he was managing director for the American venture capital firm Thiel Capital.",
+   "es": "Eric Ross Weinstein (octubre de 1965) es un matemático, economista y escritor estadounidense. ​ Escribe sobre matemáticas, capitalismo, ciencia e inversiones.",
+   "esUrl": "https://es.wikipedia.org/wiki/Eric_Weinstein"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/Eric_Weinstein_in_January_2019.png/330px-Eric_Weinstein_in_January_2019.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 295,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Eric_Weinstein_in_January_2019.png",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Rebel Wisdom"
+  },
+  "matchEvidence": [
+   "geometric",
+   "unity"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "graham hancock": {
+  "name": "Graham Hancock",
+  "wikipedia": {
+   "title": "Graham Hancock",
+   "url": "https://en.wikipedia.org/wiki/Graham_Hancock"
+  },
+  "wikidataId": "Q370235",
+  "description": {
+   "en": "British author who promotes pseudoscientific theories",
+   "es": "escritor e investigador británico promotor de teorías pseudocientíficas"
+  },
+  "extract": {
+   "en": "Graham Bruce Hancock (born 2 August 1950) is a British author known for promoting pseudoscientific explanations of ancient civilisations and hypothetical lost lands. Hancock argues that an advanced society with spiritual technology thrived during the last Ice Age until comet impacts triggered the Younger Dryas about 12,900 years ago.",
+   "es": "​ La principal de ellas postula la existencia de una civilización global avanzada durante la edad de hielo, destruida por un cataclismo, sus sobrevivientes habrían transmitido algunos conocimientos a ciertos pueblos cazadores-recolectores, quienes desarrollaron las primeras civilizaciones conocidas del antiguo Egipto, Mesopotamia y Mesoamérica.\nLas interpretaciones de Hancock de la evidencia arqueológica y los documentos históricos han sido calificadas como pseudoarqueología y pseudohistoria​​ya que parte de conclusiones preconcebidas, ignora el contexto y manipula la evidencia, procediendo por medio de un sesgo de confirmación.",
+   "esUrl": "https://es.wikipedia.org/wiki/Graham_Hancock"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/Graham-Hancock.jpg/330px-Graham-Hancock.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 407,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Graham-Hancock.jpg",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "[Cpt.Muji]"
+  },
+  "matchEvidence": [
+   "ancient",
+   "civilisations",
+   "lost",
+   "before",
+   "human",
+   "civilisation"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "simon sinek": {
+  "name": "Simon Sinek",
+  "wikipedia": {
+   "title": "Simon Sinek",
+   "url": "https://en.wikipedia.org/wiki/Simon_Sinek"
+  },
+  "wikidataId": "Q7519777",
+  "description": {
+   "en": "British/American author and motivational speaker",
+   "es": "escritor y orador motivacional britanicoestadounidense"
+  },
+  "extract": {
+   "en": "Simon Oliver Sinek (born 9 October 1973) is an author and inspirational speaker on business leadership. His books include Start with Why (2009) and The Infinite Game (2019).",
+   "es": "Simon Sinek (9 de octubre de 1973, Wimbledon) es un escritor y motivador inglés, conocido por su concepto de «El círculo dorado».",
+   "esUrl": "https://es.wikipedia.org/wiki/Simon_Sinek"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/Simon_Sinek_speaks_to_I_MIG_Marines_%282%29_%28cropped%29.jpg/330px-Simon_Sinek_speaks_to_I_MIG_Marines_%282%29_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Simon_Sinek_speaks_to_I_MIG_Marines_(2)_(cropped).jpg",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "Lance Cpl. Brendan Mullin"
+  },
+  "matchEvidence": [
+   "leadership",
+   "infinite",
+   "game"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "khabib nurmagomedov": {
+  "name": "Khabib Nurmagomedov",
+  "wikipedia": {
+   "title": "Khabib Nurmagomedov",
+   "url": "https://en.wikipedia.org/wiki/Khabib_Nurmagomedov"
+  },
+  "wikidataId": "Q3526023",
+  "description": {
+   "en": "Russian professional mixed martial artist",
+   "es": "artista marcial mixto ruso"
+  },
+  "extract": {
+   "en": "Khabib Abdulmanapovich Nurmagomedov (born 20 September 1988) is a Russian former professional mixed martial artist who competed in the Lightweight division of the Ultimate Fighting Championship (UFC). He was the longest-reigning UFC Lightweight Champion ever, having held the title from April 2018 to March 2021 (1,134 days).",
+   "es": "Jabib Abdulmanápovich Nurmagomédov (en ruso: Хабиб Абдулманапович Нурмагомедов; en avar: ХIабиб ГӀабдулманапил НурмухӀамадов; también conocido como Khabib Nurmagomédov de acuerdo a la transliteración inglesa; 20 de septiembre de 1988) es un ex artista marcial mixto, practicante de sambo y entrenador ruso. Ha sido dos veces campeón del mundo de sambo y también del Campeonato Mundial de Peso Ligero en la Ultimate Fighting Championship (UFC).",
+   "esUrl": "https://es.wikipedia.org/wiki/Jabib_Nurmagom%C3%A9dov"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Khabib_nurmagomedov.jpg/330px-Khabib_nurmagomedov.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 503,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Khabib_nurmagomedov.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Airotcivss"
+  },
+  "matchEvidence": [
+   "conor"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "bassem youssef": {
+  "name": "Bassem Youssef",
+  "wikipedia": {
+   "title": "Bassem Youssef",
+   "url": "https://en.wikipedia.org/wiki/Bassem_Youssef"
+  },
+  "wikidataId": "Q3515579",
+  "description": {
+   "en": "Egyptian doctor and satirist",
+   "es": null
+  },
+  "extract": {
+   "en": "Bassem Youssef (Arabic: باسم يوسف; born 21 March 1974) is an Egyptian-American comedian, television host, actor, political commentator, and former cardiothoracic surgeon. He rose to international prominence for hosting the satirical news program Al Bernameg (2011–2014), which emerged following the 2011 Egyptian revolution.",
+   "es": "​​\nComenzó su carrera con The B+ Show (2011), inspirado en su experiencia durante la Revolución Egipcia de 2011, y más tarde saltó a la fama como presentador de Al Bernameg (El Espectáculo), un programa de humor satírico centrado en la política egipcia, entre 2011 y 2014. ​​ Los proyectos actuales de Youssef incluyen  The Democracy Handbook.",
+   "esUrl": "https://es.wikipedia.org/wiki/Bassem_Youssef"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Bassem_Youssef_white_background.png/330px-Bassem_Youssef_white_background.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 373,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Bassem_Youssef_white_background.png",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Saha Notlari"
+  },
+  "matchEvidence": [
+   "satire",
+   "palestinian",
+   "gaza",
+   "israeli"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "bobby lee": {
+  "name": "Bobby Lee",
+  "wikipedia": {
+   "title": "Bobby Lee",
+   "url": "https://en.wikipedia.org/wiki/Bobby_Lee"
+  },
+  "wikidataId": "Q1064120",
+  "description": {
+   "en": "American stand-up comedian",
+   "es": "comediante estadounidense"
+  },
+  "extract": {
+   "en": "Robert Young Lee Jr. (born September 17, 1971) is an American stand-up comedian, actor, and podcaster.",
+   "es": "Robert Young \"Bobby\" Lee, Jr. (San Diego, California; 17 de septiembre de 1971) es un actor y comediante estadounidense, más conocido por su militancia en el elenco recurrente de la serie de comedia en vivo en MADtv desde 2001 hasta 2009 y por sus interpretaciones en películas como Harold & Kumar Go to White Castle y Pineapple Express.",
+   "esUrl": "https://es.wikipedia.org/wiki/Bobby_Lee"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Bobby_Lee_Edited_James_Tamim.jpeg/330px-Bobby_Lee_Edited_James_Tamim.jpeg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 287,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Bobby_Lee_Edited_James_Tamim.jpeg",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Neal Brennan"
+  },
+  "matchEvidence": [
+   "comedy"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "bert kreischer": {
+  "name": "Bert Kreischer",
+  "wikipedia": {
+   "title": "Bert Kreischer",
+   "url": "https://en.wikipedia.org/wiki/Bert_Kreischer"
+  },
+  "wikidataId": "Q4895172",
+  "description": {
+   "en": "American stand-up comedian, reality television host and actor",
+   "es": "comediante, presentador de programas de telerrealidad y actor estadounidense"
+  },
+  "extract": {
+   "en": "Albert Charles Kreischer Jr. (born November 3, 1972) is an American stand-up comedian, podcaster,  and actor.",
+   "es": "Bert Kreischer (nacido el 3 de noviembre de 1972), apodado \"The Machine\",​ es un comediante, podcaster, presentador de telerrealidad y actor estadounidense. ​\nComo parte de su productora, Berty Boy Productions, Kreischer produce y presenta los podcasts Bertcast y Open Tabs y el programa de cocina Something's Burning.",
+   "esUrl": "https://es.wikipedia.org/wiki/Bert_Kreischer"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Bert_kreischer_%2852703154941%29_%28cropped%29.jpg/330px-Bert_kreischer_%2852703154941%29_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Bert_kreischer_(52703154941)_(cropped).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Zach Catanzareti Photo"
+  },
+  "matchEvidence": [
+   "comedy",
+   "segura"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "will sasso": {
+  "name": "Will Sasso",
+  "wikipedia": {
+   "title": "Will Sasso",
+   "url": "https://en.wikipedia.org/wiki/Will_Sasso"
+  },
+  "wikidataId": "Q310322",
+  "description": {
+   "en": "Canadian actor and comedian",
+   "es": "comediante canadiense"
+  },
+  "extract": {
+   "en": "William Sasso (born May 24, 1975) is a Canadian actor, comedian and podcaster. After a starring role as Derek Wakaluk on the Global teen drama television series Madison (1994–1998), Sasso had his breakout as a regular cast member on the Fox sketch comedy series Mad TV (1997–2002).",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/Will_Sasso_by_Gage_Skidmore_2.jpg/330px-Will_Sasso_by_Gage_Skidmore_2.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 388,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Will_Sasso_by_Gage_Skidmore_2.jpg",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Gage Skidmore"
+  },
+  "matchEvidence": [
+   "comedy"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "mark zuckerberg": {
+  "name": "Mark Zuckerberg",
+  "wikipedia": {
+   "title": "Mark Zuckerberg",
+   "url": "https://en.wikipedia.org/wiki/Mark_Zuckerberg"
+  },
+  "wikidataId": "Q36215",
+  "description": {
+   "en": "American Internet entrepreneur",
+   "es": "empresario de Internet estadounidense"
+  },
+  "extract": {
+   "en": "Mark Elliot Zuckerberg (; born May 14, 1984) is an American businessman, webmaster, and programmer who co-founded the social media service Facebook and its parent company Meta Platforms. He is its chairman, chief executive officer (CEO), and controlling shareholder.",
+   "es": "Mark Elliot Zuckerberg (White Plains, Nueva York, 14 de mayo de 1984) es un programador, empresario y magnate estadounidense. Es uno de los fundadores de Facebook (desde 2021, Meta Platforms) y la red social homónima, y su actual presidente.",
+   "esUrl": "https://es.wikipedia.org/wiki/Mark_Zuckerberg"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/P20260929DT-1655_%2855561811540%29_%28cropped_2%29.jpg/330px-P20260929DT-1655_%2855561811540%29_%28cropped_2%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:P20260929DT-1655_(55561811540)_(cropped_2).jpg",
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "The White House"
+  },
+  "matchEvidence": [
+   "facebook",
+   "meta"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "jessie j": {
+  "name": "Jessie J",
+  "wikipedia": {
+   "title": "Jessie J",
+   "url": "https://en.wikipedia.org/wiki/Jessie_J"
+  },
+  "wikidataId": "Q18814",
+  "description": {
+   "en": "English singer (born 1988)",
+   "es": "cantante y compositora británica"
+  },
+  "extract": {
+   "en": "Jessica Ellen Cornish (born 27 March 1988), known professionally as Jessie J, is an English singer and songwriter. After signing with Republic Records, Jessie J came to prominence with the release of her debut single, \"Do It like a Dude\", which peaked at number two on the UK Singles Chart.",
+   "es": "Jessica Ellen Cornish (Londres, Inglaterra; 27 de marzo de 1988) conocida como Jessie J, es una cantante y compositora británica. Firmó un contrato discográfico con Island Records y comenzó a grabar su álbum de debut, Who You Are.",
+   "esUrl": "https://es.wikipedia.org/wiki/Jessie_J"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/WEHO2022_%2852125746986%29_%28cropped%29.jpg/330px-WEHO2022_%2852125746986%29_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 443,
+   "filePage": "https://commons.wikimedia.org/wiki/File:WEHO2022_(52125746986)_(cropped).jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "DVSROSS"
+  },
+  "matchEvidence": [
+   "album"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "joe sugg": {
+  "name": "Joe Sugg",
+  "wikipedia": {
+   "title": "Joe Sugg",
+   "url": "https://en.wikipedia.org/wiki/Joe_Sugg"
+  },
+  "wikidataId": "Q16762380",
+  "description": {
+   "en": "British vlogger",
+   "es": "blogger Británico"
+  },
+  "extract": {
+   "en": "Joseph Graham Sugg (born 8 September 1991) is an English YouTuber, vlogger, actor, author and businessman. In 2012, he began posting videos on the YouTube channel ThatcherJoe, which peaked at over 8 million subscribers.",
+   "es": "Joseph Graham Sugg (Wiltshire, 8 de septiembre de 1991) es un youtuber, cineasta, autor y vlogger británico. ​​​ En 2018, Sugg participó en la decimosexta temporada de Strictly Come Dancing de BBC One, terminando en el segundo puesto.",
+   "esUrl": "https://es.wikipedia.org/wiki/Joe_Sugg"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Joe_Sugg_by_Gage_Skidmore.jpg/330px-Joe_Sugg_by_Gage_Skidmore.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 444,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Joe_Sugg_by_Gage_Skidmore.jpg",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Gage Skidmore"
+  },
+  "matchEvidence": [
+   "youtuber",
+   "youtube",
+   "million"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "sam altman": {
+  "name": "Sam Altman",
+  "wikipedia": {
+   "title": "Sam Altman",
+   "url": "https://en.wikipedia.org/wiki/Sam_Altman"
+  },
+  "wikidataId": "Q7407093",
+  "description": {
+   "en": "American entrepreneur and investor (born 1985)",
+   "es": "empresario e inversionista estadounidense"
+  },
+  "extract": {
+   "en": "Samuel Harris Altman (born April 22, 1985) is an American entrepreneur and investor who has been the chief executive officer (CEO) of the artificial intelligence company OpenAI since 2019.\nAltman attended Stanford University for two years before he dropped out and co-founded Loopt, a geosocial networking application for smartphones.",
+   "es": "Samuel Harris Altman (Chicago, Illinois; 22 de abril de 1985), conocido como Sam Altman, es un empresario, inversionista, programador y bloguero estadounidense.​ Es director ejecutivo de OpenAI y expresidente de Y Combinator, y se le considera una de las figuras principales en el desarrollo de la inteligencia artificial.​​​​",
+   "esUrl": "https://es.wikipedia.org/wiki/Sam_Altman"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Meeting_with_Masayoshi_Son_and_Sam_Altman_%28February_3%2C_2025%29_%283x4_cropped_on_Altman%29.jpg/330px-Meeting_with_Masayoshi_Son_and_Sam_Altman_%28February_3%2C_2025%29_%283x4_cropped_on_Altman%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Meeting_with_Masayoshi_Son_and_Sam_Altman_(February_3,_2025)_(3x4_cropped_on_Altman).jpg",
+   "license": "CC BY 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+   "artist": "首相官邸ホームページ / Office of the Prime Minister of Japan Official Website"
+  },
+  "matchEvidence": [
+   "openai",
+   "chatgpt",
+   "board"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "tal wilkenfeld": {
+  "name": "Tal Wilkenfeld",
+  "wikipedia": {
+   "title": "Tal Wilkenfeld",
+   "url": "https://en.wikipedia.org/wiki/Tal_Wilkenfeld"
+  },
+  "wikidataId": "Q258718",
+  "description": {
+   "en": "Australian musician",
+   "es": "música australiana"
+  },
+  "extract": {
+   "en": "Tal Wilkenfeld (born 2 December 1986) is an Australian bassist, singer and songwriter. She has performed with artists including Chick Corea, Jeff Beck, Prince, Incubus, Eric Clapton, Herbie Hancock, Toto, and Mick Jagger.",
+   "es": "Tal Wilkenfeld (Sídney, 2 de diciembre de 1986) es una bajista y cantante australiana de jazz y jazz rock que desarrolla su carrera profesional en Estados Unidos.",
+   "esUrl": "https://es.wikipedia.org/wiki/Tal_Wilkenfeld"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Tal_Wilkenfeld.jpg/330px-Tal_Wilkenfeld.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 480,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Tal_Wilkenfeld.jpg",
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Mandy Hall"
+  },
+  "matchEvidence": [
+   "jeff",
+   "beck",
+   "prince",
+   "bass",
+   "guitar",
+   "music"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "yuval noah harari": {
+  "name": "Yuval Noah Harari",
+  "wikipedia": {
+   "title": "Yuval Noah Harari",
+   "url": "https://en.wikipedia.org/wiki/Yuval_Noah_Harari"
+  },
+  "wikidataId": "Q2484404",
+  "description": {
+   "en": "Israeli historian and author of popular science bestsellers",
+   "es": "historiador y escritor israelí"
+  },
+  "extract": {
+   "en": "Yuval Noah Harari (born 1976) is an Israeli medievalist, military historian, public intellectual, and popular science writer. He is a professor of history at the Hebrew University of Jerusalem.",
+   "es": "Yuval Noah Harari (Kiryat Atta, 24 de febrero de 1976) es un historiador y escritor israelí de origen judeopolaco, profesor en la Universidad Hebrea de Jerusalén.",
+   "esUrl": "https://es.wikipedia.org/wiki/Yuval_Noah_Harari"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/MKr364751_Yuval_Noah_Harari_%28Frankfurter_Buchmesse_2024%29.jpg/330px-MKr364751_Yuval_Noah_Harari_%28Frankfurter_Buchmesse_2024%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 480,
+   "filePage": "https://commons.wikimedia.org/wiki/File:MKr364751_Yuval_Noah_Harari_(Frankfurter_Buchmesse_2024).jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Martin Kraft"
+  },
+  "matchEvidence": [
+   "intellectual",
+   "intelligence",
+   "human",
+   "intelligent"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "jordan peterson": {
+  "name": "Jordan Peterson",
+  "wikipedia": {
+   "title": "Jordan Peterson",
+   "url": "https://en.wikipedia.org/wiki/Jordan_Peterson"
+  },
+  "wikidataId": "Q6276882",
+  "description": {
+   "en": "Canadian clinical psychologist, author, and political commentator and manosphere activist (1962-)",
+   "es": "psicólogo clínico canadiense"
+  },
+  "extract": {
+   "en": "Jordan Bernt Peterson (born 12 June 1962) is a Canadian psychologist, author, and media commentator. He received widespread attention in the late 2010s for his views on cultural and political issues.",
+   "es": "Jordan Bernt Peterson (Fairview, Alberta; 12 de junio de 1962) es un psicólogo clínico, profesor, escritor, locutor de pódcast e intelectual canadiense. ​ \nFue docente activo en las universidades de McGill, Harvard y Toronto entre los años 1985 y 2018.",
+   "esUrl": "https://es.wikipedia.org/wiki/Jordan_Peterson"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/Jordan_Peterson_in_2018_%283x4_cropped%29.jpg/330px-Jordan_Peterson_in_2018_%283x4_cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 427,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Jordan_Peterson_in_2018_(3x4_cropped).jpg",
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+   "artist": "Gage Skidmore from Peoria, AZ, United States of America"
+  },
+  "matchEvidence": [
+   "psychologist",
+   "psychology",
+   "meaning",
+   "suffered"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "brian keating": {
+  "name": "Brian Keating",
+  "wikipedia": {
+   "title": "Brian Keating",
+   "url": "https://en.wikipedia.org/wiki/Brian_Keating"
+  },
+  "wikidataId": "Q23017063",
+  "description": {
+   "en": "American cosmologist",
+   "es": "astrónomo"
+  },
+  "extract": {
+   "en": "Brian Gregory Keating (born September 9, 1971) is an American cosmologist. He works on observations of the cosmic microwave background, leading the POLARBEAR2 and Simons Array experiments.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Brian_Keating_2022.jpg/330px-Brian_Keating_2022.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 290,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Brian_Keating_2022.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Brian Keating"
+  },
+  "matchEvidence": [
+   "cosmologist",
+   "losing",
+   "nobel",
+   "prize"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "michael levin": {
+  "name": "Michael Levin",
+  "wikipedia": {
+   "title": "Michael Levin (biologist)",
+   "url": "https://en.wikipedia.org/wiki/Michael_Levin_(biologist)"
+  },
+  "wikidataId": "Q39444955",
+  "description": {
+   "en": "biologist at Tufts University",
+   "es": null
+  },
+  "extract": {
+   "en": "Michael Levin  is an American developmental and synthetic biologist. He is a professor of biomedical engineering and the Vannevar Bush Distinguished Professor of Biology at Tufts University, where he is the director of the Allen Discovery Center and the Tufts Center for Regenerative and Developmental Biology.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Michael_Levin_2024.jpg/330px-Michael_Levin_2024.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 467,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Michael_Levin_2024.jpg",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "John Templeton Foundation"
+  },
+  "matchEvidence": [
+   "biologist",
+   "biology"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "jennifer burns": {
+  "name": "Jennifer Burns",
+  "wikipedia": {
+   "title": "Jennifer Burns (historian)",
+   "url": "https://en.wikipedia.org/wiki/Jennifer_Burns_(historian)"
+  },
+  "wikidataId": "Q47114036",
+  "description": {
+   "en": "American historian (1975-)",
+   "es": null
+  },
+  "extract": {
+   "en": "Jennifer Burns (born 1975) is an American historian serving as the Edgar E. Robinson Professor in United States History at Stanford University and as a research fellow at the Hoover Institution.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": null,
+  "matchEvidence": [
+   "capitalism",
+   "economic",
+   "milton",
+   "friedman"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "scott horton": {
+  "name": "Scott Horton",
+  "wikipedia": {
+   "title": "Scott Horton (radio host)",
+   "url": "https://en.wikipedia.org/wiki/Scott_Horton_(radio_host)"
+  },
+  "wikidataId": "Q7436522",
+  "description": {
+   "en": "American radio host, journalist, author and antiwar activist",
+   "es": null
+  },
+  "extract": {
+   "en": "Scott Hortonis an American radio host and author. He serves as the director of the Libertarian Institute and hosts The Scott Horton Show, where he has conducted interviews with experts on foreign policy, war, and civil liberties.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Scotthorton.jpg/330px-Scotthorton.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 447,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Scotthorton.jpg",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "artist": "Stubb05"
+  },
+  "matchEvidence": [
+   "military"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "omar suleiman": {
+  "name": "Omar Suleiman",
+  "wikipedia": {
+   "title": "Omar Suleiman (imam)",
+   "url": "https://en.wikipedia.org/wiki/Omar_Suleiman_(imam)"
+  },
+  "wikidataId": "Q28873691",
+  "description": {
+   "en": "American Islamic scholar and author (born 1986)",
+   "es": "Imán, escritor y activista por los derechos civiles musulmán estadounidense"
+  },
+  "extract": {
+   "en": "Omar Suleiman (born June 3, 1986) is an American imam, author and civil rights activist. He is the founder and president of the Yaqeen Institute and a member of the Ethics Center Advisory Board at Southern Methodist University.",
+   "es": "Omar Suleiman (Nueva Orleans, Luisiana, 3 de junio de 1986) es un imán, escritor y activista por los derechos civiles musulmán estadounidense. Es el fundador y presidente del Instituto Yaqeen y miembro del Consejo Asesor del Centro de Ética Maguire de la Universidad Metodista del Sur.",
+   "esUrl": "https://es.wikipedia.org/wiki/Omar_Suleiman_(im%C3%A1n)"
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/ImamOmarSuleiman2.jpg/330px-ImamOmarSuleiman2.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 552,
+   "filePage": "https://commons.wikimedia.org/wiki/File:ImamOmarSuleiman2.jpg",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "FeaturingDallas"
+  },
+  "matchEvidence": [
+   "faith"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "craig jones": {
+  "name": "Craig Jones",
+  "wikipedia": {
+   "title": "Craig Jones (grappler)",
+   "url": "https://en.wikipedia.org/wiki/Craig_Jones_(grappler)"
+  },
+  "wikidataId": "Q113876482",
+  "description": {
+   "en": "Australian grappler (born 1991)",
+   "es": "grappler australiano"
+  },
+  "extract": {
+   "en": "Craig Benjamin Jones (born 17 July 1991) is an Australian grappler and Brazilian jiu-jitsu (BJJ) black belt competitor and coach. He is a two-time ADCC Submission Wrestling World Championship silver medalist and a three-time Polaris Pro Grappling champion.",
+   "es": "Craig Benjamin Jones (Adelaida, Australia Meridional; 17 de julio de 1991) es un grappler australiano y cinturón negro en Jiu-jitsu brasileño. Jones es campeón de jiu-jitsu brasileño en no-gi de la IBJJF como cinturón morado, un dos veces medallista de plata ADCC Submission Wrestling World Championship y un tres veces campeón de Polaris Pro Grappling.",
+   "esUrl": "https://es.wikipedia.org/wiki/Craig_Jones_(grappler)"
+  },
+  "photo": null,
+  "matchEvidence": [
+   "jitsu",
+   "adcc"
+  ],
+  "retrievedAt": "2026-10-22"
+ },
+ "tim dillon": {
+  "name": "Tim Dillon",
+  "wikipedia": {
+   "title": "Tim Dillon (comedian)",
+   "url": "https://en.wikipedia.org/wiki/Tim_Dillon_(comedian)"
+  },
+  "wikidataId": "Q104601374",
+  "description": {
+   "en": "American comedian and podcaster",
+   "es": "comediante y podcaster estadounidense"
+  },
+  "extract": {
+   "en": "Tim J. Dillon (born January 22, 1985) is an American stand-up comedian and podcaster.",
+   "es": null,
+   "esUrl": null
+  },
+  "photo": {
+   "thumbUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Tim_Dillon_crop.jpg/330px-Tim_Dillon_crop.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 320,
+   "height": 372,
+   "filePage": "https://commons.wikimedia.org/wiki/File:Tim_Dillon_crop.jpg",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Lex Fridman"
+  },
+  "matchEvidence": [
+   "comedian",
+   "comedy"
+  ],
+  "retrievedAt": "2026-10-22"
+ }
+}

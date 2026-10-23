@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Green Room — an AI agent that recommends podcast guests using cultural affinities (Qloo Agentic Hackathon 2026)",
+  "description": "Green Room \u2014 an AI agent that recommends podcast guests using cultural affinities (Qloo Agentic Hackathon 2026)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
@@ -12,7 +12,8 @@
     "test": "vitest run",
     "data:build": "tsx scripts/build-dataset.ts",
     "backtest": "tsx scripts/run-backtest.ts",
-    "qloo:smoke": "tsx scripts/qloo-smoke.ts"
+    "qloo:smoke": "tsx scripts/qloo-smoke.ts",
+    "profiles:build": "tsx scripts/build-profiles.ts"
   },
   "devDependencies": {
     "@netlify/functions": "^2.8.2",

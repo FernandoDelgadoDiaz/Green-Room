@@ -28,3 +28,29 @@ When no rule matches, the guest list stays empty: about 50% of DOAC titles have 
 - Names are matched by exact canonical key (case, accents and honorifics normalized). Spelling variants across feeds can be missed; we prefer missing a match to inventing one.
 - Lex/DOAC and CREATIVO share almost no guests. Without Qloo, Spanish-language recommendations for CREATIVO are cross-language and flagged as such.
 - Refreshing: `npm run data:build` re-fetches feeds when `data/raw/*.xml` is absent. The development container could not reach the feeds directly (network policy), so the snapshots were fetched through a scraping service.
+
+## Guest photos and bios
+
+`data/profiles.json` was built by `scripts/build-profiles.ts` on 2026-10-22 for the 103 people who can appear in the current recommendations and backtests: **66 profiles accepted, 58 with a photo.**
+
+| Field | Source | License |
+|---|---|---|
+| Photo (`photo.thumbUrl`) | Wikimedia Commons, via Wikipedia `pageimages` with `pilicense=free` | Per-file free license (CC BY, CC BY-SA, CC0, public domain, OGL). The author and license shown on the card come from Commons `extmetadata`. |
+| Specialty (`description.en/es`) | Wikidata | CC0 |
+| Bio quote (`extract.en/es`) | Wikipedia intro, shown as a quote with a link | CC BY-SA 4.0 |
+
+### Identity safeguards (no photos of the wrong person)
+1. Disambiguation pages are never used directly. Green Room only considers the options listed on the page (e.g. "Scott Galloway (professor)"), and accepts one only if exactly one of them matches the context.
+2. **Context check.** The Wikipedia text must share at least one meaningful word (6-letter stem) with the person's own interview titles. Example: Wikipedia's "Shawn Ryan" is a TV screenwriter, while the Diary Of A CEO guest is a different person, so no profile is attached.
+3. Words that justified each match are stored in `matchEvidence` and shown on the card ("Identity check").
+4. The 66 accepted profiles were also reviewed by hand on 2026-10-22.
+
+When any check fails, the card shows elegant initials. Known misses: Scott Galloway, Matthew McConaughey and Tony Robbins have Wikipedia pages, but their interview titles share no words with them. We chose false negatives over false positives.
+
+### Runtime
+- People without a stored profile are looked up live by the server function (Wikipedia/Wikidata APIs, 4 s timeout, in-memory cache). Any failure means initials.
+- Set `PROFILE_LOOKUP=0` to disable lookups.
+- Images are hotlinked from `upload.wikimedia.org` / `thumb.wikimedia.org`. They are not re-hosted in the repo.
+
+### Note about the development container
+The container cannot reach Wikimedia hosts. API responses were fetched through Firecrawl and cached in `data/raw/wiki-cache/` (gitignored). For the QA screenshots, the test browser was served local crops of the same Commons images, made from page renders, via request interception. Real users' browsers load them directly from Wikimedia.

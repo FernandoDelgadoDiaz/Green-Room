@@ -1,6 +1,9 @@
 import type { AgentResult } from '../core/agent/agent';
 import type { BacktestResult } from '../core/backtest';
 import type { PodcastSource } from '../core/types';
+import type { GuestProfile } from '../core/profiles';
+
+export type RecommendResult = AgentResult & { profiles: Record<string, GuestProfile | null> };
 
 export interface ShowSummary {
   id: string;
@@ -25,6 +28,6 @@ async function call<T>(body: unknown): Promise<T> {
 
 export const api = {
   shows: () => call<{ qlooMode: 'LIVE' | 'MOCK'; shows: ShowSummary[] }>({ action: 'shows' }),
-  recommend: (showId: string) => call<AgentResult>({ action: 'recommend', showId, k: 5 }),
+  recommend: (showId: string) => call<RecommendResult>({ action: 'recommend', showId, k: 5 }),
   backtest: (showId: string, cutoff: string) => call<BacktestResult>({ action: 'backtest', showId, cutoff, horizonMonths: 24 }),
 };

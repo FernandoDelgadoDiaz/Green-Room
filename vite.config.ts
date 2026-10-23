@@ -16,7 +16,7 @@ function devApi(env: Record<string, string>): Plugin {
         for await (const chunk of req) raw += chunk;
         try {
           const { handleApi } = await server.ssrLoadModule('/core/api.ts');
-          const { status, body } = await handleApi(JSON.parse(raw || '{}'), { QLOO_API_KEY: env.QLOO_API_KEY, QLOO_BASE_URL: env.QLOO_BASE_URL });
+          const { status, body } = await handleApi(JSON.parse(raw || '{}'), { QLOO_API_KEY: env.QLOO_API_KEY, QLOO_BASE_URL: env.QLOO_BASE_URL, PROFILE_LOOKUP: env.PROFILE_LOOKUP });
           res.statusCode = status;
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(body));

@@ -13,6 +13,7 @@ import { NoQlooAdapter } from './qloo/mock';
 
 export interface ArmResult {
   label: string;
+  labelEs: string;
   qlooMode: QlooAdapter['mode'];
   /** False when any input is simulated: such numbers test the pipeline, they are not results. */
   isEvidence: boolean;
@@ -35,6 +36,7 @@ export interface BacktestResult {
   arms: ArmResult[];
   leakage: { maxHistoryDate: string; maxPoolDate: string; ok: boolean };
   limitations: string[];
+  limitationsEs: string[];
 }
 
 export const KS = [5, 10, 25] as const;
@@ -44,7 +46,7 @@ export async function runBacktest(args: {
   others: PodcastDataset[];
   cutoff: string;
   horizonMonths?: number;
-  qlooArm?: { label: string; adapter: QlooAdapter };
+  qlooArm?: { label: string; labelEs?: string; adapter: QlooAdapter };
 }): Promise<BacktestResult> {
   const { target, others, cutoff } = args;
   const horizonMonths = args.horizonMonths ?? 24;
@@ -68,19 +70,19 @@ export async function runBacktest(args: {
   const reachable = [...hiddenMap.keys()].filter((k) => poolKeys.has(k));
   const poolSize = baseline.ranked.length;
 
-  const scoreArm = (label: string, mode: QlooAdapter['mode'], ranked: Array<{ key: string; name: string }>): ArmResult => {
+  const scoreArm = (label: string, labelEs: string, mode: QlooAdapter['mode'], ranked: Array<{ key: string; name: string }>): ArmResult => {
     const hits = ranked
       .map((r, i) => ({ r, rank: i + 1 }))
       .filter(({ r }) => hiddenMap.has(r.key))
       .map(({ r, rank }) => ({ name: r.name, rank, bookedOn: hiddenMap.get(r.key)!.bookedOn, title: hiddenMap.get(r.key)!.title }));
     const hitsAt = Object.fromEntries(KS.map((k) => [k, hits.filter((h) => h.rank <= k).length]));
-    return { label, qlooMode: mode, isEvidence: mode !== 'MOCK', hitsAt, hits: hits.filter((h) => h.rank <= KS[KS.length - 1]) };
+    return { label, labelEs, qlooMode: mode, isEvidence: mode !== 'MOCK', hitsAt, hits: hits.filter((h) => h.rank <= KS[KS.length - 1]) };
   };
 
-  const arms: ArmResult[] = [scoreArm('Without Qloo (themes + verified track record)', 'OFF', baseline.ranked)];
+  const arms: ArmResult[] = [scoreArm('Without Qloo (themes + verified track record)', 'Sin Qloo (temas + trayectoria verificada)', 'OFF', baseline.ranked)];
   if (args.qlooArm) {
     const withQloo = await runAgent({ target, others, qloo: args.qlooArm.adapter, asOf: cutoff, k: 10 });
-    arms.push(scoreArm(args.qlooArm.label, args.qlooArm.adapter.mode, withQloo.ranked));
+    arms.push(scoreArm(args.qlooArm.label, args.qlooArm.labelEs ?? args.qlooArm.label, args.qlooArm.adapter.mode, withQloo.ranked));
   }
 
   // Leakage audit: nothing the agent saw may be dated on/after the cutoff.
@@ -108,6 +110,12 @@ export async function runBacktest(args: {
       `Only ${reachable.length} of ${hiddenMap.size} later first-time guests had appeared on a comparison show before the cutoff, so that is the maximum any method can find here.`,
       'Guest names come from RSS titles with deterministic rules; unparsed titles are treated as unknown, which can hide hits.',
       'Small samples: differences of one or two hits are not meaningful.',
+    ],
+    limitationsEs: [
+      'Un acierto significa que el conductor luego invitó a esa persona. Mide coincidencia con sus decisiones reales, no impacto en la audiencia.',
+      `Solo ${reachable.length} de ${hiddenMap.size} invitados nuevos posteriores habían participado antes del corte en un programa de comparación: ese es el máximo que cualquier método puede encontrar aquí.`,
+      'Los nombres de invitados salen de los títulos del RSS con reglas fijas; los títulos no interpretados cuentan como desconocidos, lo que puede ocultar aciertos.',
+      'Muestras chicas: diferencias de uno o dos aciertos no son significativas.',
     ],
   };
 }
