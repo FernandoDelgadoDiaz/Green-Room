@@ -17,7 +17,19 @@ import type catalogJson from '../data/catalog.json';
 export type Catalog = typeof catalogJson;
 export type CatalogShow = Catalog['shows'][number];
 
+/** Present on results produced by the public Qloo LIVE path (/api/discover). */
+export interface LiveMeta {
+  mode: 'LIVE';
+  cached: boolean;
+  computedAt: string;
+  stale?: boolean;
+  qlooCalls?: number;
+  partial?: boolean;
+  errors?: Record<string, number>;
+}
+
 export type RecommendResult = AgentResult & {
+  live?: LiveMeta;
   profiles: Record<string, GuestProfile | null>;
   /** LIVE only: the same analysis without Qloo, to show what Qloo added. */
   comparison: BaselineComparison | null;
@@ -59,7 +71,7 @@ export const liveToken = {
   },
 };
 
-async function post<T>(path: '/api/agent' | '/api/live' | '/api/podcasts', body: unknown, token?: string): Promise<{ ok: boolean; status: number; json: T & { error?: string; reason?: string } }> {
+async function post<T>(path: '/api/agent' | '/api/live' | '/api/podcasts' | '/api/discover', body: unknown, token?: string): Promise<{ ok: boolean; status: number; json: T & { error?: string; reason?: string } }> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(path, { method: 'POST', headers, body: JSON.stringify(body) });
@@ -79,6 +91,36 @@ async function podcasts<T>(body: unknown): Promise<T> {
   const { ok, status, json } = await post<T>('/api/podcasts', body);
   if (!ok) throw new Error(json?.error ?? `HTTP ${status}`);
   return json as T;
+}
+
+export interface PublicLiveStatus {
+  live: boolean;
+  code: string | null;
+  message: { en: string; es: string } | null;
+}
+
+/** A public LIVE request that did not produce a LIVE result. Carries the server's honest explanation. */
+export class LiveError extends Error {
+  constructor(
+    readonly code: string,
+    readonly explanation: { en: string; es: string } | null,
+    readonly retry: boolean,
+    /** An earlier, dated LIVE result for the same show, when the server has one. */
+    readonly staleLive: unknown,
+  ) {
+    super(explanation?.en ?? code);
+  }
+}
+
+async function discover<T>(body: unknown): Promise<T> {
+  let r;
+  try {
+    r = await post<T & { code?: string; message?: { en: string; es: string }; retry?: boolean; staleLive?: unknown }>('/api/discover', body);
+  } catch {
+    throw new LiveError('network', { en: 'The server could not be reached. Nothing was substituted.', es: 'No se pudo contactar al servidor. No se reemplazó por otro resultado.' }, true, null);
+  }
+  if (!r.ok) throw new LiveError(r.json.code ?? `http_${r.status}`, r.json.message ?? (r.json.error ? { en: r.json.error, es: r.json.error } : null), r.json.retry ?? r.status >= 500, r.json.staleLive ?? null);
+  return r.json as T;
 }
 
 export type LiveStatus = { state: 'live' } | { state: 'off'; reason?: string } | { state: 'denied' | 'unconfigured' | 'error'; message: string };
@@ -103,6 +145,10 @@ export const api = {
     if (!ok) throw new Error(json?.error ?? `HTTP ${status}`);
     return json;
   },
+  /** Public Qloo LIVE (no token): whether it is available right now. */
+  publicStatus: () => post<PublicLiveStatus>('/api/discover', { action: 'status' }).then((r) => (r.ok ? r.json : { live: false, code: `http_${r.status}`, message: null })).catch(() => ({ live: false, code: 'network', message: null }) as PublicLiveStatus),
+  recommendLive: (showId: string) => discover<RecommendResult>({ action: 'recommend', showId }),
+  analyzeLive: (appleId: number) => discover<{ analysis: FeedAnalysisSummary; result: RecommendResult | null }>({ action: 'analyze', appleId }),
   backtest: (showId: string, cutoff: string) => call<BacktestResult>({ action: 'backtest', showId, cutoff, horizonMonths: 24 }),
   liveStatus: async (token: string): Promise<LiveStatus> => {
     const r = await post<{ mode?: string }>('/api/live', { action: 'status' }, token).catch((e) => ({ ok: false, status: 0, json: { error: String(e) } as { error?: string; reason?: string } }));

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, liveToken, type Catalog, type FeedAnalysisSummary, type LiveStatus, type PodcastHit, type RecommendResult, type ShowSummary } from './api';
+import { api, LiveError, liveToken, type Catalog, type FeedAnalysisSummary, type LiveStatus, type PodcastHit, type PublicLiveStatus, type RecommendResult, type ShowSummary } from './api';
 import { CatalogPicker } from './components/CatalogPicker';
 import { Badge } from './components/Badge';
 import { RecommendView } from './components/RecommendView';
@@ -100,6 +100,49 @@ function AnalysisStatus({ hit, analysis }: { hit: PodcastHit; analysis: FeedAnal
   );
 }
 
+/** States what produced the result: the real Qloo API (when, from cache or not, partial or not). */
+function LiveBanner({ result }: { result: RecommendResult }) {
+  const { t } = useI18n();
+  const l = result.live;
+  if (!l) return null;
+  const errs = Object.entries(l.errors ?? {}).map(([k, n]) => `${k} ×${n}`).join(', ');
+  return (
+    <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+      <p className="flex flex-wrap items-center gap-2 font-semibold">
+        <Badge p="LIVE" /> {t('pl.banner', { date: l.computedAt.slice(0, 16).replace('T', ' ') })} · {l.cached ? t('pl.cached') : t('pl.calls', { n: l.qlooCalls ?? 0 })}
+      </p>
+      {l.stale && <p className="mt-1 text-brass-200">{t('pl.stale')}</p>}
+      {l.partial && <p className="mt-1 text-brass-200">{t('pl.partial', { errors: errs })}</p>}
+      <p className="mt-1 text-xs text-emerald-200/80">{t('pl.audience')}</p>
+    </div>
+  );
+}
+
+interface Failure {
+  code: string;
+  message: { en: string; es: string } | null;
+  retry: (() => void) | null;
+  stale: (() => void) | null;
+  staleDate: string | null;
+  mock: () => void;
+}
+
+/** Honest failure: what happened, and explicit choices. Nothing is substituted automatically. */
+function FailureCard({ f }: { f: Failure }) {
+  const { lang, t } = useI18n();
+  return (
+    <div className="card border border-red-400/30 p-4 text-sm text-red-100">
+      <p className="font-semibold">{t('pl.failTitle')}</p>
+      <p className="mt-1 text-stone-300">{f.message ? (lang === 'es' ? f.message.es : f.message.en) : f.code === 'not_in_directory' ? t('pl.noDirectory') : f.code}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {f.retry && <button className="btn-primary" onClick={f.retry}>{t('pl.retry')}</button>}
+        {f.stale && <button className="btn-ghost" onClick={f.stale}>{t('pl.useStale', { date: (f.staleDate ?? '').slice(0, 10) })}</button>}
+        <button className="btn-ghost" onClick={f.mock}>{t('pl.mock')}</button>
+      </div>
+    </div>
+  );
+}
+
 function Shell() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('recommend');
@@ -111,20 +154,36 @@ function Shell() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [publicLive, setPublicLive] = useState<PublicLiveStatus | null>(null);
+  const [failure, setFailure] = useState<Failure | null>(null);
+  // Public Qloo LIVE is used only when the server says it is available and no private token is active.
+  const usePublicLive = () => !liveToken.get() && Boolean(publicLive?.live);
+
   useEffect(() => {
     api.shows().then((r) => { setShows(r.shows); if (!liveToken.get()) setMode(r.qlooMode); }).catch((e) => setError(String(e)));
     api.catalog().then(setCatalog).catch((e) => setError(String(e)));
+    api.publicStatus().then((s) => { setPublicLive(s); if (s.live && !liveToken.get()) setMode('LIVE'); });
   }, []);
 
   const [external, setExternal] = useState<{ hit: PodcastHit; analysis: FeedAnalysisSummary | null } | null>(null);
 
-  // A show found through the open search (not in the catalog): analyzed from its live RSS feed.
-  const analyzeHit = async (hit: PodcastHit) => {
-    setSelected(`ext:${hit.feedUrl}`);
-    setExternal({ hit, analysis: null });
+  const start = () => {
     setResult(null);
+    setFailure(null);
     setLoading(true);
     setError(null);
+  };
+
+  const fail = (e: unknown, retry: () => void, mock: () => void, show: (stale: unknown) => void) => {
+    if (!(e instanceof LiveError)) return setError(String(e));
+    const stale = e.staleLive as (RecommendResult & { result?: RecommendResult }) | null;
+    const staleResult = stale ? (stale.result ?? stale) : null;
+    setFailure({ code: e.code, message: e.explanation, retry: e.retry ? retry : null, stale: stale ? () => (setFailure(null), show(stale)) : null, staleDate: staleResult?.live?.computedAt ?? null, mock });
+  };
+
+  // A show found through the open search (not in the catalog), MOCK or explicitly requested.
+  const analyzeHitMock = async (hit: PodcastHit) => {
+    start();
     try {
       const r = await api.analyzeFeed(hit);
       setExternal({ hit, analysis: r.analysis });
@@ -136,16 +195,47 @@ function Shell() {
     }
   };
 
-  const analyze = async (id: string) => {
-    setExternal(null);
-    setSelected(id);
-    setResult(null);
-    setLoading(true);
-    setError(null);
+  const analyzeHit = async (hit: PodcastHit) => {
+    setSelected(`ext:${hit.feedUrl}`);
+    setExternal({ hit, analysis: null });
+    if (!usePublicLive()) return analyzeHitMock(hit);
+    start();
+    try {
+      if (!hit.appleId) throw new LiveError('not_in_directory', null, false, null);
+      const r = await api.analyzeLive(hit.appleId);
+      setExternal({ hit, analysis: r.analysis });
+      setResult(r.result);
+    } catch (e) {
+      fail(e, () => void analyzeHit(hit), () => void analyzeHitMock(hit), (s) => {
+        const x = s as { analysis: FeedAnalysisSummary; result: RecommendResult };
+        setExternal({ hit, analysis: x.analysis });
+        setResult(x.result);
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const analyzeMock = async (id: string) => {
+    start();
     try {
       setResult(await api.recommend(id));
     } catch (e) {
       setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const analyze = async (id: string) => {
+    setExternal(null);
+    setSelected(id);
+    if (!usePublicLive()) return analyzeMock(id);
+    start();
+    try {
+      setResult(await api.recommendLive(id));
+    } catch (e) {
+      fail(e, () => void analyze(id), () => void analyzeMock(id), (s) => setResult(s as RecommendResult));
     } finally {
       setLoading(false);
     }
@@ -183,6 +273,7 @@ function Shell() {
         </div>
       </header>
       <PrivateLive onMode={setMode} />
+      {publicLive && !publicLive.live && !liveToken.get() && <p className="mt-3 text-xs text-stone-500">{t('pl.offNote')}</p>}
 
       <nav className="mt-6 flex flex-wrap gap-2 sm:mt-8">
         {(
@@ -208,15 +299,17 @@ function Shell() {
               </section>
             )}
             {selected && (
-              <button className="btn-ghost" onClick={() => (setSelected(null), setResult(null), setExternal(null))}>
+              <button className="btn-ghost" onClick={() => (setSelected(null), setResult(null), setExternal(null), setFailure(null))}>
                 {t('cat.change')}
               </button>
             )}
-            {loading && <p className="text-sm text-stone-400">{t('state.analyzing')}</p>}
+            {loading && <p className="text-sm text-stone-400">{usePublicLive() ? t('pl.running') : t('state.analyzing')}</p>}
+            {failure && <FailureCard f={failure} />}
             {external?.analysis && <AnalysisStatus hit={external.hit} analysis={external.analysis} />}
             {show && result && (
               <section>
                 <h2 className="mb-3 text-xs uppercase tracking-widest text-stone-500">{t('step.results')} {show.name}</h2>
+                <div className="mb-4"><LiveBanner result={result} /></div>
                 <RecommendView show={show} result={result} />
               </section>
             )}

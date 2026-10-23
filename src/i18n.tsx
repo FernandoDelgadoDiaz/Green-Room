@@ -122,7 +122,38 @@ const STRINGS = {
     en: 'From {n} episode titles. Describes what the show talks about, not what listeners like.',
     es: 'A partir de {n} títulos de episodios. Describe de qué habla el programa, no qué le gusta a su audiencia.',
   },
-  'affinities.title': { en: 'Cultural affinities of this audience', es: 'Afinidades culturales de esta audiencia' },
+  'affinities.title': { en: 'Cultural affinities inferred by Qloo', es: 'Afinidades culturales inferidas por Qloo' },
+  'pl.audience': {
+    en: 'Inferred, not measured: Qloo’s affinities are taste patterns of people who like this show’s signals (its past guests, the show itself or its topics). They are not data about this show’s listeners, and we do not know who they are.',
+    es: 'Inferidas, no medidas: las afinidades de Qloo son patrones de gusto de quienes se interesan por las señales de este programa (sus invitados anteriores, el propio programa o sus temas). No son datos de los oyentes de este programa, y no sabemos quiénes son.',
+  },
+  'pl.offNote': {
+    en: 'Public Qloo LIVE is off right now. Analyses use MOCK data and only show how the pipeline works.',
+    es: 'El acceso público a Qloo LIVE está apagado en este momento. Los análisis usan datos MOCK y solo muestran cómo funciona el circuito.',
+  },
+  'pl.banner': { en: 'Built with the real Qloo API · computed {date} UTC', es: 'Construido con la API real de Qloo · calculado el {date} UTC' },
+  'pl.cached': { en: 'served from cache: no new Qloo queries', es: 'servido desde caché: sin nuevas consultas a Qloo' },
+  'pl.calls': { en: '{n} Qloo queries', es: '{n} consultas a Qloo' },
+  'pl.stale': {
+    en: 'Earlier LIVE result, shown because a new one cannot be produced right now.',
+    es: 'Resultado LIVE anterior, mostrado porque ahora no se puede generar uno nuevo.',
+  },
+  'pl.partial': {
+    en: 'Some Qloo queries failed ({errors}). The result uses only the answers that did arrive.',
+    es: 'Algunas consultas a Qloo fallaron ({errors}). El resultado usa solo las respuestas que llegaron.',
+  },
+  'pl.failTitle': { en: 'Qloo LIVE could not produce this result', es: 'Qloo LIVE no pudo generar este resultado' },
+  'pl.retry': { en: 'Try again', es: 'Reintentar' },
+  'pl.useStale': { en: 'See the earlier LIVE result ({date})', es: 'Ver el resultado LIVE anterior ({date})' },
+  'pl.mock': { en: 'See a demo without Qloo (MOCK)', es: 'Ver una demostración sin Qloo (MOCK)' },
+  'pl.noDirectory': {
+    en: 'Qloo LIVE analyzes podcasts from our catalog or from Apple’s podcast directory, where the feed address comes from a trusted directory. This link has no Apple directory entry.',
+    es: 'Qloo LIVE analiza podcasts de nuestro catálogo o del directorio de podcasts de Apple, donde la dirección del feed viene de un directorio confiable. Este enlace no tiene una entrada en el directorio de Apple.',
+  },
+  'pl.running': {
+    en: 'Analyzing with the real Qloo API. This can take up to a minute.',
+    es: 'Analizando con la API real de Qloo. Puede tardar hasta un minuto.',
+  },
   'affinities.pending': {
     en: 'Waiting for the live Qloo API. With the key, this panel shows the artists, films and books that people who follow this show’s past guests over-index on. No placeholder names are shown: we do not invent taste data.',
     es: 'Esperando la API real de Qloo. Con la clave, este panel muestra los artistas, películas y libros por los que tienen más afinidad quienes siguen a los invitados anteriores del programa. No mostramos nombres de relleno: no inventamos datos de gustos.',

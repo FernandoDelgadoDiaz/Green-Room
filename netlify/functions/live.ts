@@ -1,6 +1,7 @@
 // Private endpoint: POST /api/live. LIVE Qloo only with QLOO_LIVE_ENABLED=true, a key and a valid
 // bearer token (see core/access.ts). Strict per-IP rate limit on top of the per-token hourly quota.
 import { handleLive, type LiveRequest } from '../../core/api';
+import { blobsStore } from '../../core/public-live/blobs-store';
 
 const ENV_KEYS = [
   'QLOO_LIVE_ENABLED',
@@ -14,6 +15,14 @@ const ENV_KEYS = [
   'QLOO_TIMEOUT_MS',
   'QLOO_DEADLINE_MS',
   'PROFILE_LOOKUP',
+  // Public-path controls (public-usage / public-pause / public-resume).
+  'QLOO_PUBLIC_ENABLED',
+  'PUBLIC_DAILY_QLOO_CALLS',
+  'PUBLIC_CALLS_PER_ANALYSIS',
+  'PUBLIC_MAX_CONCURRENT',
+  'PUBLIC_FRESH_PER_IP_PER_DAY',
+  'PUBLIC_OPEN_FEEDS_PER_DAY',
+  'PUBLIC_CACHE_HOURS',
 ] as const;
 
 export default async (req: Request): Promise<Response> => {
@@ -27,7 +36,7 @@ export default async (req: Request): Promise<Response> => {
   }
   const env = Object.fromEntries(ENV_KEYS.map((k) => [k, process.env[k]]));
   try {
-    const { status, body: out } = await handleLive(body, env, req.headers.get('authorization'));
+    const { status, body: out } = await handleLive(body, env, req.headers.get('authorization'), { store: blobsStore() });
     return Response.json(out, { status, headers });
   } catch {
     // No error text here: it could only come from unexpected code paths.

@@ -534,6 +534,7 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
           ) : (
             <p className="mt-2 text-sm text-stone-400">{t('affinities.pending')}</p>
           )}
+          {result.qlooMode === 'LIVE' && <p className="mt-3 text-[11px] text-stone-500">{t('pl.audience')}</p>}
         </div>
       </section>
 

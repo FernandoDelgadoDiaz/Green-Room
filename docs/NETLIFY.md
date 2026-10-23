@@ -7,6 +7,9 @@ Status on 2026-10-23: nothing is deployed and no key has been loaded.
 |---|---|---|---|---|
 | `POST /api/agent` | `netlify/functions/agent.ts` | **always MOCK** (reads no Qloo variable) | public | 60 / 60 s per IP |
 | `POST /api/live` | `netlify/functions/live.ts` | LIVE only if all conditions below hold | bearer token | 6 / 60 s per IP |
+| `POST /api/discover` | `netlify/functions/discover.ts` | **public LIVE**, only with `QLOO_PUBLIC_ENABLED=true` and inside shared limits | public | 10 / 60 s per IP |
+
+The public LIVE path, its limits and the emergency pause are described in `docs/PUBLIC_LIVE.md`.
 
 LIVE requires all four conditions:
 1. `QLOO_LIVE_ENABLED` is exactly `true`. Any other value keeps every request in MOCK.
@@ -60,6 +63,8 @@ Measured performance, against a **simulated** Qloo (`npm run perf:sim`). This me
 | `QLOO_TIMEOUT_MS` | `8000` | Functions | no |
 | `QLOO_DEADLINE_MS` | `45000` | Functions | no |
 | `PROFILE_LOOKUP` | *(empty)* | Functions | no |
+| `QLOO_PUBLIC_ENABLED` | `false` (see `docs/PUBLIC_LIVE.md` before switching) | Functions | no |
+| `PUBLIC_DAILY_QLOO_CALLS` … `PUBLIC_IP_SALT` | defaults in `.env.example` | Functions | `PUBLIC_IP_SALT`: yes |
 
 - Never use a `VITE_` prefix.
 - The token itself is never stored in Netlify, only its hash.

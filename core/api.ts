@@ -19,6 +19,7 @@ import { runComparison, runCoverage, runOriginality, summarizeComparison, summar
 import { redact } from './qloo/credentials';
 import { resolveProfiles, type GuestProfile } from './profiles';
 import { nameKey } from './names';
+import { PublicGuard, publicConfig, type CasStore, type PublicEnv } from './public-live/guard';
 
 /** Every analyzable catalog show; each one is a comparison show for the others. */
 export const DATASETS: PodcastDataset[] = ALL_DATASETS;
@@ -192,7 +193,11 @@ export type LiveRequest =
   /** Blind editorial set (Qloo-admitted vs baseline) for independent raters; the key is returned separately. */
   | { action: 'editorial'; showId: string }
   /** LIVE analysis of a show found through the open search (feed URL). */
-  | { action: 'analyze'; feedUrl: string; appleUrl?: string | null; host?: string | null };
+  | { action: 'analyze'; feedUrl: string; appleUrl?: string | null; host?: string | null }
+  /** Operator controls for the PUBLIC LIVE path (/api/discover): usage and emergency pause. */
+  | { action: 'public-usage' }
+  | { action: 'public-pause'; note?: string }
+  | { action: 'public-resume' };
 
 const quota = new HourlyQuota();
 
@@ -201,10 +206,18 @@ const quota = new HourlyQuota();
  * Responses carry aggregate numbers and our own (RSS) names only: no Qloo entity data beyond what
  * the normal recommendation view shows, and never the key.
  */
-export async function handleLive(req: LiveRequest, env: Env, authorization: string | null | undefined): Promise<{ status: number; body: unknown }> {
+export async function handleLive(req: LiveRequest, env: Env & PublicEnv, authorization: string | null | undefined, deps: { store?: CasStore | null } = {}): Promise<{ status: number; body: unknown }> {
   if (!env.LIVE_ACCESS_TOKEN_SHA256) return { status: 503, body: { error: 'Private LIVE testing is not configured.' } };
   const tokenId = verifyBearer(authorization, env);
   if (!tokenId) return { status: 401, body: { error: 'Missing or invalid access token.' } };
+  // Public-path controls work even when private LIVE is switched off (emergency pause must always work).
+  if (req.action === 'public-usage' || req.action === 'public-pause' || req.action === 'public-resume') {
+    if (!deps.store) return { status: 503, body: { error: 'Shared usage store unavailable.' } };
+    const guard = new PublicGuard(deps.store, publicConfig(env));
+    if (req.action === 'public-pause') return { status: 200, body: { control: await guard.setPaused(true, typeof req.note === 'string' ? req.note.slice(0, 200) : null) } };
+    if (req.action === 'public-resume') return { status: 200, body: { control: await guard.setPaused(false, null) } };
+    return { status: 200, body: { publicEnabled: env.QLOO_PUBLIC_ENABLED === 'true' && Boolean(env.QLOO_API_KEY), control: await guard.control(), usage: await guard.usage() } };
+  }
   const sw = liveSwitch(env);
   if (!sw.on) return { status: 403, body: { error: 'LIVE is switched off; requests stay in MOCK.', reason: sw.reason, mode: 'MOCK' } };
   if (req.action === 'status') {
