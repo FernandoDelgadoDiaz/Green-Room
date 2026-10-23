@@ -86,3 +86,15 @@ Judges of an agentic hackathon will most likely read it as a well-documented pip
 Free routes:
 - Step 1 with the RulePlanner costs nothing and makes the agentic structure real.
 - A model call needs your authorization. The official Qloo harness's `qloo explore` uses your own model sign-in for interactive use only; it is not a backend route.
+
+## Phase 5 (2026-10-23): agent loop implemented
+- `runAgent` is now a loop: **observe → decide (rule planner) → act (typed tool) → verify → replan**.
+- Limits: at most 40 steps, a 50 s deadline after which Qloo tools are skipped, at most 3 verification rounds, and the per-request Qloo call budget enforced by the client.
+- Real re-plans, covered by tests in `tests/agent-loop.test.ts`:
+  - fewer than 3 confirmed guest identities → try the show as a Qloo podcast entity → theme tags → continue without Qloo, saying so;
+  - fewer than 30% of episodes name a guest → skip guest lookups and start from the show entity;
+  - verification rejects a pick (a name that looks like a recurring segment, or a name already present in the show's titles) → re-select without it;
+  - too few eligible candidates → relax the threshold → widen the window.
+- Every trace step and the `plan` array record **why** the planner chose it, in English and Spanish.
+- The ranking formula is unchanged. On the original three-show corpus, recommendations and backtests are identical to the recorded baseline.
+- Remaining gap for an "agentic" jury: the planner is rules, not a language model. Options and costs are in docs/LLM_OPTIONS.md; nothing paid is active.

@@ -2,6 +2,10 @@ import type { AgentResult } from '../core/agent/agent';
 import type { BacktestResult } from '../core/backtest';
 import type { PodcastSource } from '../core/types';
 import type { GuestProfile } from '../core/profiles';
+import type catalogJson from '../data/catalog.json';
+
+export type Catalog = typeof catalogJson;
+export type CatalogShow = Catalog['shows'][number];
 
 export type RecommendResult = AgentResult & { profiles: Record<string, GuestProfile | null> };
 
@@ -60,6 +64,10 @@ export type LiveStatus = { state: 'live' } | { state: 'off'; reason?: string } |
 
 export const api = {
   shows: () => post<{ qlooMode: 'LIVE' | 'MOCK'; shows: ShowSummary[] }>('/api/agent', { action: 'shows' }).then((r) => {
+    if (!r.ok) throw new Error(r.json?.error ?? `HTTP ${r.status}`);
+    return r.json;
+  }),
+  catalog: () => post<Catalog>('/api/agent', { action: 'catalog' }).then((r) => {
     if (!r.ok) throw new Error(r.json?.error ?? `HTTP ${r.status}`);
     return r.json;
   }),

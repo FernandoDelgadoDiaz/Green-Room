@@ -54,3 +54,17 @@ When any check fails, the card shows elegant initials. Known misses: Scott Gallo
 
 ### Note about the development container
 The container cannot reach Wikimedia hosts. API responses were fetched through Firecrawl and cached in `data/raw/wiki-cache/` (gitignored). For the QA screenshots, the test browser was served local crops of the same Commons images, made from page renders, via request interception. Real users' browsers load them directly from Wikimedia.
+
+## Five-country catalog (2026-10-23)
+- **Charts.** Official Apple Podcasts "Top Shows" charts for US, MX, GB, AR and ES (`rss.applemarketingtools.com/api/v2/<cc>/podcasts/top/…`, updated 2026-10-23 03:48 UTC). Positions are Apple's. Green Room only *selects* interview/conversation formats from the chart, so the selection is editorial and labeled as such. No audience figures are shown because none are verifiable.
+- **Metadata.** The official iTunes lookup API gives the feed URL, artwork, genre, episode count and last release.
+- **Episodes.** Snapshots of each official RSS feed: titles, dates and links only, up to 500 per show. They were fetched through a scraping service because this container cannot reach feed hosts.
+- **Guests in new shows.** `core/extract-generic.ts` only reads name slots: the whole title, the first or last segment, a parenthesized name, a leading "Name on…", or a trailing "with Name". Confidence is "low". A spot check of 36 extractions found 3 non-person phrases.
+- **Recurring segments.** Segment names ("Tertulia de Sapiens", CREATIVO's "EL TREN") are rejected at extraction and again by the agent's verification step.
+- **Not analyzable, with the reason shown:**
+  - Palabra Plena (inactive since 2020, 6 episodes);
+  - The Megyn Kelly Show and Martha Debayle (feeds of about 2,000 episodes, not processed in this version).
+- **Limited, with the reason shown:** Santiago Bilinkis, Aislados and The Wild Project, where fewer than 30% of titles name a guest. Their analysis exercises the agent's re-planning.
+- **Country vs. language.** The country is where a show charts; the language comes from its RSS. The candidate pool is international, and language is checked per person (confirmed / probable / unknown).
+
+Rebuild with `npm run catalog:build`, using `data/catalog/sources.json` and `data/raw/catalog/*.xml`.

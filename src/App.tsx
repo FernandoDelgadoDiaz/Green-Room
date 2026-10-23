@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { api, liveToken, type LiveStatus, type RecommendResult, type ShowSummary } from './api';
+import { api, liveToken, type Catalog, type LiveStatus, type RecommendResult, type ShowSummary } from './api';
+import { CatalogPicker } from './components/CatalogPicker';
 import { Badge } from './components/Badge';
 import { RecommendView } from './components/RecommendView';
 import { BacktestView } from './components/BacktestView';
@@ -7,33 +8,6 @@ import { LanguageProvider, LanguageSwitch, useI18n } from './i18n';
 import type { Provenance } from '../core/types';
 
 type Tab = 'recommend' | 'backtest' | 'method';
-
-function ShowPicker({ shows, selected, onSelect }: { shows: ShowSummary[]; selected: string | null; onSelect: (id: string) => void }) {
-  const { t } = useI18n();
-  return (
-    <div className="grid gap-4 md:grid-cols-3">
-      {shows.map((s) => (
-        <button
-          key={s.id}
-          onClick={() => onSelect(s.id)}
-          className={`card p-5 text-left transition hover:border-brass-400/50 ${selected === s.id ? 'border-brass-400/70 ring-1 ring-brass-400/40' : ''}`}
-        >
-          <p className="text-xs uppercase tracking-widest text-stone-500">
-            {s.language === 'es' ? t('lang.es') : t('lang.en')} · {t('show.hostedBy')} {s.host}
-          </p>
-          <h3 className="mt-1 font-display text-2xl">{s.name}</h3>
-          <p className="mt-1 text-sm text-stone-400">{(['lex-fridman', 'diary-of-a-ceo', 'creativo'] as const).includes(s.id as never) ? t(`showdesc.${s.id as 'creativo'}`) : s.description}</p>
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-400">
-            <span>{s.episodeCount} {t('show.episodes')}</span>
-            <span>{s.withGuests} {t('show.withGuests')}</span>
-            <span>{s.firstEpisode?.slice(0, 4)}–{s.lastEpisode?.slice(0, 4)}</span>
-          </div>
-          <p className="mt-3 flex items-center gap-2 text-[11px] text-stone-500"><Badge p="VERIFIED" /> {t('show.feed')} {s.source.retrievedAt}</p>
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function MethodView({ shows, mode }: { shows: ShowSummary[]; mode: 'LIVE' | 'MOCK' }) {
   const { t } = useI18n();
@@ -118,12 +92,14 @@ function Shell() {
   const [shows, setShows] = useState<ShowSummary[]>([]);
   const [mode, setMode] = useState<'LIVE' | 'MOCK'>('MOCK');
   const [selected, setSelected] = useState<string | null>(null);
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [result, setResult] = useState<RecommendResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api.shows().then((r) => { setShows(r.shows); if (!liveToken.get()) setMode(r.qlooMode); }).catch((e) => setError(String(e)));
+    api.catalog().then(setCatalog).catch((e) => setError(String(e)));
   }, []);
 
   const analyze = async (id: string) => {
@@ -174,11 +150,17 @@ function Shell() {
       <main className="mt-8 space-y-8">
         {tab === 'recommend' && (
           <>
-            <section>
-              <h2 className="mb-3 text-xs uppercase tracking-widest text-stone-500">{t('step.pick')}</h2>
-              {shows.length === 0 && !error && <p className="text-sm text-stone-400">{t('state.loadingShows')}</p>}
-              <ShowPicker shows={shows} selected={selected} onSelect={analyze} />
-            </section>
+            {!selected && (
+              <section>
+                {!catalog && !error && <p className="text-sm text-stone-400">{t('state.loadingShows')}</p>}
+                {catalog && <CatalogPicker catalog={catalog} selected={selected} onSelect={analyze} />}
+              </section>
+            )}
+            {selected && (
+              <button className="btn-ghost" onClick={() => (setSelected(null), setResult(null))}>
+                {t('cat.change')}
+              </button>
+            )}
             {loading && <p className="text-sm text-stone-400">{t('state.analyzing')}</p>}
             {show && result && (
               <section>

@@ -37,3 +37,11 @@ Everything stays in `data/raw/` (gitignored).
 - B is better only if onlyB beats onlyA on relevance **and** originality by at least 0.5 points (1–5 scale), without a higher share of "identity wrong" or "language no".
 - With 3 shows and 10 people per list, smaller differences are not meaningful.
 - If raters disagree a lot, report "not conclusive".
+
+## What to hand each rater (checklist)
+1. `sheet.csv` from `npm run editorial:prepare`. This needs the Qloo key, because list B requires live Qloo.
+2. This instruction text, and nothing else from Green Room:
+   > "For each person, judge whether they would be a good guest for the named podcast. Use web search if needed. Score relevance (1–5) and originality (1–5: 5 = a non-obvious, fresh choice). Mark whether you are sure who the person is (ok / doubtful / wrong / unknown) and whether they could do the interview in the show's language (yes / probable / no / unknown). Would you invite them (yes/no)? Do not look at Green Room while rating."
+3. A deadline. Each rater returns their own CSV, named `<rater>.csv`.
+
+Raters must be **two or more real, independent people** who did not build Green Room. Until there are results, Green Room claims nothing about editorial superiority.

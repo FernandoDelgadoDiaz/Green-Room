@@ -11,7 +11,7 @@ import { GuestAvatar } from './GuestAvatar';
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}`);
 
 export function AgentTrace({ steps, done }: { steps: TraceStep[]; done: boolean }) {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   return (
     <ol className="relative space-y-3 border-l border-white/10 pl-5">
       {steps.map((s, i) => {
@@ -24,6 +24,7 @@ export function AgentTrace({ steps, done }: { steps: TraceStep[]; done: boolean 
               {s.tool && <code className="rounded bg-white/5 px-1.5 py-0.5 text-[11px] text-stone-400">{s.tool}</code>}
               <Badge p={s.provenance} />
             </div>
+            {txt.why && <p className="mt-1 text-xs italic text-sky-200/80">{t('trace.why')}: {txt.why}</p>}
             <p className="mt-1 text-sm text-stone-400">{txt.detail}</p>
             {txt.decision && <p className="mt-1 text-sm text-brass-300">→ {txt.decision}</p>}
           </li>
@@ -319,6 +320,7 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
             <h3 className="font-display text-2xl">{t('trace.title')}</h3>
             <span className="text-[11px] text-stone-500">{t('trace.replay')}</span>
           </div>
+          <p className="mt-2 text-xs text-stone-500">{t('trace.planner')}</p>
           <div className="mt-4">
             <AgentTrace steps={result.trace.slice(0, visible)} done={done} />
           </div>

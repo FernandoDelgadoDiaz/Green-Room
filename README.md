@@ -8,9 +8,13 @@ Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/). Qloo's t
 
 ## What it does
 
-1. **Pick a show**: Lex Fridman Podcast, The Diary Of A CEO, or CREATIVO (Spanish, Mexico).
-2. **The agent runs** a decision loop and shows each step and decision:
-   read history → infer themes → resolve past guests in Qloo → map cross-domain taste → search candidates → discard repeat guests → score → relax thresholds or widen the window when data is thin → check language fit → pick a varied shortlist → justify.
+1. **Pick a country, then a podcast.** The catalog covers the US, Mexico, the UK, Argentina and Spain: 21 interview shows selected from Apple Podcasts' official charts. 15 are analyzable, 3 are limited (few guest names in titles) and 3 are not analyzable; each card says why. You can also search by name.
+2. **The agent loop runs: observe → decide → act → verify → replan.** A deterministic rule planner (no language model) picks each next tool from what it has observed, and every step records *why*. It re-plans when the data is thin:
+   - not enough confirmed guest identities → the show as a Qloo podcast entity → theme tags;
+   - too few candidates → relax the threshold → widen the window;
+   - a failed verification → re-select.
+
+   See [docs/AGENT_AUDIT.md](docs/AGENT_AUDIT.md).
 3. **Five recommendations**, each with:
    - score components: topical fit, Qloo affinity, momentum and recency;
    - verified appearances, with links;
@@ -53,7 +57,8 @@ Only 7 of the 59 later first-time guests were reachable: they had appeared on a 
 ```bash
 npm install
 npm run dev           # http://localhost:5173 (API served by the same handler as the Netlify Function)
-npm test              # 70 tests: extraction, agent, leakage, Qloo client and limits, LIVE access control, secrets, i18n, profiles, unchanged ranking, experiment
+npm test              # 87+ tests: extraction, agent loop and re-planning, leakage, Qloo client and limits, LIVE access control, secrets, i18n, profiles, unchanged ranking, experiment, editorial evaluation
+npm run catalog:build # rebuild the five-country catalog from data/catalog/sources.json + RSS snapshots
 npm run typecheck
 npm run build
 npm run backtest -- <showId> <YYYY-MM-DD>
