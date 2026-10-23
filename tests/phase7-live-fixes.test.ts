@@ -117,6 +117,14 @@ describe('full circuit: proposal → identity → external verification → edit
   });
 });
 
+describe('signal verdict only describes real Qloo answers', () => {
+  it('MOCK runs report not_run', async () => {
+    const { MockQlooAdapter } = await import('../core/qloo/mock');
+    const r = await runAgent({ target, others: [other], qloo: new MockQlooAdapter(), asOf: AS_OF });
+    expect(r.signalDiagnostics.verdict).toBe('not_run');
+  });
+});
+
 describe('Spanish discovery: identity context across languages', () => {
   it('an English Qloo description matches Spanish interview titles', () => {
     const ev = identityEvidence({ entityId: 'x', name: 'Lila Downs', description: 'Mexican singer and songwriter' }, 'Lila Downs', ['Lila Downs: la cantante mexicana que canta en lenguas indígenas']);

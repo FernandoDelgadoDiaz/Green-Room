@@ -791,7 +791,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       signalsSettled = true;
       qlooUsable = resolved.length >= 3 || Boolean(podcastEntity) || tagSignals.length > 0;
       const anyResults = sig.guests.withResults + sig.podcast.reduce((s, x) => s + x.results, 0) + sig.tags.reduce((s, x) => s + x.results, 0);
-      sig.verdict = qlooUsable ? 'ok' : anyResults === 0 ? 'none_in_qloo' : sig.guests.ambiguous > sig.guests.noContext + sig.guests.fuzzyOnly ? 'ambiguous' : 'unrecognized';
+      // Only real Qloo answers say anything about Qloo: MOCK/OFF runs report "not_run".
+      sig.verdict = qloo.mode !== 'LIVE' ? 'not_run' : qlooUsable ? 'ok' : anyResults === 0 ? 'none_in_qloo' : sig.guests.ambiguous > sig.guests.noContext + sig.guests.fuzzyOnly ? 'ambiguous' : 'unrecognized';
       signalStrategy = resolved.length >= 3 ? 'guests' : podcastEntity && tagSignals.length ? 'podcast+tags' : podcastEntity ? 'podcast' : tagSignals.length ? 'tags' : 'none';
       const label: Record<string, Bi> = {
         guests: [`${resolved.length} confirmed past guests`, `${resolved.length} invitados anteriores confirmados`],
