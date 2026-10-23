@@ -11,11 +11,23 @@ A visitor searches for a podcast, picks it, and gets recommendations built with 
 |---|---|---|---|
 | `/api/agent` | always MOCK | public | catalog, shows, recommend, backtest (unchanged) |
 | `/api/podcasts` | always MOCK | public | open search, link resolution, MOCK analysis (unchanged) |
-| `/api/discover` | **LIVE**, inside the limits below | public | only `status`, `recommend {showId}` and `analyze {appleId}` |
+| `/api/discover` | **LIVE**, inside the limits below | public | only `status`, `recommend {showId}`, `analyze {appleId}` and `job {jobId}` |
+| `/api/discover-run` | runs a queued job | background function | a job id; only a job still `queued` in Blobs runs, once |
 | `/api/live` | LIVE | private token | diagnostics, A/B/C/D `compare`, `editorial`, and the public-path controls |
 
 - Any other action sent to `/api/discover` gets a 400. That includes `compare`, `editorial`, `diagnose` and the controls.
 - `/api/discover` reads its own switch. `QLOO_LIVE_ENABLED` (private tests) does not turn it on.
+
+## How a public analysis runs
+1. `POST /api/discover {recommend|analyze}`.
+   - A fresh cached result comes back at once (200).
+   - Otherwise the guard reserves the budget, a job is written to Blobs, the background function is started, and the answer is `202 {jobId}`.
+2. `discover-run-background` claims the job with compare-and-swap (queued → running), runs the analysis, settles the reservation, caches the result and writes the outcome.
+   - It never throws, so Netlify's automatic retries are no-ops.
+3. The browser polls `POST /api/discover {job, jobId}` every 3 s.
+   - A job queued for more than 90 s, or running past its lease, is reported as `stalled`. Nothing is substituted.
+
+Design and evidence: `docs/LIVE_ENGINE_FIX.md`.
 
 ## What can be analyzed
 1. **The catalog shows.** These are the 20 curated datasets listed by `status.scope.catalog`.
@@ -33,15 +45,16 @@ All counters live in **one document per UTC day** in Netlify Blobs (store `publi
 | Limit | Variable | Default | How it holds |
 |---|---|---|---|
 | Qloo calls per UTC day (hard ceiling) | `PUBLIC_DAILY_QLOO_CALLS` | 400 | A fresh analysis first reserves its worst case. It runs only if `spent + in-flight reservations + cap ≤ ceiling`. |
-| Qloo calls per analysis | `PUBLIC_CALLS_PER_ANALYSIS` | 60 | Enforced by the adapter (`maxCalls`, retries included). After the run, the reservation is settled to the real count. |
-| Simultaneous analyses | `PUBLIC_MAX_CONCURRENT` | 2 | Leases with a 75 s expiry. An unsettled lease (crash, timeout) expires and counts its **whole** reservation as spent. |
+| Qloo calls per analysis | `PUBLIC_CALLS_PER_ANALYSIS` | 80 | Enforced by the adapter (`maxCalls`, retries included); the agent skips optional steps before reaching it. After the run, the reservation is settled to the real count. |
+| Simultaneous analyses | `PUBLIC_MAX_CONCURRENT` | 2 | Leases that expire after `PUBLIC_JOB_MAX_SECONDS` + 60 s. An unsettled lease (crash) expires and counts its **whole** reservation as spent. A second visitor asking for a show already being analyzed joins that job (no new reservation). |
 | Fresh analyses per visitor per day | `PUBLIC_FRESH_PER_IP_PER_DAY` | 3 | Keyed by a salted SHA-256 of IP and day. Raw IPs are never stored. |
 | New open-search feeds per day | `PUBLIC_OPEN_FEEDS_PER_DAY` | 10 | A separate counter, so the catalog stays available. |
-| Result cache | `PUBLIC_CACHE_HOURS` | 24 | Only complete LIVE results are cached, and a cache hit costs 0 Qloo calls. Partial results are never cached. |
-| Burst limit | function `config.rateLimit` | 10 / 60 s per IP | Netlify edge rate limit. |
-| Time | — | 40 s per analysis, 8 s per call | Stays under Netlify's synchronous limit. |
+| Result cache | `PUBLIC_CACHE_HOURS` / `PUBLIC_PARTIAL_CACHE_HOURS` | 24 h / 1 h | A cache hit costs 0 Qloo calls. Results that lost Qloo answers (after retries) are cached for 1 h and labeled partial. |
+| Burst limit | function `config.rateLimit` | 40 / 60 s per IP | Netlify edge rate limit (polling a job is one request every 3 s). |
+| Time | `PUBLIC_JOB_MAX_SECONDS` | 240 s per analysis (Qloo deadline 180 s), 10 s per call | Runs in a background function (15 min limit), not in the HTTP request. |
+| Qloo rate | — | 250 ms between request starts, 3 in flight, adaptive | On 429 every request backs off (Retry-After honored, up to 15 s), concurrency is halved; up to 3 retries, each counted. |
 
-**Worst case.** The public path can never spend more than `PUBLIC_DAILY_QLOO_CALLS` Qloo calls in a UTC day. With the defaults that is 400 calls, at most 6 fresh analyses a day; cached shows are unlimited.
+**Worst case.** The public path can never spend more than `PUBLIC_DAILY_QLOO_CALLS` Qloo calls in a UTC day. With the defaults that is 400 calls: at most 5 fresh analyses a day at the 80-call cap (more when analyses settle below it); cached shows are unlimited.
 
 **Fail closed.** If the Blobs store cannot be read or written, no Qloo call is made. The visitor sees `guard_unavailable`.
 

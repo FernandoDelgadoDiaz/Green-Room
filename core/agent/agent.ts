@@ -166,6 +166,8 @@ export interface DiscoveryPosition {
   qlooAffinity: number | null;
   inBand: boolean;
   languageConfirmed: boolean;
+  /** Passed verification and the pertinence bar: a real candidate, whatever its final rank. */
+  eligible: boolean;
   /** Missing measurements, never imputed (e.g. no interviews in our RSS → no momentum/recency). */
   notMeasured: string[];
   finalRank: number;
@@ -306,6 +308,10 @@ const WEIGHTS = { themeFit: 0.6, momentum: 0.25, recency: 0.15 };
 export const QLOO_BLEND = 0.5;
 /** Width of the editorial band inside which Qloo affinity may reorder candidates (see applyEditorialBand). */
 export const EDITORIAL_BAND = 0.15;
+/** Guest signal: most recent guests are looked up in waves until this many identities are confirmed. */
+export const GUEST_SIGNAL_TARGET = 10;
+const GUEST_WAVE = 5;
+const GUEST_LOOKUP_MAX = 25;
 
 interface Candidate {
   key: string;
@@ -732,10 +738,23 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     },
 
     qloo_resolve_guests: async () => {
-      const recentGuests = [...pastGuests.values()].sort((a, b) => b.published.localeCompare(a.published)).slice(0, 25);
-      // Lookups run concurrently (the adapter bounds concurrency); results are consumed in list order,
-      // so the outcome does not depend on response timing.
-      const lookups = await Promise.all(recentGuests.map((g) => qloo.searchPerson(g.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
+      const candidates = [...pastGuests.values()].sort((a, b) => b.published.localeCompare(a.published)).slice(0, GUEST_LOOKUP_MAX);
+      // Most recent first, in waves: once GUEST_SIGNAL_TARGET identities are confirmed the signal is
+      // complete and the remaining lookups are not spent (they are the largest cost of an analysis).
+      // Each wave runs concurrently; results are consumed in list order, so timing never changes the outcome.
+      const recentGuests: typeof candidates = [];
+      const lookups: Array<{ hits: QlooEntity[] } | { err: unknown }> = [];
+      let confirmed = 0;
+      for (let i = 0; i < candidates.length && confirmed < GUEST_SIGNAL_TARGET && !outOfTime(); i += GUEST_WAVE) {
+        const wave = candidates.slice(i, i + GUEST_WAVE);
+        const got = await Promise.all(wave.map((g) => qloo.searchPerson(g.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
+        recentGuests.push(...wave);
+        lookups.push(...got);
+        wave.forEach((g, j) => {
+          const l = got[j];
+          if (!('err' in l) && checkIdentity(l.hits, g.name, titlesByKey.get(nameKey(g.name)) ?? []).status === 'confirmed') confirmed++;
+        });
+      }
       const guestErrors: string[] = [];
       sig.guests.searched += recentGuests.length;
       recentGuests.forEach((g, i) => {
@@ -757,8 +776,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         title: ['Resolve past guests in Qloo’s taste graph', 'Ubicar a los invitados anteriores en el grafo de gustos de Qloo'],
         tool: 'qloo.search',
         detail: [
-          `${resolved.length} of the ${recentGuests.length} most recent guests confirmed in Qloo (unique exact name AND Qloo's description shares context with their interview titles)${unconfirmedGuests.length ? `; ${unconfirmedGuests.length} left out as unverified (name only, namesakes or no context)` : ''}.`,
-          `${resolved.length} de los ${recentGuests.length} invitados más recientes confirmados en Qloo (nombre exacto y único Y la descripción de Qloo comparte contexto con los títulos de sus entrevistas)${unconfirmedGuests.length ? `; ${unconfirmedGuests.length} quedan afuera sin verificar (solo nombre, homónimos o sin contexto)` : ''}.`,
+          `${resolved.length} of the ${recentGuests.length} most recent guests confirmed in Qloo (unique exact name AND Qloo's description shares context with their interview titles)${unconfirmedGuests.length ? `; ${unconfirmedGuests.length} left out as unverified (name only, namesakes or no context)` : ''}${recentGuests.length < candidates.length ? `. Stopped after ${GUEST_SIGNAL_TARGET} confirmed identities: ${candidates.length - recentGuests.length} older guests not looked up` : ''}.`,
+          `${resolved.length} de los ${recentGuests.length} invitados más recientes confirmados en Qloo (nombre exacto y único Y la descripción de Qloo comparte contexto con los títulos de sus entrevistas)${unconfirmedGuests.length ? `; ${unconfirmedGuests.length} quedan afuera sin verificar (solo nombre, homónimos o sin contexto)` : ''}${recentGuests.length < candidates.length ? `. Me detuve al llegar a ${GUEST_SIGNAL_TARGET} identidades confirmadas: ${candidates.length - recentGuests.length} invitados más antiguos no se buscaron` : ''}.`,
         ],
         decision:
           resolved.length >= 3
@@ -880,6 +899,17 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
     qloo_cross_domain: async () => {
       const types = ['urn:entity:artist', 'urn:entity:movie', 'urn:entity:book'] as const;
+      // Display-only enrichment: it runs after discovery and affinity, and only if the budget still covers it.
+      if ((qloo.budgetLeft?.() ?? Infinity) < types.length) {
+        step({
+          title: ['Map the cross-domain taste of that audience', 'Mapear el gusto de esa audiencia en otros dominios'],
+          tool: 'qloo.insights (artist, movie, book)',
+          detail: ['Skipped: the Qloo call budget left for this analysis was kept for discovery and affinity.', 'Omitido: el presupuesto de consultas a Qloo de este análisis se reservó para el descubrimiento y la afinidad.'],
+          decision: ['No cultural hooks this time; explanations rely on themes and prior appearances.', 'Esta vez no hay referencias culturales; las explicaciones se basan en temas y apariciones previas.'],
+          provenance: qlooProvenance,
+        });
+        return;
+      }
       const got = await Promise.all(types.map((type) => qloo.categoryInsights({ signalIds: signalIds(), tagIds: tagIds(), type, take: 6 }).then((entities) => ({ entities }), (err: unknown) => ({ err }))));
       types.forEach((type, i) => {
         const g = got[i];
@@ -1251,10 +1281,19 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     },
 
     qloo_score_affinity: async () => {
-      // Same measurement for everyone: the top 40 by editorial score plus every verified Qloo proposal.
-      const top = [...pool.values()].sort((a, b) => b.base - a.base).slice(0, 40);
+      // Affinity can only reorder candidates inside the editorial band (see applyEditorialBand), so only
+      // those are looked up (at most 40), plus every verified Qloo proposal, whose id is already known
+      // and costs no lookup. Looking up anyone below the band would spend calls that cannot change a rank.
+      const fitBases = [...pool.values()].filter((c) => c.themeFit >= minFit).map((c) => c.base).sort((a, b) => b - a);
+      const floor = (fitBases[Math.min(k, fitBases.length) - 1] ?? 0) * (1 - EDITORIAL_BAND);
+      const top = [...pool.values()].filter((c) => c.base >= floor).sort((a, b) => b.base - a.base).slice(0, 40);
       const shortlist = [...top, ...[...pool.values()].filter((c) => c.qlooProposedRank !== null && !top.includes(c))];
-      const toLookup = shortlist.filter((c) => !(c.qlooProposedRank !== null && c.identity.status === 'confirmed'));
+      // Highest editorial scores first; never more lookups than the budget leaves after the affinity call itself.
+      const lookupBudget = Math.max(0, (qloo.budgetLeft?.() ?? Infinity) - 1);
+      const wanted = shortlist.filter((c) => !(c.qlooProposedRank !== null && c.identity.status === 'confirmed'));
+      const toLookup = wanted.slice(0, lookupBudget);
+      if (toLookup.length < wanted.length)
+        warn([`Qloo call budget: ${wanted.length - toLookup.length} lower-scored candidates in the band were not looked up for affinity (they keep a neutral value).`, `Presupuesto de consultas a Qloo: ${wanted.length - toLookup.length} candidatos de menor puntaje dentro de la banda no se buscaron para la afinidad (quedan con valor neutro).`]);
       const found = await Promise.all(toLookup.map((c) => qloo.searchPerson(c.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
       const candidateErrors: string[] = [];
       toLookup.forEach((c, i) => {
@@ -1283,8 +1322,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         title: ['Score candidates against the audience’s taste', 'Puntuar candidatos según el gusto de la audiencia'],
         tool: 'qloo.insights (filter.results.entities)',
         detail: [
-          `${ids.length} of ${shortlist.length} candidates (top ${top.length} by editorial score${shortlist.length > top.length ? ` + ${shortlist.length - top.length} verified Qloo proposals` : ''}) confirmed in Qloo with context evidence; ${affinities.size} received an affinity score. The rest keep a neutral value and are marked pending verification.`,
-          `${ids.length} de ${shortlist.length} candidatos (los ${top.length} mejores por puntaje editorial${shortlist.length > top.length ? ` + ${shortlist.length - top.length} propuestas verificadas de Qloo` : ''}) confirmados en Qloo con evidencia de contexto; ${affinities.size} recibieron puntaje de afinidad. El resto queda con un valor neutro y marcado como pendiente de verificación.`,
+          `${ids.length} of ${shortlist.length} candidates (the ${top.length} inside the editorial band${shortlist.length > top.length ? ` + ${shortlist.length - top.length} verified Qloo proposals` : ''}) confirmed in Qloo with context evidence; ${affinities.size} received an affinity score. The rest keep a neutral value and are marked pending verification. Candidates below the band were not looked up: affinity cannot change their rank.`,
+          `${ids.length} de ${shortlist.length} candidatos (los ${top.length} dentro de la banda editorial${shortlist.length > top.length ? ` + ${shortlist.length - top.length} propuestas verificadas de Qloo` : ''}) confirmados en Qloo con evidencia de contexto; ${affinities.size} recibieron puntaje de afinidad. El resto queda con un valor neutro y marcado como pendiente de verificación. No se buscó a los candidatos debajo de la banda: la afinidad no puede cambiar su posición.`,
         ],
         decision:
           blend > 0
@@ -1457,7 +1496,6 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         };
       return { tool: 'settle_signals', why: outOfTime() ? ['Time budget reached for Qloo lookups: deciding with what I have.', 'Llegué al límite de tiempo para Qloo: decido con lo que tengo.'] : ['All signal strategies tried: deciding which one to use.', 'Probé todas las estrategias de señal: decido cuál usar.'] };
     }
-    if (qlooUsable && !done.has('qloo_cross_domain') && !outOfTime()) return { tool: 'qloo_cross_domain', why: ['A usable audience signal exists: look for cultural hooks across domains.', 'Hay una señal de audiencia utilizable: busco referencias culturales en otros dominios.'] };
     if (!done.has('build_pool')) return { tool: 'build_pool', why: ['Look for people with verified interviews on comparable shows.', 'Busco personas con entrevistas verificadas en programas comparables.'] };
     if (qlooUsable && input.qlooDiscovery !== false && !done.has('qloo_discover_people') && !outOfTime())
       return { tool: 'qloo_discover_people', why: ['Ask Qloo for people outside our sources with affinity to this audience.', 'Pido a Qloo personas fuera de nuestras fuentes con afinidad con esta audiencia.'] };
@@ -1474,7 +1512,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         ],
       };
     // Replanning the discovery: Qloo's people could not be turned into verified candidates.
-    if (qloo.mode === 'LIVE' && discoveryAttempts === 1 && rankedProposals() === 0 && !outOfTime()) {
+    if (qloo.mode === 'LIVE' && discoveryAttempts === 1 && rankedProposals() === 0 && !outOfTime() && (qloo.budgetLeft?.() ?? Infinity) >= 8) {
       const why = funnelDiagnosis.diagnosisText;
       const whyEs = funnelDiagnosis.diagnosisTextEs;
       if (signalStrategy === 'guests' && !done.has('qloo_find_theme_tags') && themes.length)
@@ -1485,6 +1523,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         return { tool: 'qloo_discover_people', why: ['Alternative signal found: asking Qloo once more (one retry, within the call budget).', 'Encontré una señal alternativa: le pregunto a Qloo una vez más (un solo reintento, dentro del límite de consultas).'] };
     }
     if (qlooUsable && useAffinity && !done.has('qloo_score_affinity') && !outOfTime()) return { tool: 'qloo_score_affinity', why: ['Add Qloo affinity for candidates whose identity can be confirmed.', 'Agrego la afinidad de Qloo para los candidatos cuya identidad se pueda confirmar.'] };
+    // Cultural hooks come last: they explain, they do not rank, so they never take budget from discovery.
+    if (qlooUsable && !done.has('qloo_cross_domain') && !outOfTime()) return { tool: 'qloo_cross_domain', why: ['A usable audience signal exists: look for cultural hooks across domains.', 'Hay una señal de audiencia utilizable: busco referencias culturales en otros dominios.'] };
     if (eligible().length < k && minFit > 0) return { tool: 'relax_threshold', why: [`Only ${eligible().length} candidates pass the topical-fit bar (need ${k}).`, `Solo ${eligible().length} candidatos superan el ajuste temático mínimo (necesito ${k}).`] };
     if (eligible().length < k && windowMonths < 72 && !done.has('widen_window')) return { tool: 'widen_window', why: [`Still ${eligible().length} eligible after relaxing: widen the time window.`, `Siguen siendo ${eligible().length} elegibles después de relajar: amplío la ventana de tiempo.`] };
     if (!done.has('check_language')) return { tool: 'check_language', why: [`Habitual language(s) “${acceptedLabel()}”: check which candidates have a verified interview in them.`, `Idioma(s) habitual(es) “${acceptedLabel()}”: reviso quién tiene una entrevista verificada en ellos.`] };
@@ -1558,6 +1598,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         qlooAffinity: c.qlooAffinity,
         inBand: c.inBand !== false,
         languageConfirmed: langOk,
+        eligible: !rejected.has(c.key) && pertinent(c),
         notMeasured: c.external ? ['momentum', 'recency'] : [],
         finalRank: rankOf.get(c.key) ?? 0,
         inTopK,

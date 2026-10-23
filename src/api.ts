@@ -123,6 +123,23 @@ async function discover<T>(body: unknown): Promise<T> {
   return r.json as T;
 }
 
+/**
+ * A fresh public LIVE analysis runs as a background job: the server answers 202 with a job id and
+ * the outcome is polled. Cached results come back directly (200).
+ */
+async function discoverRun<T>(body: unknown, onProgress?: (elapsedS: number) => void): Promise<T> {
+  const first = await discover<T & { jobId?: string; status?: string }>(body);
+  if (!first.jobId || !first.status) return first as T;
+  const started = Date.now();
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 3000));
+    onProgress?.(Math.round((Date.now() - started) / 1000));
+    if (Date.now() - started > 8 * 60_000) throw new LiveError('timeout', { en: 'The analysis is taking too long. Try again later.', es: 'El análisis está tardando demasiado. Probá más tarde.' }, true, null);
+    const r = await discover<T & { jobId?: string; status?: string }>({ action: 'job', jobId: first.jobId });
+    if (!(r.jobId && (r.status === 'queued' || r.status === 'running'))) return r as T;
+  }
+}
+
 export type LiveStatus = { state: 'live' } | { state: 'off'; reason?: string } | { state: 'denied' | 'unconfigured' | 'error'; message: string };
 
 export const api = {
@@ -147,8 +164,8 @@ export const api = {
   },
   /** Public Qloo LIVE (no token): whether it is available right now. */
   publicStatus: () => post<PublicLiveStatus>('/api/discover', { action: 'status' }).then((r) => (r.ok ? r.json : { live: false, code: `http_${r.status}`, message: null })).catch(() => ({ live: false, code: 'network', message: null }) as PublicLiveStatus),
-  recommendLive: (showId: string) => discover<RecommendResult>({ action: 'recommend', showId }),
-  analyzeLive: (appleId: number) => discover<{ analysis: FeedAnalysisSummary; result: RecommendResult | null }>({ action: 'analyze', appleId }),
+  recommendLive: (showId: string, onProgress?: (s: number) => void) => discoverRun<RecommendResult>({ action: 'recommend', showId }, onProgress),
+  analyzeLive: (appleId: number, onProgress?: (s: number) => void) => discoverRun<{ analysis: FeedAnalysisSummary; result: RecommendResult | null }>({ action: 'analyze', appleId }, onProgress),
   backtest: (showId: string, cutoff: string) => call<BacktestResult>({ action: 'backtest', showId, cutoff, horizonMonths: 24 }),
   liveStatus: async (token: string): Promise<LiveStatus> => {
     const r = await post<{ mode?: string }>('/api/live', { action: 'status' }, token).catch((e) => ({ ok: false, status: 0, json: { error: String(e) } as { error?: string; reason?: string } }));

@@ -123,6 +123,14 @@ const STRINGS = {
     es: 'A partir de {n} títulos de episodios. Describe de qué habla el programa, no qué le gusta a su audiencia.',
   },
   'affinities.title': { en: 'Cultural affinities inferred by Qloo', es: 'Afinidades culturales inferidas por Qloo' },
+  'disc.newTitle': { en: 'New people Qloo found (verified, on-theme)', es: 'Personas nuevas que encontró Qloo (verificadas y pertinentes)' },
+  'disc.newNote': {
+    en: 'Nobody here has an interview in our sources: without Qloo, Green Room could not have suggested them. Each one passed identity, theme and repeat checks. They are listed apart because they did not outscore the five picks on our evidence; the reason is given, and no one is pushed into the top five.',
+    es: 'Ninguna tiene entrevistas en nuestras fuentes: sin Qloo, Green Room no podría haberlas sugerido. Cada una pasó los controles de identidad, tema y repetición. Se listan aparte porque no superaron a las cinco elegidas según nuestra evidencia; se indica el motivo y nadie es forzado al top cinco.',
+  },
+  'disc.newRow': { en: 'Qloo rank {q} · topical fit {f} · position {p} in our ranking', es: 'Posición {q} en Qloo · ajuste temático {f} · posición {p} en nuestro ranking' },
+  'disc.newLang': { en: 'language not confirmed', es: 'idioma no confirmado' },
+  'disc.newInTop': { en: 'in the top five', es: 'en el top cinco' },
   'pl.audience': {
     en: 'Inferred, not measured: Qloo’s affinities are taste patterns of people who like this show’s signals (its past guests, the show itself or its topics). They are not data about this show’s listeners, and we do not know who they are.',
     es: 'Inferidas, no medidas: las afinidades de Qloo son patrones de gusto de quienes se interesan por las señales de este programa (sus invitados anteriores, el propio programa o sus temas). No son datos de los oyentes de este programa, y no sabemos quiénes son.',
@@ -151,8 +159,8 @@ const STRINGS = {
     es: 'Qloo LIVE analiza podcasts de nuestro catálogo o del directorio de podcasts de Apple, donde la dirección del feed viene de un directorio confiable. Este enlace no tiene una entrada en el directorio de Apple.',
   },
   'pl.running': {
-    en: 'Analyzing with the real Qloo API. This can take up to a minute.',
-    es: 'Analizando con la API real de Qloo. Puede tardar hasta un minuto.',
+    en: 'Analyzing with the real Qloo API. The analysis runs in the background and can take a few minutes; keep this page open.',
+    es: 'Analizando con la API real de Qloo. El análisis corre en segundo plano y puede tardar unos minutos; dejá esta página abierta.',
   },
   'affinities.pending': {
     en: 'Waiting for the live Qloo API. With the key, this panel shows the artists, films and books that people who follow this show’s past guests over-index on. No placeholder names are shown: we do not invent taste data.',

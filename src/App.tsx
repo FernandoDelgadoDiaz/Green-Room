@@ -156,6 +156,7 @@ function Shell() {
 
   const [publicLive, setPublicLive] = useState<PublicLiveStatus | null>(null);
   const [failure, setFailure] = useState<Failure | null>(null);
+  const [elapsed, setElapsed] = useState<number | null>(null);
   // Public Qloo LIVE is used only when the server says it is available and no private token is active.
   const usePublicLive = () => !liveToken.get() && Boolean(publicLive?.live);
 
@@ -170,6 +171,7 @@ function Shell() {
   const start = () => {
     setResult(null);
     setFailure(null);
+    setElapsed(null);
     setLoading(true);
     setError(null);
   };
@@ -202,7 +204,7 @@ function Shell() {
     start();
     try {
       if (!hit.appleId) throw new LiveError('not_in_directory', null, false, null);
-      const r = await api.analyzeLive(hit.appleId);
+      const r = await api.analyzeLive(hit.appleId, setElapsed);
       setExternal({ hit, analysis: r.analysis });
       setResult(r.result);
     } catch (e) {
@@ -233,7 +235,7 @@ function Shell() {
     if (!usePublicLive()) return analyzeMock(id);
     start();
     try {
-      setResult(await api.recommendLive(id));
+      setResult(await api.recommendLive(id, setElapsed));
     } catch (e) {
       fail(e, () => void analyze(id), () => void analyzeMock(id), (s) => setResult(s as RecommendResult));
     } finally {
@@ -303,7 +305,7 @@ function Shell() {
                 {t('cat.change')}
               </button>
             )}
-            {loading && <p className="text-sm text-stone-400">{usePublicLive() ? t('pl.running') : t('state.analyzing')}</p>}
+            {loading && <p className="text-sm text-stone-400">{usePublicLive() ? t('pl.running') : t('state.analyzing')}{elapsed !== null && ` · ${elapsed} s`}</p>}
             {failure && <FailureCard f={failure} />}
             {external?.analysis && <AnalysisStatus hit={external.hit} analysis={external.analysis} />}
             {show && result && (
