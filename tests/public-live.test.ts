@@ -135,6 +135,28 @@ describe('public endpoint: scope and switches', () => {
 });
 
 describe('public endpoint: LIVE results, cache and honest failures', () => {
+  it('bounds public Qloo work below the observed synchronous function limit', async () => {
+    const seen: Array<{ maxCalls: number; concurrency: number; timeoutMs: number; deadlineMs: number; retries: number }> = [];
+    const response = await handlePublicLive(
+      { action: 'recommend', showId: 'diary-of-a-ceo' },
+      ENV,
+      {
+        store: new MemoryCasStore(),
+        ip: '203.0.113.21',
+        now: () => T0,
+        qlooFactory: (limits) => {
+          seen.push(limits);
+          return scripted();
+        },
+      },
+    );
+    expect(response.status).toBe(200);
+    expect(seen).toEqual([{ maxCalls: 24, concurrency: 2, timeoutMs: 2500, deadlineMs: 15_000, retries: 0 }]);
+    const result = response.body as { qlooMode: string; qlooCalls: unknown[]; live: { qlooCalls: number } };
+    expect(result.qlooMode).toBe('LIVE');
+    expect(result.live.qlooCalls).toBeLessThanOrEqual(24);
+  });
+
   it('runs LIVE once, labels it, includes the baseline comparison, then serves it from cache at zero Qloo cost', async () => {
     const store = new MemoryCasStore();
     const built: QlooAdapter[] = [];
