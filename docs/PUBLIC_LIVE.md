@@ -75,6 +75,14 @@ The card offers these choices:
 
 MOCK is only shown when the visitor chooses it, and then the existing MOCK notice is displayed. Nothing is substituted silently.
 
+## Budgeted discovery candidate (not yet validated LIVE)
+
+The proposed public fast path prioritizes **person discovery** instead of spending the synchronous function budget on every optional enrichment step. It resolves at most six recent guests, up to three theme queries, performs Qloo person discovery, and independently verifies at most four external proposals. Cross-domain artist/movie/book lookups, the second discovery pass and affinity reranking are skipped **only on the public path**. The private LIVE diagnostic and A/B/C/D paths are unchanged.
+
+The public adapter has a stricter limit of at most 24 network calls (or the configured per-analysis cap, if lower), two in flight, 2.5-second request timeouts, a 15-second Qloo deadline and no retries. The agent's planner is given a 20-second soft deadline; this is **not a hard total-function timeout**. The guard still reserves the configured per-analysis maximum and settles the actual call count. Profile lookups are disabled for the public fast path; existing static profiles still display.
+
+**Tradeoff:** public results will show Qloo discoveries but will not claim that Qloo affinity reweighted the final ranking or generated cross-domain cultural hooks. This is a reliability-first experimental change, not proof that Qloo improves the top five. It must pass typecheck/tests and real production tests before merging and re-enabling public Qloo.
+
 ## Before switching it on
 1. **Run the LIVE test.** With the private token, run `recommend` on 3–5 catalog shows through `/api/live` (or the public path in a preview deploy). Record `qlooMetrics.networkCalls`, p95 latency, errors and the funnel.
 2. **Set the limits from that measurement:**
