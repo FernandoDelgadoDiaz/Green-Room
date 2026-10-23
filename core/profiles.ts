@@ -186,7 +186,8 @@ export async function resolveProfiles(
   const accepted: Array<{ name: string; page: WikiPage; overlap: string[]; lang: 'en' | 'es' }> = [];
 
   const disambiguations: Array<{ person: { name: string; appearanceTitles: string[] }; title: string }> = [];
-  // People with no English page at all: many Spanish-language guests only have a Spanish one.
+  // People with no English page, or whose English page shares no context with their (often Spanish)
+  // interview titles: they get a second chance on the Spanish Wikipedia, under the same rules.
   const noEnglishPage: Array<{ name: string; appearanceTitles: string[] }> = [];
   for (const batch of chunk(people, 20)) {
     const body = (await fetchJson(pagesUrl('en', batch.map((p) => p.name)))) as Record<string, unknown>;
@@ -204,6 +205,7 @@ export async function resolveProfiles(
       const overlap = contextOverlap(person.name, `${page.title} ${page.description ?? ''} ${page.extract ?? ''}`, person.appearanceTitles);
       if (overlap.length === 0) {
         result.set(person.name, null);
+        noEnglishPage.push(person);
         continue;
       }
       accepted.push({ name: person.name, page, overlap, lang: 'en' });

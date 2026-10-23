@@ -129,7 +129,10 @@ describe('guest profiles (photos and bios)', () => {
       if (u.searchParams.get('prop') === 'imageinfo') {
         return { query: { pages: [{ title: 'File:Cantante.jpg', imageinfo: [{ thumburl: 'https://upload.wikimedia.org/c.jpg', thumbwidth: 320, thumbheight: 400, descriptionurl: 'https://commons.wikimedia.org/wiki/File:Cantante.jpg', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' }, Artist: { value: 'Alguien' } } }] }] } };
       }
-      if (u.hostname === 'en.wikipedia.org') return { query: { pages: titles.map((t) => ({ title: t, missing: true })) } };
+      if (u.hostname === 'en.wikipedia.org') {
+        // Ana has no English page; Juan has one, about a namesake sharing nothing with his titles.
+        return { query: { pages: titles.map((t) => (t === 'Juan Gómez' ? { title: t, extract: 'Juan Gómez is a Uruguayan footballer.' } : { title: t, missing: true })) } };
+      }
       return {
         query: {
           pages: [
