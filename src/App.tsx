@@ -161,7 +161,8 @@ function Shell() {
   const usePublicLive = () => !liveToken.get() && Boolean(publicLive?.live);
 
   useEffect(() => {
-    api.shows().then((r) => { setShows(r.shows); if (!liveToken.get()) setMode(r.qlooMode); }).catch((e) => setError(String(e)));
+    // Public LIVE status may arrive first: the catalog's MOCK default must not overwrite it.
+    api.shows().then((r) => { setShows(r.shows); if (!liveToken.get()) setMode((m) => (m === 'LIVE' ? m : r.qlooMode)); }).catch((e) => setError(String(e)));
     api.catalog().then(setCatalog).catch((e) => setError(String(e)));
     api.publicStatus().then((s) => { setPublicLive(s); if (s.live && !liveToken.get()) setMode('LIVE'); });
   }, []);
