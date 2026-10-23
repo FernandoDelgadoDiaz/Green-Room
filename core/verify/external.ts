@@ -89,7 +89,10 @@ export interface WikidataVerifierOptions {
 /** Verifies Qloo proposals against Wikidata and Wikipedia. All network access goes through `fetchJson`. */
 export class WikidataVerifier {
   readonly calls: string[] = [];
-  constructor(private readonly opts: WikidataVerifierOptions) {}
+  readonly maxCandidates: number;
+  constructor(private readonly opts: WikidataVerifierOptions) {
+    this.maxCandidates = opts.maxCandidates ?? 12;
+  }
 
   private async get(url: string): Promise<unknown> {
     this.calls.push(url);
@@ -97,7 +100,7 @@ export class WikidataVerifier {
   }
 
   async verify(proposals: Array<{ entity: QlooEntity }>, ctx: { targetLang: string }): Promise<ExternalCheck[]> {
-    const items = proposals.slice(0, this.opts.maxCandidates ?? 12);
+    const items = proposals.slice(0, this.maxCandidates);
     // 1. Candidate Wikidata items: Qloo's own link when present, else same-name search (en + es).
     const candidatesByProposal = await Promise.all(
       items.map(async ({ entity }) => {

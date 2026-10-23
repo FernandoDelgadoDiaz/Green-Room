@@ -8,7 +8,7 @@ import { appearanceLanguage, detectTitleLanguage, languageProfile, type Language
 import type { ExternalCheck } from '../verify/external';
 import { buildTagQueries, showNameVariants } from '../qloo/signals';
 import { THEMES, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
-import type { QlooAdapter, QlooEntity } from '../qloo/types';
+import { qlooKind, type QlooAdapter, type QlooEntity } from '../qloo/types';
 
 export interface TraceStep {
   id: string;
@@ -128,10 +128,16 @@ export interface DiscoveryFunnel {
   languageCompatible: number;
   languageUnknown: number;
   /** External verification (outside our RSS): documented, partial, still pending, and type errors (bands, companies, works). */
+  /** Proposals sent to independent verification, how many were actually checked, and how many the per-run cap left out. */
+  externalQueued: number;
+  externalChecked: number;
+  externalOverCap: number;
   externalDocumented: number;
   externalPartial: number;
   externalPending: number;
   typeErrors: number;
+  /** Identity verified, but Qloo's type was generic and Wikidata could not confirm an individual person. */
+  typePending: number;
   /** Verified and on-theme: compete in the main ranking under the same rules as everyone else. */
   ranked: number;
   /** Of those, how many made the final shortlist. */
@@ -139,6 +145,18 @@ export interface DiscoveryFunnel {
   diagnosis: DiscoveryFailure | 'language' | 'ok' | 'not_run';
   diagnosisText: string;
   diagnosisTextEs: string;
+}
+
+export interface SignalDiagnostics {
+  guests: { searched: number; withResults: number; confirmed: number; ambiguous: number; noContext: number; fuzzyOnly: number; notFound: number; errors: number };
+  podcast: Array<{ query: string; results: number; exactMatches: number; sample: string[] }>;
+  tags: Array<{ word: string; query: string; results: number; accepted: string | null; sample: string[] }>;
+  skippedGeneric: string[];
+  /**
+   * ok: a usable signal; none_in_qloo: lookups returned nothing; unrecognized: Qloo returned results
+   * but none matched exactly or shared context; ambiguous: namesakes prevented a match; not_run.
+   */
+  verdict: 'ok' | 'none_in_qloo' | 'unrecognized' | 'ambiguous' | 'not_run';
 }
 
 export interface IdentityStatus {
@@ -214,6 +232,8 @@ export interface AgentResult {
   funnel: DiscoveryFunnel;
   /** Habitual interview languages of the show, from its own titles. */
   languageProfile: LanguageProfile;
+  /** What each Qloo signal lookup returned, to tell "nothing in Qloo" from "not recognized" and "ambiguous". */
+  signalDiagnostics: SignalDiagnostics;
   /** Planner decisions in order: which tool and why (deterministic rule planner, no language model). */
   plan: Array<{ tool: ToolName; why: string; whyEs: string }>;
   /** Which audience signal the agent ended up using after replanning. */
@@ -247,12 +267,14 @@ export interface AgentInput {
   /** Blend Qloo affinity into the score of existing candidates (default true; LIVE only). Arms B and C of the comparison turn one of the two Qloo effects off. */
   qlooAffinity?: boolean;
   /** Independent verification of Qloo proposals with no record in our RSS (Wikidata/Wikipedia). */
-  verifier?: { verify(proposals: Array<{ entity: QlooEntity }>, ctx: { targetLang: string }): Promise<ExternalCheck[]> };
+  verifier?: { maxCandidates?: number; verify(proposals: Array<{ entity: QlooEntity }>, ctx: { targetLang: string }): Promise<ExternalCheck[]> };
 }
 
 const MONTH_MS = 30.44 * 24 * 3600 * 1000;
 const WEIGHTS = { themeFit: 0.6, momentum: 0.25, recency: 0.15 };
 export const QLOO_BLEND = 0.5;
+/** Width of the editorial band inside which Qloo affinity may reorder candidates (see applyEditorialBand). */
+export const EDITORIAL_BAND = 0.15;
 
 interface Candidate {
   key: string;
@@ -271,6 +293,9 @@ interface Candidate {
   recency: number;
   base: number;
   score: number;
+  /** Score with Qloo affinity blended in (LIVE); applied only inside the editorial band. */
+  blended?: number;
+  inBand?: boolean;
 }
 
 /** high: several interviews, or one with a curated/explicit name; medium: two automatic mentions; low: one automatic mention. */
@@ -408,7 +433,23 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     diagnosisTextEs: qloo.mode === 'LIVE' ? 'El descubrimiento con Qloo no se ejecutó (sin señal de audiencia utilizable o sin tiempo).' : `El descubrimiento con Qloo solo funciona en modo LIVE (esta ejecución: ${qloo.mode}).`,
   };
   const rankedProposals = () => proposals.filter((x) => x.outcome === 'ranked').length;
-  const externalQueue: Array<{ entity: QlooEntity; rank: number }> = [];
+  const sig: SignalDiagnostics = {
+    guests: { searched: 0, withResults: 0, confirmed: 0, ambiguous: 0, noContext: 0, fuzzyOnly: 0, notFound: 0, errors: 0 },
+    podcast: [],
+    tags: [],
+    skippedGeneric: [],
+    verdict: 'not_run',
+  };
+  // 'full': no record in our RSS, identity and kind come from Wikidata/Wikipedia.
+  // 'type': identity already proven by our RSS; Wikidata only settles whether it is an individual person.
+  const externalQueue: Array<{ entity: QlooEntity; rank: number; mode: 'full' | 'type'; candidate?: Candidate; evidence?: string[] }> = [];
+  const externalStats = { queued: 0, checked: 0, overCap: 0 };
+  const admitPoolCandidate = (c: Candidate, qlooId: string, rank: number, ev: string[]) => {
+    c.source = 'qloo-person-insights';
+    c.qlooEntityId = qlooId;
+    c.qlooProposedRank = rank;
+    c.identity = { status: 'confirmed', evidence: ev };
+  };
   const funnelCounts = () => {
     const n = (f: (x: QlooProposal) => boolean) => proposals.filter(f).length;
     const lang = (x: QlooProposal, ok: boolean | null) => x.outcome === 'ranked' && x.checks.some((c) => c.check === 'language' && c.ok === ok);
@@ -422,10 +463,14 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       offTheme: n((x) => x.failure === 'theme'),
       languageCompatible: n((x) => lang(x, true)),
       languageUnknown: n((x) => lang(x, null)),
+      externalQueued: externalStats.queued,
+      externalChecked: externalStats.checked,
+      externalOverCap: externalStats.overCap,
       externalDocumented: n((x) => x.external?.kind === 'person' && x.external.status === 'documented'),
       externalPartial: n((x) => x.external?.kind === 'person' && x.external.status === 'partial'),
       externalPending: n((x) => x.external?.status === 'pending'),
-      typeErrors: n((x) => x.failure === 'type'),
+      typeErrors: n((x) => x.failure === 'type' && x.outcome === 'discarded'),
+      typePending: n((x) => x.failure === 'type' && x.outcome === 'pending'),
       ranked: rankedProposals(),
       inShortlist: n((x) => x.outcome === 'ranked' && picks.some((p) => p.key === x.key)),
     };
@@ -500,7 +545,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         c.recency = 0;
         c.base = c.themeFit;
         if (c.qlooEntityId && affinityRank.has(c.qlooEntityId)) c.qlooAffinity = affinityRank.get(c.qlooEntityId)!;
-        c.score = blend > 0 && affinityRank.size ? (1 - blend) * c.base + blend * (c.qlooAffinity ?? 0.5) : c.base;
+        c.blended = blend > 0 && affinityRank.size ? (1 - blend) * c.base + blend * (c.qlooAffinity ?? 0.5) : c.base;
+        c.score = c.blended;
         continue;
       }
       const recent = c.appearances.filter((a) => monthsBetween(a.published, asOf) <= 24).length;
@@ -510,9 +556,30 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       c.base = WEIGHTS.themeFit * c.themeFit + WEIGHTS.momentum * c.momentum + WEIGHTS.recency * c.recency;
       if (c.qlooEntityId && affinityRank.has(c.qlooEntityId)) c.qlooAffinity = affinityRank.get(c.qlooEntityId)!;
       // Candidates Qloo cannot score keep a neutral 0.5 instead of being penalized for coverage gaps.
-      c.score = blend > 0 && affinityRank.size ? (1 - blend) * c.base + blend * (c.qlooAffinity ?? 0.5) : c.base;
+      c.blended = blend > 0 && affinityRank.size ? (1 - blend) * c.base + blend * (c.qlooAffinity ?? 0.5) : c.base;
+      c.score = c.blended;
     }
   };
+  // Editorial band (rule fixed before any LIVE evaluation, not tuned on results): Qloo affinity may
+  // reorder candidates whose editorial relevance is within EDITORIAL_BAND of the k-th best eligible
+  // candidate; it never lifts anyone below that band, and band members always rank above them.
+  // Without LIVE affinity this is a no-op, so MOCK/baseline rankings are unchanged.
+  let bandFloor = -Infinity;
+  const applyEditorialBand = () => {
+    bandFloor = -Infinity;
+    if (!(blend > 0 && affinityRank.size)) {
+      for (const c of pool.values()) ((c.inBand = true), (c.score = c.blended ?? c.score));
+      return;
+    }
+    const bases = [...pool.values()].filter((c) => c.themeFit >= minFit).map((c) => c.base).sort((a, b) => b - a);
+    const kth = bases[Math.min(k, bases.length) - 1] ?? 0;
+    bandFloor = kth * (1 - EDITORIAL_BAND);
+    for (const c of pool.values()) {
+      c.inBand = c.base >= bandFloor;
+      c.score = c.inBand ? (c.blended ?? c.base) : c.base;
+    }
+  };
+  const byRank = (a: Candidate, b: Candidate) => Number(b.inBand !== false) - Number(a.inBand !== false) || b.score - a.score;
 
   // Tools ------------------------------------------------------------------------------------
   const tools: Record<LoopTool, () => Promise<void>> = {
@@ -621,12 +688,19 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       // so the outcome does not depend on response timing.
       const lookups = await Promise.all(recentGuests.map((g) => qloo.searchPerson(g.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
       const guestErrors: string[] = [];
+      sig.guests.searched += recentGuests.length;
       recentGuests.forEach((g, i) => {
         const l = lookups[i];
-        if ('err' in l) return void guestErrors.push(String(l.err));
+        if ('err' in l) return void (sig.guests.errors++, guestErrors.push(String(l.err)));
+        if (l.hits.length) sig.guests.withResults++;
         const r = checkIdentity(l.hits, g.name, titlesByKey.get(nameKey(g.name)) ?? []);
-        if (r.status === 'confirmed') resolved.push(r.entity);
-        else if (r.status === 'pending') unconfirmedGuests.push(g.name);
+        if (r.status === 'confirmed') (resolved.push(r.entity), sig.guests.confirmed++);
+        else if (r.status === 'pending') {
+          unconfirmedGuests.push(g.name);
+          if (r.reason === 'ambiguous') sig.guests.ambiguous++;
+          else if (r.reason === 'fuzzy') sig.guests.fuzzyOnly++;
+          else sig.guests.noContext++;
+        } else sig.guests.notFound++;
       });
       if (guestErrors.length)
         warn([`${guestErrors.length} Qloo guest lookups failed (first: ${guestErrors[0]}).`, `Fallaron ${guestErrors.length} búsquedas de invitados en Qloo (primera: ${guestErrors[0]}).`]);
@@ -652,7 +726,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       const variantKeys = new Set(variants.map(nameKey));
       for (const v of variants) {
         try {
-          hits = [...hits, ...(await qloo.searchPodcast(v))];
+          const got = await qloo.searchPodcast(v);
+          hits = [...hits, ...got];
+          sig.podcast.push({ query: v, results: got.length, exactMatches: got.filter((h) => variantKeys.has(nameKey(h.name))).length, sample: got.slice(0, 3).map((h) => h.name) });
         } catch (err) {
           warn([`Qloo podcast search failed: ${String(err)}`, `Falló la búsqueda del podcast en Qloo: ${String(err)}`]);
         }
@@ -684,11 +760,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       // form when one exists, so Spanish-language shows can reach Qloo's tags.
       const { queries: tq, skippedGeneric } = buildTagQueries(themes);
       const queries = tq.map((x) => x.query);
-      for (const { query: q, accepts } of tq) {
+      for (const s of skippedGeneric) if (!sig.skippedGeneric.includes(s)) sig.skippedGeneric.push(s);
+      for (const { query: q, accepts, word } of tq) {
         try {
           const tags = await qloo.findTags(q);
           // Accept a tag only when its name equals the word or its English form (exact-or-choose rule).
           const exact = tags.filter((t) => accepts.includes(nameKey(t.name)));
+          sig.tags.push({ word, query: q, results: tags.length, accepted: exact.length === 1 ? exact[0].name : null, sample: tags.slice(0, 3).map((x) => x.name) });
           const into = signalsSettled ? altTags : tagSignals;
           if (exact.length === 1 && !into.some((x) => x.entityId === exact[0].entityId)) into.push(exact[0]);
         } catch (err) {
@@ -712,6 +790,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     settle_signals: async () => {
       signalsSettled = true;
       qlooUsable = resolved.length >= 3 || Boolean(podcastEntity) || tagSignals.length > 0;
+      const anyResults = sig.guests.withResults + sig.podcast.reduce((s, x) => s + x.results, 0) + sig.tags.reduce((s, x) => s + x.results, 0);
+      sig.verdict = qlooUsable ? 'ok' : anyResults === 0 ? 'none_in_qloo' : sig.guests.ambiguous > sig.guests.noContext + sig.guests.fuzzyOnly ? 'ambiguous' : 'unrecognized';
       signalStrategy = resolved.length >= 3 ? 'guests' : podcastEntity && tagSignals.length ? 'podcast+tags' : podcastEntity ? 'podcast' : tagSignals.length ? 'tags' : 'none';
       const label: Record<string, Bi> = {
         guests: [`${resolved.length} confirmed past guests`, `${resolved.length} invitados anteriores confirmados`],
@@ -724,7 +804,10 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         tool: 'settle_signals',
         detail: qlooUsable
           ? [`Audience signal: ${label[signalStrategy][0]}.`, `Señal de audiencia: ${label[signalStrategy][1]}.`]
-          : ['No reliable Qloo signal after trying guests, the show entity and theme tags.', 'Sin señal confiable de Qloo después de probar invitados, la entidad del programa y etiquetas temáticas.'],
+          : [
+              `No reliable Qloo signal after trying guests, the show entity and theme tags (${sig.verdict === 'none_in_qloo' ? 'Qloo returned nothing for these lookups' : sig.verdict === 'ambiguous' ? 'results were namesakes' : 'Qloo returned results, but none matched exactly or shared context'}).`,
+              `Sin señal confiable de Qloo después de probar invitados, la entidad del programa y etiquetas temáticas (${sig.verdict === 'none_in_qloo' ? 'Qloo no devolvió nada para estas búsquedas' : sig.verdict === 'ambiguous' ? 'los resultados eran homónimos' : 'Qloo devolvió resultados, pero ninguno coincidió exactamente ni compartió contexto'}).`,
+            ],
         decision: qlooUsable
           ? signalStrategy === 'guests'
             ? ['Strongest option available; continuing.', 'Es la opción más fuerte disponible; sigo.']
@@ -826,12 +909,20 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           out({ outcome: 'discarded', failure: 'not_person', reason: 'Not a person', reasonEs: 'No es una persona' });
           continue;
         }
-        if (u.entity.types?.length && !u.entity.types.includes('urn:entity:person')) {
-          checks.push({ check: 'person', ok: false, detail: `Qloo types: ${u.entity.types.join(', ')} (not urn:entity:person).`, detailEs: `Tipos en Qloo: ${u.entity.types.join(', ')} (no urn:entity:person).` });
-          out({ outcome: 'discarded', failure: 'type', reason: 'Qloo does not type it as a person', reasonEs: 'Qloo no lo tipifica como persona' });
+        // Qloo's own type: a specific non-person kind discards; a generic or ambiguous one ("urn:entity",
+        // "urn:entity:artist") does NOT — the kind is then settled with Wikidata before any ranking.
+        const kind = qlooKind(u.entity.types);
+        const typesLabel = u.entity.types?.join(', ') || '—';
+        if (kind === 'non_person') {
+          checks.push({ check: 'person', ok: false, detail: `Qloo types: ${typesLabel} (a non-person kind).`, detailEs: `Tipos en Qloo: ${typesLabel} (no es una persona).` });
+          out({ outcome: 'discarded', failure: 'type', reason: 'Qloo types it as a non-person entity', reasonEs: 'Qloo lo tipifica como algo que no es una persona' });
           continue;
         }
-        checks.push({ check: 'person', ok: true, detail: 'Returned by Qloo person insights; type confirmed below.', detailEs: 'Devuelto por person insights de Qloo; el tipo se confirma más abajo.' });
+        checks.push(
+          kind === 'person'
+            ? { check: 'person', ok: true, detail: `Qloo type: ${typesLabel}.`, detailEs: `Tipo en Qloo: ${typesLabel}.` }
+            : { check: 'person', ok: null, detail: `Qloo type is generic or ambiguous (${typesLabel}): the kind (person, band, organization) must be confirmed in Wikidata.`, detailEs: `El tipo en Qloo es genérico o ambiguo (${typesLabel}): el tipo de entidad (persona, banda, organización) se confirma en Wikidata.` },
+        );
         const past = pastGuests.get(key);
         const inTitles = key.split(' ').length >= 2 && targetTitles.some((x) => x.includes(` ${key} `));
         if (past || targetHostKeys.has(key) || inTitles) {
@@ -861,7 +952,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
             language: { status: 'unknown', target: targetLang, evidenceLanguages: [], evidenceEn: 'No verified interview in our sources.', evidenceEs: 'Sin entrevistas verificadas en nuestras fuentes.' },
             history: historyStatus,
           });
-          externalQueue.push({ entity: u.entity, rank: u.rank });
+          externalQueue.push({ entity: u.entity, rank: u.rank, mode: 'full' });
           continue;
         }
         // Same name as someone with verified interviews: merged only with shared context (never by name alone).
@@ -885,10 +976,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
             ? { check: 'language', ok: true, detail: `Verified interview in ${acceptedLabel()}.`, detailEs: `Entrevista verificada en ${acceptedLabel()}.` }
             : { check: 'language', ok: null, detail: `Interviews in ${langs.join(', ')}; ${acceptedLabel()} not verified (not proof they cannot speak it).`, detailEs: `Entrevistas en ${langs.join(', ')}; ${acceptedLabel()} sin verificar (no prueba que no lo hable).` },
         );
-        c.source = 'qloo-person-insights';
-        c.qlooEntityId = u.entity.entityId;
-        c.qlooProposedRank = u.rank;
-        c.identity = { status: 'confirmed', evidence: ev };
+        if (kind !== 'person') {
+          // Identity proven by our RSS; only the kind is unknown. Ranked only after Wikidata says "human".
+          out({ outcome: 'pending', failure: 'type', reason: 'Identity verified; kind to confirm (generic Qloo type)', reasonEs: 'Identidad verificada; falta confirmar el tipo (tipo genérico en Qloo)' });
+          externalQueue.push({ entity: u.entity, rank: u.rank, mode: 'type', candidate: c, evidence: ev });
+          continue;
+        }
+        admitPoolCandidate(c, u.entity.entityId, u.rank, ev);
         out({ outcome: 'ranked', reason: 'Verified: competes in the main ranking', reasonEs: 'Verificado: compite en el ranking principal' });
       }
       const f = funnelCounts();
@@ -906,13 +1000,27 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     },
 
     verify_external: async () => {
-      const queue = externalQueue.splice(0).sort((a, b) => a.rank - b.rank);
+      // Highest Qloo rank first; the verifier checks at most `maxCandidates` per run.
+      const all = externalQueue.splice(0).sort((a, b) => a.rank - b.rank);
+      const cap = input.verifier!.maxCandidates ?? 12;
+      const queue = all.slice(0, cap);
+      externalStats.queued += all.length;
+      externalStats.overCap += all.length - queue.length;
+      for (const q of all.slice(cap)) {
+        const prop = proposals.find((x) => x.qlooEntityId === q.entity.entityId);
+        if (prop) {
+          prop.checks.push({ check: 'external', ok: null, detail: `Not checked: verification cap (${cap} per analysis) reached; lower Qloo rank.`, detailEs: `Sin revisar: se alcanzó el límite de verificación (${cap} por análisis); menor posición en Qloo.` });
+          Object.assign(prop, { reason: `Not checked (cap of ${cap} reached)`, reasonEs: `Sin revisar (límite de ${cap} alcanzado)` });
+        }
+      }
       let checks: ExternalCheck[] = [];
       try {
         checks = await input.verifier!.verify(queue, { targetLang: [...accepted][0] ?? targetLang });
       } catch (err) {
         warn([`External verification failed: ${String(err)}`, `Falló la verificación externa: ${String(err)}`]);
       }
+      externalStats.checked += checks.reduce((s, c) => s + c.qlooIds.length, 0);
+      const modeOf = new Map(queue.map((q) => [q.entity.entityId, q]));
       const removeDiscovery = (id: string) => {
         const i = discoveries.findIndex((d) => d.qlooEntityId === id);
         if (i >= 0) discoveries.splice(i, 1);
@@ -922,6 +1030,22 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         const prop = proposals.find((x) => x.qlooEntityId === primaryId);
         if (!prop) continue;
         prop.external = ch;
+        const item = modeOf.get(primaryId);
+        if (item?.mode === 'type') {
+          // Identity was proven by our RSS; Wikidata only answers "individual person or not".
+          if (ch.kind === 'person') {
+            prop.checks.push({ check: 'external', ok: true, detail: `Wikidata lists “${ch.name}” as a human${ch.wikidataId ? ` (${ch.wikidataId})` : ''}.`, detailEs: `Wikidata registra a “${ch.name}” como ser humano${ch.wikidataId ? ` (${ch.wikidataId})` : ''}.` });
+            admitPoolCandidate(item.candidate!, primaryId, prop.qlooRank, item.evidence!);
+            Object.assign(prop, { outcome: 'ranked', failure: undefined, reason: 'Verified: competes in the main ranking', reasonEs: 'Verificado: compite en el ranking principal' });
+          } else if (ch.status === 'discarded') {
+            prop.checks.push({ check: 'external', ok: false, detail: ch.reason, detailEs: ch.reasonEs });
+            Object.assign(prop, { outcome: 'discarded', failure: 'type', reason: `Not an individual person (${ch.kind})`, reasonEs: `No es una persona individual (${ch.kind})` });
+          } else {
+            prop.checks.push({ check: 'external', ok: null, detail: 'No Wikidata record settles the kind: kept pending.', detailEs: 'Ningún registro de Wikidata confirma el tipo: queda pendiente.' });
+            Object.assign(prop, { reason: 'Kind not confirmed', reasonEs: 'Tipo no confirmado' });
+          }
+          continue;
+        }
         const src = ch.sources.map((s) => s.url).join(' · ');
         // Duplicate Qloo ids proven to be the same person (same Wikidata item): kept, merged into one.
         for (const id of dupIds) {
@@ -1068,7 +1192,10 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         ],
         decision:
           blend > 0
-            ? [`Final score = ${1 - blend}×(topical fit, momentum, recency) + ${blend}×Qloo affinity rank.`, `Puntaje final = ${1 - blend}×(ajuste temático, momento, recencia) + ${blend}×posición de afinidad en Qloo.`]
+            ? [
+                `Final score = ${1 - blend}×(topical fit, momentum, recency) + ${blend}×Qloo affinity rank, applied only within ${EDITORIAL_BAND * 100}% of the k-th best editorial score: affinity can reorder comparable candidates, never lift a less relevant one above them.`,
+                `Puntaje final = ${1 - blend}×(ajuste temático, momento, recencia) + ${blend}×posición de afinidad en Qloo, aplicado solo dentro del ${EDITORIAL_BAND * 100}% del k-ésimo mejor puntaje editorial: la afinidad puede reordenar candidatos comparables, nunca subir a uno menos pertinente por encima de ellos.`,
+              ]
             : ['MOCK affinities are computed to exercise the pipeline but are NOT used for ranking.', 'Las afinidades MOCK se calculan para probar el circuito, pero NO se usan en el ranking.'],
         provenance: qlooProvenance,
       });
@@ -1130,16 +1257,18 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     select_shortlist: async () => {
       // Diversity-aware selection (MMR) among eligible candidates not rejected by verification.
       picks = [];
+      applyEditorialBand();
       const candidates = eligible()
         .filter((c) => (!languageFilter || speaksTarget(c)) && !rejected.has(c.key))
-        .sort((a, b) => (speaksTarget(b) ? 1 : 0) - (speaksTarget(a) ? 1 : 0) || b.score - a.score)
+        .sort((a, b) => (speaksTarget(b) ? 1 : 0) - (speaksTarget(a) ? 1 : 0) || byRank(a, b))
         .slice(0, 60);
       while (picks.length < k && candidates.length) {
         let best = 0;
         let bestVal = -Infinity;
         candidates.forEach((c, i) => {
           const redundancy = picks.length ? Math.max(...picks.map((p) => cosine(p.vector, c.vector))) : 0;
-          const val = 0.75 * c.score - 0.25 * redundancy * c.score;
+          // Out-of-band candidates are only picked once no band member is left.
+          const val = (c.inBand === false ? -1 : 0) + 0.75 * c.score - 0.25 * redundancy * c.score;
           if (val > bestVal) {
             bestVal = val;
             best = i;
@@ -1147,7 +1276,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         });
         picks.push(candidates.splice(best, 1)[0]);
       }
-      const rankedNow = [...pool.values()].filter((c) => !rejected.has(c.key)).sort((a, b) => b.score - a.score);
+      const rankedNow = [...pool.values()].filter((c) => !rejected.has(c.key)).sort(byRank);
       const reordered = picks.some((p, i) => rankedNow[i]?.key !== p.key);
       step({
         title: ['Pick a varied shortlist', 'Elegir una lista corta variada'],
@@ -1291,7 +1420,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       `Qloo no aportó ningún candidato nuevo verificable (${funnelDiagnosis.diagnosisTextEs}) El ranking sale solo de fuentes verificadas.`,
     ]);
   // Ranking used by the backtest: confirmed-language candidates first; nobody removed for an unknown language.
-  const ranked = [...pool.values()].sort((a, b) => (languageFilter ? Number(speaksTarget(b)) - Number(speaksTarget(a)) : 0) || b.score - a.score);
+  applyEditorialBand();
+  const ranked = [...pool.values()].sort((a, b) => (languageFilter ? Number(speaksTarget(b)) - Number(speaksTarget(a)) : 0) || byRank(a, b));
 
 
   currentWhy = ['Shortlist verified: write each justification only from the evidence collected.', 'Lista corta verificada: escribo cada justificación solo con la evidencia reunida.'];
@@ -1470,6 +1600,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     guestCoverage: coverage,
     discoveries,
     qlooProposals: proposals,
+    signalDiagnostics: sig,
     funnel: { attempts, ...funnelCounts(), ...funnelDiagnosis },
     languageProfile: langProfile,
     plan: planLog,

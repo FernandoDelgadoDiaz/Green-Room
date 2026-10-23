@@ -47,7 +47,8 @@ class DiscoveryQloo implements QlooAdapter {
   }
   async personInsights(args: { signalIds: string[]; tagIds?: string[] }): Promise<QlooEntity[]> {
     this.insightCalls.push({ signals: args.signalIds.length, tags: args.tagIds?.length ?? 0 });
-    return this.propose(args);
+    // Person insights are typed people (Qloo subtype urn:entity:person), unless a test says otherwise.
+    return this.propose(args).map((e) => ({ types: ['urn:entity:person', 'urn:entity'], ...e }));
   }
   async affinityFor({ candidateIds }: { candidateIds: string[] }) {
     return new Map(candidateIds.filter((id) => id in this.affinity).map((id) => [id, this.affinity[id]]));
@@ -139,17 +140,17 @@ describe('Qloo-first discovery: Qloo proposes, the agent verifies', () => {
 });
 
 describe('baseline comparison', () => {
-  it('counts a verified Qloo person who displaces a baseline pick as a new relation', async () => {
-    // Bob has the stronger editorial record; Qloo affinity favors Ann.
+  it('a high Qloo affinity cannot lift a much less relevant person over the baseline pick (editorial band)', async () => {
+    // Bob has three recent interviews, Ann one: Ann is far outside the editorial band, so a 0.95
+    // affinity does not move her above Bob. (Before Phase 7 it did: this is the deliberate change.)
     const q = new DiscoveryQloo(() => [MIXED[0]], { 'q:ann': 0.95, 'p:bob ray': 0.05 });
     const enriched = await runAgent({ target, others: [other], qloo: q, asOf: AS_OF, k: 1 });
     const baseline = await runAgent({ target, others: [other], qloo: new NoQlooAdapter(), asOf: AS_OF, k: 1 });
     expect(baseline.recommendations.map((x) => x.name)).toEqual(['Bob Ray']);
+    expect(enriched.recommendations.map((x) => x.name)).toEqual(['Bob Ray']);
     const c = compareWithBaseline(baseline, enriched);
-    expect(c.enrichedTop).toEqual(['Ann Lee']);
-    expect(c.newRelations).toEqual([{ name: 'Ann Lee', qlooRank: 1, baselineRank: 2 }]);
-    expect(c.overlap).toBe(0);
-    expect(c.verdict).toMatch(/not measured here/);
+    expect(c.newRelations).toEqual([]);
+    expect(c.overlap).toBe(1);
   });
 
   it('counts agreement as a confirmation, not as a contribution', async () => {

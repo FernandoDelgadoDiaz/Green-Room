@@ -397,6 +397,8 @@ function DiscoveryPanel({ result, show, part }: { result: RecommendResult; show:
       </ol>
       <p className="mt-3 text-stone-300">{lang === 'es' ? f.diagnosisTextEs : f.diagnosisText}</p>
       {f.typeErrors > 0 && <p className="mt-1 text-xs text-stone-400">{f.typeErrors} {t('funnel.typeErrors')}</p>}
+      {(f.typePending > 0 || f.externalOverCap > 0) && <p className="mt-1 text-xs text-stone-400">{t('funnel.pendingDetail', { t: f.typePending, c: f.externalOverCap })}</p>}
+      {result.signalDiagnostics.verdict !== 'ok' && result.signalDiagnostics.verdict !== 'not_run' && <p className="mt-1 text-xs text-brass-300">{t(`sigv.${result.signalDiagnostics.verdict}`)}</p>}
       {f.attempts.length > 1 && <p className="mt-1 text-xs text-sky-200/80">{t('disc.replanned', { a: f.attempts.map((x) => `${x.signal} (${x.proposed})`).join(' → ') })}</p>}
       {c && (
         <div className="mt-3 rounded-lg border border-white/10 p-3">
@@ -405,6 +407,8 @@ function DiscoveryPanel({ result, show, part }: { result: RecommendResult; show:
           <ul className="mt-1 text-xs text-stone-400">
             <li>{t('cmp.overlap', { n: c.overlap, k: c.k })}</li>
             {c.newRelations.length > 0 && <li>{t('cmp.new', { names: c.newRelations.map((x) => `${x.name}${x.baselineRank ? ` (${t('cmp.baselineRank', { n: x.baselineRank })})` : ''}`).join(', ') })}</li>}
+            {c.affinityPromoted.length > 0 && <li>{t('cmp.affinity', { names: c.affinityPromoted.map((x) => `${x.name}${x.baselineRank ? ` (${t('cmp.baselineRank', { n: x.baselineRank })})` : ''}`).join(', ') })}</li>}
+            {c.displaced.length > 0 && <li>{t('cmp.displaced', { names: c.displaced.join(', ') })}</li>}
             {c.confirmations.length > 0 && <li>{t('cmp.confirm', { names: c.confirmations.join(', ') })}</li>}
             <li>{t('cmp.pending', { n: c.pending })}</li>
           </ul>

@@ -47,8 +47,27 @@ export function contentWords(text: string): Set<string> {
   );
 }
 
+/**
+ * Spanish → English forms of common occupation and context words, so an English Qloo description
+ * ("Mexican singer") can be compared with Spanish interview titles ("cantante mexicano"). Applied to
+ * both sides before stemming; it only widens what counts as the SAME word, never adds new evidence.
+ */
+const CANON: Record<string, string> = {
+  musico: 'musician', musica: 'music', cantante: 'singer', cantautor: 'songwriter', compositor: 'composer', compositora: 'composer', rapero: 'rapper', banda: 'band',
+  actor: 'actor', actriz: 'actress', comediante: 'comedian', humorista: 'comedian', director: 'director', directora: 'director', guionista: 'screenwriter', cineasta: 'filmmaker', productor: 'producer',
+  escritor: 'writer', escritora: 'writer', autor: 'author', autora: 'author', poeta: 'poet', periodista: 'journalist', conductor: 'presenter', conductora: 'presenter', presentador: 'presenter', locutor: 'broadcaster',
+  empresario: 'businessman', empresaria: 'businesswoman', emprendedor: 'entrepreneur', emprendedora: 'entrepreneur', inversor: 'investor', economista: 'economist',
+  politico: 'politician', politica: 'politician', diputado: 'politician', senador: 'senator', presidente: 'president', abogado: 'lawyer', abogada: 'lawyer',
+  cientifico: 'scientist', cientifica: 'scientist', fisico: 'physicist', medico: 'physician', psicologo: 'psychologist', psicologa: 'psychologist', filosofo: 'philosopher', historiador: 'historian', divulgador: 'science communicator',
+  futbolista: 'footballer', boxeador: 'boxer', piloto: 'driver', atleta: 'athlete', entrenador: 'coach', deportista: 'athlete', ajedrecista: 'chess',
+  youtuber: 'youtuber', influencer: 'influencer', streamer: 'streamer', chef: 'chef', cocinero: 'chef',
+  mexicano: 'mexican', mexicana: 'mexican', argentino: 'argentine', argentina: 'argentine', espanol: 'spanish', espanola: 'spanish', colombiano: 'colombian', chileno: 'chilean', estadounidense: 'american',
+  tecnologia: 'technology', inteligencia: 'intelligence', ciencia: 'science', negocios: 'business', historia: 'history', politica_: 'politics', television: 'television', pelicula: 'film', cine: 'film',
+};
+const canon = (w: string) => CANON[w] ?? w;
+
 /** Light stemming: words match when they share their first 6 letters ("neuroscience" ~ "neuroscientist"). */
-const stem = (w: string) => w.slice(0, 6);
+const stem = (w: string) => canon(w).slice(0, 6);
 
 /** Words in common between the Wikipedia text and the appearance titles, excluding the person's own name. */
 export function contextOverlap(name: string, wikiText: string, appearanceTitles: string[]): string[] {

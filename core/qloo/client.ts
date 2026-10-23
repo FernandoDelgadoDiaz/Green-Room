@@ -78,8 +78,13 @@ export function parseEntity(raw: unknown): QlooEntity | null {
     ? (r.tags as unknown[]).map((t) => (t && typeof t === 'object' ? (t as Record<string, unknown>).name : t)).filter((t): t is string => typeof t === 'string')
     : undefined;
   const props = (r.properties && typeof r.properties === 'object' ? r.properties : {}) as Record<string, unknown>;
-  const description = [props.short_description, props.description, r.disambiguation].find((d): d is string => typeof d === 'string' && d.length > 0);
-  const types = Array.isArray(r.types) ? (r.types as unknown[]).filter((x): x is string => typeof x === 'string') : typeof r.type === 'string' ? [r.type] : undefined;
+  // Top-level short_description/description first, then properties (same order as the official harness).
+  const description = [r.short_description, r.description, props.short_description, props.description, r.disambiguation].find((d): d is string => typeof d === 'string' && d.length > 0);
+  // Qloo sends a generic `type` ("urn:entity") and the specific kind in `subtype` ("urn:entity:person");
+  // the official harness reads `subtype || type`. Keep every type seen, specific ones first.
+  const types = [...new Set([r.subtype, ...(Array.isArray(r.types) ? (r.types as unknown[]) : []), r.type].filter((x): x is string => typeof x === 'string' && x.length > 0))].sort(
+    (a, b) => Number(a === 'urn:entity') - Number(b === 'urn:entity'),
+  );
   // Tolerant: external.wikidata may be a list of {id} objects or of strings.
   const ext = (r.external && typeof r.external === 'object' ? (r.external as Record<string, unknown>).wikidata : undefined) as unknown;
   const wikidataIds = (Array.isArray(ext) ? ext : ext ? [ext] : [])
@@ -88,12 +93,12 @@ export function parseEntity(raw: unknown): QlooEntity | null {
   return {
     entityId,
     name,
-    type: typeof r.type === 'string' ? r.type : Array.isArray(r.types) && typeof r.types[0] === 'string' ? (r.types[0] as string) : undefined,
+    type: types[0],
     popularity: num(r.popularity),
     affinity: num(query.affinity) ?? num(r.affinity),
     tags,
     ...(description ? { description } : {}),
-    ...(types?.length ? { types } : {}),
+    ...(types.length ? { types } : {}),
     ...(wikidataIds.length ? { wikidataIds } : {}),
   };
 }

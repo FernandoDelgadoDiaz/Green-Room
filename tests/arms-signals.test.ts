@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runAgent } from '../core/agent/agent';
-import { compareArms } from '../core/discovery';
+import { compareArms, compareWithBaseline } from '../core/discovery';
 import { buildTagQueries, showNameVariants } from '../core/qloo/signals';
 import { nameKey } from '../core/names';
 import { NoQlooAdapter } from '../core/qloo/mock';
@@ -31,7 +31,7 @@ class Fake implements QlooAdapter {
   }
   async searchPodcast() { return []; }
   async findTags() { return []; }
-  async personInsights() { return this.people; }
+  async personInsights() { return this.people.map((e) => ({ types: ['urn:entity:person', 'urn:entity'], ...e })); }
   async affinityFor({ candidateIds }: { candidateIds: string[] }) {
     return new Map(candidateIds.filter((id) => id in this.aff).map((id) => [id, this.aff[id]]));
   }
@@ -64,6 +64,32 @@ describe('four controlled arms: which Qloo effect changes the list', () => {
     expect(ann.assessment.qlooAffinity).toBeNull();
     expect(ann.score).toBeCloseTo(ann.assessment.editorialRelevance, 9);
     expect(B.qlooCalls.some((c) => c.params?.['filter.results.entities'])).toBe(false);
+  });
+});
+
+describe('editorial band: affinity reorders comparable candidates only', () => {
+  const show = (others: PodcastDataset) => others;
+  it('reorders within the band, never lifts a clearly less relevant candidate', async () => {
+    // Close: Ann and Bob both have one recent AI interview (comparable relevance) → affinity may decide.
+    const close = mk('c', [ep('c1', 'Ann Lee: AI safety and robots', '2024-05-01T00:00:00.000Z', ['Ann Lee']), ep('c2', 'Bob Ray: AI robots and the future', '2024-05-02T00:00:00.000Z', ['Bob Ray'])]);
+    // Far: Bob has four recent interviews, Ann one old one → affinity must not lift Ann.
+    const far = mk('f', [
+      ep('f1', 'Ann Lee: AI safety and robots', '2023-01-01T00:00:00.000Z', ['Ann Lee']),
+      ...['2024-05-01', '2024-05-05', '2024-05-10', '2024-05-20'].map((d, i) => ep(`b${i}`, 'Bob Ray: AI robots and the future of work', `${d}T00:00:00.000Z`, ['Bob Ray'])),
+    ]);
+    const aff = { 'p:ann lee': 0.99, 'p:bob ray': 0.01 };
+    const run = (o: PodcastDataset) => runAgent({ target, others: [show(o)], qloo: new Fake([], aff), asOf: AS_OF, k: 1, qlooDiscovery: false });
+    const closeRun = await run(close);
+    expect(closeRun.recommendations[0].name).toBe('Ann Lee');
+    // The comparison names the effect: Ann entered through affinity (no discovery), Bob was displaced.
+    const base = await runAgent({ target, others: [close], qloo: new NoQlooAdapter(), asOf: AS_OF, k: 1 });
+    const cmp = compareWithBaseline(base, closeRun);
+    expect(cmp.affinityPromoted.map((x) => x.name)).toEqual(['Ann Lee']);
+    expect(cmp.displaced).toEqual(['Bob Ray']);
+    expect(cmp.newRelations).toEqual([]);
+    const r = await run(far);
+    expect(r.recommendations[0].name).toBe('Bob Ray');
+    expect(r.trace.find((s) => s.tool?.startsWith('qloo.insights (filter'))!.decision).toMatch(/within 15%/);
   });
 });
 

@@ -78,3 +78,19 @@ export class QlooError extends Error {
     this.name = 'QlooError';
   }
 }
+
+/**
+ * What Qloo's own types say about an entity: 'person' (urn:entity:person), 'non_person' (a specific
+ * non-person kind such as album, movie, place, brand), or 'unknown' (only the generic "urn:entity",
+ * an ambiguous kind such as urn:entity:artist — which covers both solo artists and bands — or no
+ * type). 'unknown' is never a reason to discard: the kind is settled with independent evidence.
+ */
+export type QlooKind = 'person' | 'non_person' | 'unknown';
+const NON_PERSON = new Set(['urn:entity:album', 'urn:entity:book', 'urn:entity:brand', 'urn:entity:destination', 'urn:entity:locality', 'urn:entity:movie', 'urn:entity:place', 'urn:entity:podcast', 'urn:entity:tv_show', 'urn:entity:video_game']);
+
+export function qlooKind(types: string[] | undefined): QlooKind {
+  if (!types?.length) return 'unknown';
+  if (types.includes('urn:entity:person')) return 'person';
+  if (types.some((t) => NON_PERSON.has(t))) return 'non_person';
+  return 'unknown';
+}

@@ -34,6 +34,8 @@ export interface Env extends LiveEnv {
   PROFILE_LOOKUP?: string;
   /** Set to "0" to skip the Wikidata/Wikipedia verification of Qloo proposals (LIVE only). */
   EXTERNAL_VERIFY?: string;
+  /** Maximum Qloo proposals verified in Wikidata/Wikipedia per analysis (default 12, max 30). */
+  EXTERNAL_VERIFY_MAX?: string;
 }
 
 /** Private, server-side Qloo response cache shared by requests on a warm instance (allowed by the developer guide). */
@@ -117,13 +119,16 @@ const WIKI_HOSTS = ['www.wikidata.org', 'en.wikipedia.org', 'es.wikipedia.org'];
 /** Wikidata/Wikipedia verifier, used only with LIVE Qloo (it verifies Qloo's proposals). */
 export function makeVerifier(env: Env) {
   if (env.EXTERNAL_VERIFY === '0') return undefined;
-  return new WikidataVerifier({ fetchJson: (u) => safeJson(u, { allowHosts: WIKI_HOSTS, timeoutMs: 5000 }), maxCandidates: 12 });
+  // Default 12 per analysis; adjustable (1–30) only after measuring how many useful candidates the cap leaves out.
+  const max = Math.min(30, Math.max(1, Number(env.EXTERNAL_VERIFY_MAX) || 12));
+  return new WikidataVerifier({ fetchJson: (u) => safeJson(u, { allowHosts: WIKI_HOSTS, timeoutMs: 5000 }), maxCandidates: max });
 }
 
 /** One analysis: agent run, Wikipedia photos/profiles, and (LIVE) the baseline comparison. */
 export async function recommendFor(target: PodcastDataset, others: PodcastDataset[], qloo: QlooAdapter, env: Env, k: number, origin: unknown) {
   const live = qloo.mode === 'LIVE';
-  const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, verifier: live ? makeVerifier(env) : undefined });
+  const verifier = live ? makeVerifier(env) : undefined;
+  const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, verifier });
   // LIVE: also run the baseline (no Qloo, no API calls) on the same data and rules, to show what Qloo added.
   const comparison = live ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF }), result) : null;
   const profiles = await profilesFor(result.recommendations, env.PROFILE_LOOKUP !== '0');
@@ -142,7 +147,8 @@ export async function recommendFor(target: PodcastDataset, others: PodcastDatase
       };
     }
   }
-  return { ...result, ranked: undefined, profiles, comparison, origin };
+  // Cost of the external verification (Wikidata/Wikipedia calls), to size the per-run cap with data.
+  return { ...result, ranked: undefined, profiles, comparison, origin, externalVerification: verifier ? { calls: verifier.calls.length, cap: verifier.maxCandidates } : null };
 }
 
 async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter): Promise<{ status: number; body: unknown }> {

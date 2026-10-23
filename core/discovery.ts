@@ -19,6 +19,10 @@ export interface BaselineComparison {
   newRelations: Array<{ name: string; qlooRank: number; baselineRank: number | null }>;
   /** Qloo-proposed people the baseline had already put in its top-k (agreement, not a new find). */
   confirmations: string[];
+  /** People we already had who entered the top-k only through Qloo affinity reweighting (no discovery). */
+  affinityPromoted: Array<{ name: string; baselineRank: number | null }>;
+  /** Baseline picks that left the top-k. */
+  displaced: string[];
   /** Pending discoveries: Qloo-only people we could not verify. Never counted as a contribution. */
   pending: number;
   verdict: string;
@@ -36,6 +40,9 @@ export function compareWithBaseline(baseline: AgentResult, enriched: AgentResult
     .filter((r) => r.assessment.qlooProposedRank !== null && !bSet.has(r.key))
     .map((r) => ({ name: r.name, qlooRank: r.assessment.qlooProposedRank!, baselineRank: bRank.get(r.key) ?? null }));
   const confirmations = qlooRanked.filter((p) => bSet.has(p.key)).map((p) => p.name);
+  const affinityPromoted = enriched.recommendations.filter((r) => r.assessment.qlooProposedRank === null && !bSet.has(r.key)).map((r) => ({ name: r.name, baselineRank: bRank.get(r.key) ?? null }));
+  const eSet = new Set(eTop);
+  const displaced = baseline.recommendations.filter((r) => !eSet.has(r.key)).map((r) => r.name);
   const f = enriched.funnel;
   const verdict =
     f.proposed === 0
@@ -60,6 +67,8 @@ export function compareWithBaseline(baseline: AgentResult, enriched: AgentResult
     inShortlist: f.inShortlist,
     newRelations,
     confirmations,
+    affinityPromoted,
+    displaced,
     pending: enriched.discoveries.length,
     verdict,
     verdictEs,
@@ -89,7 +98,7 @@ export interface ArmMetrics {
   /** Top-k people whose identity is pending verification. */
   identityIssues: number;
   languageConfirmed: number;
-  funnel: { proposed: number; identityVerified: number; ranked: number; typeErrors: number };
+  funnel: { proposed: number; identityVerified: number; externalDocumented: number; externalOverCap: number; typePending: number; ranked: number; typeErrors: number; signal: string };
 }
 
 const round = (x: number) => Math.round(x * 1000) / 1000;
@@ -121,7 +130,7 @@ export function compareArms(arms: Record<ArmId, AgentResult>) {
       evidence: ev,
       identityIssues: recs.filter((x) => x.identity.status === 'pending').length,
       languageConfirmed: recs.filter((x) => x.language.status === 'confirmed').length,
-      funnel: { proposed: r.funnel.proposed, identityVerified: r.funnel.identityVerified, ranked: r.funnel.ranked, typeErrors: r.funnel.typeErrors },
+      funnel: { proposed: r.funnel.proposed, identityVerified: r.funnel.identityVerified, externalDocumented: r.funnel.externalDocumented, externalOverCap: r.funnel.externalOverCap, typePending: r.funnel.typePending, ranked: r.funnel.ranked, typeErrors: r.funnel.typeErrors, signal: r.signalDiagnostics.verdict },
     };
   });
   const by = Object.fromEntries(metrics.map((m) => [m.arm, m])) as Record<ArmId, ArmMetrics>;
