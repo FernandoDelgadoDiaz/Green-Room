@@ -50,12 +50,16 @@ export interface QlooAdapter {
   /** Log of every call made, shown in the agent trace. */
   readonly calls: QlooCall[];
   searchPerson(name: string): Promise<QlooEntity[]>;
-  /** People with affinity to the signal entities, excluding the given ids. */
-  personInsights(args: { signalIds: string[]; excludeIds: string[]; take: number; popularityMax?: number }): Promise<QlooEntity[]>;
-  /** Affinity of specific candidate entities to the signal entities (filter.results.entities). */
-  affinityFor(args: { signalIds: string[]; candidateIds: string[] }): Promise<Map<string, number>>;
+  /** Podcast entities by name (/search, types=urn:entity:podcast). */
+  searchPodcast(name: string): Promise<QlooEntity[]>;
+  /** Qloo tags by natural-language query (/v2/tags, semantic search). */
+  findTags(query: string): Promise<QlooEntity[]>;
+  /** People with affinity to the signal entities and/or tags, excluding the given ids. */
+  personInsights(args: { signalIds: string[]; tagIds?: string[]; excludeIds: string[]; take: number; popularityMax?: number }): Promise<QlooEntity[]>;
+  /** Affinity of specific candidate entities to the signals (filter.results.entities). */
+  affinityFor(args: { signalIds: string[]; tagIds?: string[]; candidateIds: string[] }): Promise<Map<string, number>>;
   /** Cross-domain taste of the audience implied by the signals (artists, films, books…). */
-  categoryInsights(args: { signalIds: string[]; type: InsightsEntityType; take: number }): Promise<QlooEntity[]>;
+  categoryInsights(args: { signalIds: string[]; tagIds?: string[]; type: InsightsEntityType; take: number }): Promise<QlooEntity[]>;
 }
 
 export type QlooErrorKind = 'http' | 'network' | 'timeout' | 'budget' | 'deadline' | 'config';

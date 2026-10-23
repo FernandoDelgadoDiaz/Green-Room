@@ -1,9 +1,8 @@
 // Request handler shared by the Netlify Function and the Vite dev server.
 // Runs server-side, so QLOO_API_KEY never reaches the browser.
 
-import lex from '../data/podcasts/lex-fridman.json';
-import doac from '../data/podcasts/diary-of-a-ceo.json';
-import creativo from '../data/podcasts/creativo.json';
+import catalogJson from '../data/catalog.json';
+import { ALL_DATASETS, CORE_IDS } from './datasets';
 import profilesJson from '../data/profiles.json';
 import type { PodcastDataset } from './types';
 import { runAgent } from './agent/agent';
@@ -17,7 +16,13 @@ import { redact } from './qloo/credentials';
 import { resolveProfiles, type GuestProfile } from './profiles';
 import { nameKey } from './names';
 
-export const DATASETS: PodcastDataset[] = [lex, doac, creativo] as PodcastDataset[];
+/** Every analyzable catalog show; each one is a comparison show for the others. */
+export const DATASETS: PodcastDataset[] = ALL_DATASETS;
+/** The original three shows: a fixed corpus for regression tests and the historical backtest. */
+export const CORE_DATASETS: PodcastDataset[] = ALL_DATASETS.filter((d) => CORE_IDS.includes(d.id));
+
+export type CatalogShow = (typeof catalogJson)['shows'][number];
+export const CATALOG = catalogJson;
 
 export interface Env extends LiveEnv {
   /** Set to "0" to skip live Wikipedia lookups (tests, offline environments). */
@@ -36,6 +41,7 @@ export function makeQloo(env: Env, limits?: Partial<QlooLimits>, sharedBudget?: 
 
 export type ApiRequest =
   | { action: 'shows' }
+  | { action: 'catalog' }
   | { action: 'recommend'; showId: string; k?: number }
   | { action: 'backtest'; showId: string; cutoff: string; horizonMonths?: number };
 
@@ -100,6 +106,7 @@ export async function handleApi(req: ApiRequest, env: Env): Promise<{ status: nu
 }
 
 async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter): Promise<{ status: number; body: unknown }> {
+  if (req.action === 'catalog') return { status: 200, body: CATALOG };
   if (req.action === 'shows') return { status: 200, body: { qlooMode: qlooFor().mode === 'LIVE' ? 'LIVE' : 'MOCK', shows: showSummaries() } };
   const target = DATASETS.find((d) => d.id === req.showId);
   if (!target) return { status: 404, body: { error: `Unknown show ${req.showId}` } };

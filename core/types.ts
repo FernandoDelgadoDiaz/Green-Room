@@ -59,4 +59,6 @@ export interface Appearance {
   title: string;
   published: string;
   url: string | null;
+  /** Extraction confidence of the guest name in this appearance's title. */
+  confidence?: GuestMention['confidence'];
 }

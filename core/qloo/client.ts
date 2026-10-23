@@ -70,7 +70,7 @@ function num(v: unknown): number | undefined {
 export function parseEntity(raw: unknown): QlooEntity | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-  const entityId = typeof r.entity_id === 'string' ? r.entity_id : typeof r.id === 'string' ? r.id : null;
+  const entityId = typeof r.entity_id === 'string' ? r.entity_id : typeof r.id === 'string' ? r.id : typeof r.tag_id === 'string' ? r.tag_id : null;
   const name = typeof r.name === 'string' ? r.name : null;
   if (!entityId || !name) return null;
   const query = (r.query && typeof r.query === 'object' ? r.query : {}) as Record<string, unknown>;
@@ -98,7 +98,9 @@ export function parseEntities(body: unknown): QlooEntity[] {
     ? results
     : results && typeof results === 'object' && Array.isArray((results as Record<string, unknown>).entities)
       ? ((results as Record<string, unknown>).entities as unknown[])
-      : [];
+      : results && typeof results === 'object' && Array.isArray((results as Record<string, unknown>).tags)
+        ? ((results as Record<string, unknown>).tags as unknown[])
+        : [];
   return list.map(parseEntity).filter((e): e is QlooEntity => e !== null);
 }
 
@@ -234,23 +236,34 @@ export class LiveQlooAdapter implements QlooAdapter {
     return this.get('/search', { query: name, types: 'urn:entity:person', take: '5' });
   }
 
-  personInsights({ signalIds, excludeIds, take, popularityMax }: { signalIds: string[]; excludeIds: string[]; take: number; popularityMax?: number }) {
+  searchPodcast(name: string) {
+    return this.get('/search', { query: name, types: 'urn:entity:podcast', take: '5' });
+  }
+
+  /** Same request as the official harness's tag resolver (filter.query + feature.semantic_search). */
+  findTags(query: string) {
+    return this.get('/v2/tags', { 'filter.query': query, 'feature.semantic_search': 'true', take: '10' });
+  }
+
+  personInsights({ signalIds, tagIds = [], excludeIds, take, popularityMax }: { signalIds: string[]; tagIds?: string[]; excludeIds: string[]; take: number; popularityMax?: number }) {
     return this.get('/v2/insights', {
       'filter.type': 'urn:entity:person',
       'signal.interests.entities': signalIds.join(','),
+      'signal.interests.tags': tagIds.join(','),
       'filter.exclude.entities': excludeIds.join(','),
       'filter.popularity.max': popularityMax === undefined ? '' : String(popularityMax),
       take: String(Math.min(take, 50)),
     });
   }
 
-  async affinityFor({ signalIds, candidateIds }: { signalIds: string[]; candidateIds: string[] }) {
+  async affinityFor({ signalIds, tagIds = [], candidateIds }: { signalIds: string[]; tagIds?: string[]; candidateIds: string[] }) {
     const out = new Map<string, number>();
     for (let i = 0; i < candidateIds.length; i += 50) {
       const batch = candidateIds.slice(i, i + 50);
       const entities = await this.get('/v2/insights', {
         'filter.type': 'urn:entity:person',
         'signal.interests.entities': signalIds.join(','),
+        'signal.interests.tags': tagIds.join(','),
         // filter.results.entities restricts results to these ids (Entity Type Parameter Guide, person).
         // An unknown name such as filter.entities is silently ignored and would return arbitrary people.
         'filter.results.entities': batch.join(','),
@@ -269,10 +282,11 @@ export class LiveQlooAdapter implements QlooAdapter {
     return out;
   }
 
-  categoryInsights({ signalIds, type, take }: { signalIds: string[]; type: InsightsEntityType; take: number }) {
+  categoryInsights({ signalIds, tagIds = [], type, take }: { signalIds: string[]; tagIds?: string[]; type: InsightsEntityType; take: number }) {
     return this.get('/v2/insights', {
       'filter.type': type,
       'signal.interests.entities': signalIds.join(','),
+      'signal.interests.tags': tagIds.join(','),
       take: String(Math.min(take, 50)),
     });
   }

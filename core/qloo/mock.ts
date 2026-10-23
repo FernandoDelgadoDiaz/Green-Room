@@ -31,6 +31,16 @@ export class MockQlooAdapter implements QlooAdapter {
     return [{ entityId: id, name, type: 'urn:entity:person' }];
   }
 
+  async searchPodcast(name: string): Promise<QlooEntity[]> {
+    this.log('/search', { query: name, types: 'urn:entity:podcast' }, 0, 'MOCK: podcast coverage unknown without the API; returns nothing');
+    return [];
+  }
+
+  async findTags(query: string): Promise<QlooEntity[]> {
+    this.log('/v2/tags', { 'filter.query': query }, 0, 'MOCK: no tag ontology without the API; returns nothing');
+    return [];
+  }
+
   async personInsights(args: { signalIds: string[]; excludeIds: string[]; take: number }): Promise<QlooEntity[]> {
     this.log('/v2/insights', { 'filter.type': 'urn:entity:person', signals: String(args.signalIds.length) }, 0, 'MOCK: returns no people (we never invent candidates)');
     return [];
@@ -55,6 +65,12 @@ export class NoQlooAdapter implements QlooAdapter {
   readonly mode = 'OFF' as const;
   readonly calls: QlooCall[] = [];
   async searchPerson() {
+    return [];
+  }
+  async searchPodcast() {
+    return [];
+  }
+  async findTags() {
     return [];
   }
   async personInsights() {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { handleApi, DATASETS } from '../core/api';
+import { handleApi, CORE_DATASETS as DATASETS } from '../core/api';
 import { runAgent } from '../core/agent/agent';
 import { runBacktest } from '../core/backtest';
 import { MockQlooAdapter, NoQlooAdapter } from '../core/qloo/mock';
@@ -12,21 +12,26 @@ const others = (id: string) => DATASETS.filter((d) => d.id !== id);
 const byId = (id: string) => DATASETS.find((d) => d.id === id)!;
 
 describe('presentation changes do not alter the logic', () => {
+  // Fixed corpus (the original three shows): the catalog adds comparison shows, which legitimately
+  // changes rankings, so the regression is checked on the corpus the baseline was recorded with.
   it('recommendations keep the same people, order and scores (±0.001; "now" moves)', async () => {
     for (const [showId, expected] of Object.entries(baseline.recs)) {
-      const { body } = await handleApi({ action: 'recommend', showId }, { PROFILE_LOOKUP: '0' });
-      const recs = (body as { recommendations: Array<{ key: string; score: number }> }).recommendations;
-      expect(recs.map((r) => r.key)).toEqual((expected as Array<[string, number]>).map(([k]) => k));
-      recs.forEach((r, i) => expect(Math.abs(r.score - (expected as Array<[string, number]>)[i][1])).toBeLessThan(1e-3));
+      const r = await runAgent({ target: byId(showId), others: others(showId), qloo: new MockQlooAdapter() });
+      expect(r.recommendations.map((x) => x.key)).toEqual((expected as Array<[string, number]>).map(([k]) => k));
+      r.recommendations.forEach((x, i) => expect(Math.abs(x.score - (expected as Array<[string, number]>)[i][1])).toBeLessThan(1e-3));
     }
   });
 
   it('backtest results are identical to the recorded baseline', async () => {
     for (const [id, expected] of Object.entries(baseline.backtests)) {
       const [showId, cutoff] = id.split('@');
-      const { body } = await handleApi({ action: 'backtest', showId, cutoff }, {});
-      const arms = (body as { arms: Array<{ qlooMode: string; hitsAt: unknown; hits: Array<{ name: string; rank: number }> }> }).arms;
-      expect(arms.map((a) => [a.qlooMode, a.hitsAt, a.hits.map((h) => [h.name, h.rank])])).toEqual(expected);
+      const r = await runBacktest({
+        target: byId(showId),
+        others: others(showId),
+        cutoff: new Date(cutoff).toISOString(),
+        qlooArm: { label: 'x', labelEs: 'x', adapter: new MockQlooAdapter() },
+      });
+      expect(r.arms.map((a) => [a.qlooMode, a.hitsAt, a.hits.map((h) => [h.name, h.rank])])).toEqual(expected);
     }
   });
 });

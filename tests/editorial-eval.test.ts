@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildEditorialSet, parseCsv, ratingsFromCsv, scoreEditorial, sheetCsv, LIST_SIZE, type EditorialKey } from '../core/editorial';
-import { DATASETS } from '../core/api';
+import { CORE_DATASETS as DATASETS } from '../core/api';
 import { nameKey } from '../core/names';
 import type { QlooAdapter, QlooCall, QlooEntity } from '../core/qloo/types';
 
@@ -18,6 +18,12 @@ class FakeLive implements QlooAdapter {
   }
   async affinityFor({ candidateIds }: { candidateIds: string[] }) {
     return new Map(candidateIds.map((id, i) => [id, 1 - i / candidateIds.length]));
+  }
+  async searchPodcast(): Promise<QlooEntity[]> {
+    return [];
+  }
+  async findTags(): Promise<QlooEntity[]> {
+    return [];
   }
   async categoryInsights(): Promise<QlooEntity[]> {
     return [];

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkIdentity } from '../core/qloo/resolve';
 import { runAgent } from '../core/agent/agent';
-import { DATASETS } from '../core/api';
+import { CORE_DATASETS as DATASETS } from '../core/api';
 import { nameKey } from '../core/names';
 import { NoQlooAdapter } from '../core/qloo/mock';
 import type { QlooAdapter, QlooCall, QlooEntity } from '../core/qloo/types';
@@ -39,6 +39,12 @@ class NameOnlyQloo implements QlooAdapter {
   }
   async affinityFor() {
     return new Map<string, number>();
+  }
+  async searchPodcast(): Promise<QlooEntity[]> {
+    return [];
+  }
+  async findTags(): Promise<QlooEntity[]> {
+    return [];
   }
   async categoryInsights() {
     return [];

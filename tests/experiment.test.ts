@@ -6,7 +6,7 @@ import { LiveQlooAdapter } from '../core/qloo/client';
 import { resolvePerson } from '../core/qloo/resolve';
 import { assertQlooBaseUrl, loadQlooCredentials, parseHarnessConfig, redact } from '../core/qloo/credentials';
 import { runComparison, signTest, summarizeComparison, summarizeCoverage, runCoverage } from '../core/experiment';
-import { DATASETS } from '../core/api';
+import { CORE_DATASETS as DATASETS } from '../core/api';
 import { nameKey } from '../core/names';
 import type { QlooAdapter, QlooCall, QlooEntity } from '../core/qloo/types';
 
@@ -108,6 +108,12 @@ class FakeLiveQloo implements QlooAdapter {
     }
     this.calls.push({ endpoint: '/v2/insights', params: { 'signal.interests.entities': signalIds.join(','), 'filter.results.entities': candidateIds.join(',') }, status: 200, ms: 0, resultCount: out.size, note: `affinity values: ${out.size}` });
     return out;
+  }
+  async searchPodcast(): Promise<QlooEntity[]> {
+    return [];
+  }
+  async findTags(): Promise<QlooEntity[]> {
+    return [];
   }
   async categoryInsights() {
     return [];

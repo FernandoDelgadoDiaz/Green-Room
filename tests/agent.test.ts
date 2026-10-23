@@ -3,7 +3,7 @@ import { runAgent } from '../core/agent/agent';
 import { runBacktest } from '../core/backtest';
 import { MockQlooAdapter, NoQlooAdapter } from '../core/qloo/mock';
 import { nameKey } from '../core/names';
-import { DATASETS } from '../core/api';
+import { CORE_DATASETS as DATASETS } from '../core/api';
 import type { PodcastDataset } from '../core/types';
 
 const byId = (id: string) => DATASETS.find((d) => d.id === id)!;
@@ -55,7 +55,7 @@ describe('agent on real datasets', () => {
     const lex = await runAgent({ target: byId('lex-fridman'), others: others('lex-fridman'), qloo: new NoQlooAdapter() });
     for (const rec of lex.recommendations) expect(rec.appearances.some((a) => a.showId !== 'creativo')).toBe(true);
     const creativo = await runAgent({ target: byId('creativo'), others: others('creativo'), qloo: new NoQlooAdapter() });
-    expect(creativo.warnings.some((w) => w.includes('cross-language'))).toBe(true);
+    expect(creativo.warnings.some((w) => w.includes('unknown language'))).toBe(true);
   });
 
   it('only uses information published before asOf', async () => {
