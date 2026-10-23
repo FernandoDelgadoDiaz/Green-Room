@@ -168,6 +168,25 @@ function TechnicalDetails({ rec, mode }: { rec: Recommendation; mode: RecommendR
         </div>
       </div>
       <div>
+        <p className="mb-2 text-xs uppercase tracking-widest text-stone-500">{t('tech.assessment')}</p>
+        <ul className="grid gap-2 text-xs text-stone-300 sm:grid-cols-3">
+          <li className="rounded-lg bg-white/5 p-2">
+            <p className="text-stone-500">{t('tech.a.qloo')}</p>
+            {rec.assessment.qlooProposedRank !== null ? t('tech.a.qlooProposed', { n: rec.assessment.qlooProposedRank }) : t('tech.a.qlooNot')}
+            {rec.assessment.qlooAffinity !== null && ` · ${t('tech.a.affinity', { v: pct(rec.assessment.qlooAffinity) })}`}
+          </li>
+          <li className="rounded-lg bg-white/5 p-2">
+            <p className="text-stone-500">{t('tech.a.editorial')}</p>
+            {pct(rec.assessment.editorialRelevance)}/100
+          </li>
+          <li className="rounded-lg bg-white/5 p-2">
+            <p className="text-stone-500">{t('tech.a.evidence')}</p>
+            {t(`tech.a.level.${rec.assessment.evidence.level}` as Parameters<typeof t>[0])} · {t('tech.a.evidenceDetail', { n: rec.assessment.evidence.appearances, s: rec.assessment.evidence.shows })}
+            {rec.assessment.evidence.automaticNamesOnly && ` · ${t('tech.a.automatic')}`}
+          </li>
+        </ul>
+      </div>
+      <div>
         <p className="mb-2 text-xs uppercase tracking-widest text-stone-500">{t('tech.rationale')}</p>
         <ul className="space-y-1.5">
           {rec.rationale.map((r) => (
@@ -255,7 +274,7 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
 }
 
 /** History, language and identity, each with how sure we are. Shared by recommendations and discoveries. */
-function StatusChips({ rec, show }: { rec: Pick<Recommendation, 'history' | 'language' | 'identity'>; show: ShowSummary }) {
+function StatusChips({ rec, show }: { rec: Pick<Recommendation, 'history' | 'language' | 'identity'> & Partial<Pick<Recommendation, 'assessment'>>; show: ShowSummary }) {
   const { lang, t } = useI18n();
   const h = rec.history;
   const langEvidence = lang === 'es' ? rec.language.evidenceEs : rec.language.evidenceEn;
@@ -275,28 +294,143 @@ function StatusChips({ rec, show }: { rec: Pick<Recommendation, 'history' | 'lan
         {t(`card.lang.${rec.language.status}`, { lang: rec.language.target.toUpperCase() })}
       </span>
       {rec.identity.status === 'pending' && <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-fuchsia-200">{t('card.identityPending')}</span>}
+      {rec.assessment && rec.assessment.qlooProposedRank !== null && (
+        <span className="rounded-full bg-brass-400/15 px-2.5 py-1 text-brass-300">{t('card.qlooVerified', { n: rec.assessment.qlooProposedRank })}</span>
+      )}
     </>
   );
 }
 
-function DiscoveriesPanel({ result, show }: { result: RecommendResult; show: ShowSummary }) {
-  const { t } = useI18n();
-  if (!result.discoveries?.length) return null;
+const SIGNAL_KEYS = { guests: 'sig.guests', podcast: 'sig.podcast', tags: 'sig.tags', 'podcast+tags': 'sig.podcastTags', none: 'sig.none' } as const;
+
+/** Which podcast was analyzed, which signals were used, and the show's habitual languages. */
+function AnalysisSummary({ result, show }: { result: RecommendResult; show: ShowSummary }) {
+  const { lang, t } = useI18n();
+  const lp = result.languageProfile;
+  const o = result.origin;
   return (
-    <div className="card border-fuchsia-400/30 p-5">
+    <div className="card p-5 text-sm">
+      <p className="text-xs uppercase tracking-widest text-stone-500">{t('sum.title')}</p>
+      <p className="mt-1 font-display text-2xl">{show.name}</p>
+      <ul className="mt-3 space-y-1.5 text-stone-300">
+        <li>
+          <span className="text-stone-500">{t('sum.origin')}: </span>
+          {o && o.status === 'verified' && o.country ? t('sum.originVerified', { country: o.country.toUpperCase() }) : t('sum.originUnverified')}
+          {o?.evidence[0] && (
+            <>
+              {' '}
+              · <a className="text-brass-300 hover:underline" href={o.evidence[0].url} target="_blank" rel="noreferrer">{t('sum.source')}</a>
+            </>
+          )}
+        </li>
+        <li>
+          <span className="text-stone-500">{t('sum.history')}: </span>
+          {t('sum.historyDetail', { e: result.historyEpisodeCount, g: result.pastGuestCount, c: Math.round(result.guestCoverage * 100) })}
+        </li>
+        <li>
+          <span className="text-stone-500">{t('sum.languages')}: </span>
+          {lang === 'es' ? lp.preferenceEs : lp.preference}{' '}
+          <span className="text-stone-500">({t(`sum.conf.${lp.confidence}` as Parameters<typeof t>[0])})</span>
+          {lp.internationalGuests.length > 0 && <span className="text-stone-500"> · {t('sum.intl', { n: lp.internationalGuests.length })}</span>}
+        </li>
+        <li>
+          <span className="text-stone-500">{t('sum.signal')}: </span>
+          {result.qlooMode === 'LIVE' ? t(SIGNAL_KEYS[result.signalStrategy]) : t('sum.signalMock')}
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+const CHECK_ICON = (ok: boolean | null) => (ok === true ? '✓' : ok === false ? '✗' : '?');
+
+/** What Qloo proposed, what the agent verified, and what it rejected, with reasons. */
+function DiscoveryPanel({ result, show }: { result: RecommendResult; show: ShowSummary }) {
+  const { lang, t } = useI18n();
+  const f = result.funnel;
+  const c = result.comparison;
+  if (result.qlooMode !== 'LIVE')
+    return (
+      <div className="card border-white/10 p-5 text-sm">
+        <h3 className="font-display text-2xl">{t('disc.title')}</h3>
+        <p className="mt-1 text-stone-400">{t('disc.notLive')}</p>
+      </div>
+    );
+  const steps: Array<[string, number]> = [
+    [t('funnel.proposed'), f.proposed],
+    [t('funnel.identity'), f.identityVerified],
+    [t('funnel.ranked'), f.ranked],
+    [t('funnel.language'), f.languageCompatible],
+    [t('funnel.shortlist'), f.inShortlist],
+  ];
+  return (
+    <div className="card border-brass-400/30 p-5 text-sm">
       <h3 className="flex items-center gap-2 font-display text-2xl">{t('disc.title')} <Badge p="LIVE" /></h3>
-      <p className="mt-1 text-sm text-stone-400">{t('disc.note')}</p>
-      <ul className="mt-4 space-y-3">
-        {result.discoveries.map((d) => (
-          <li key={d.qlooEntityId} className="rounded-xl border border-white/10 p-3">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="font-semibold">{d.name}</span>
-              <span className="text-xs text-stone-500">{t('disc.rank', { n: d.qlooRank })}{d.popularity !== undefined ? ` · ${t('disc.popularity', { p: Math.round(d.popularity * 100) })}` : ''}</span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2 text-[11px]"><StatusChips rec={d} show={show} /></div>
+      <p className="mt-1 text-stone-400">{t('disc.note')}</p>
+      <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {steps.map(([label, n]) => (
+          <li key={label} className="rounded-lg bg-white/5 p-2 text-center">
+            <p className="text-2xl font-semibold tabular-nums">{n}</p>
+            <p className="text-[11px] text-stone-400">{label}</p>
           </li>
         ))}
-      </ul>
+      </ol>
+      <p className="mt-3 text-stone-300">{lang === 'es' ? f.diagnosisTextEs : f.diagnosisText}</p>
+      {f.attempts.length > 1 && <p className="mt-1 text-xs text-sky-200/80">{t('disc.replanned', { a: f.attempts.map((x) => `${x.signal} (${x.proposed})`).join(' → ') })}</p>}
+      {c && (
+        <div className="mt-3 rounded-lg border border-white/10 p-3">
+          <p className="text-xs uppercase tracking-widest text-stone-500">{t('cmp.title')}</p>
+          <p className="mt-1 text-stone-200">{lang === 'es' ? c.verdictEs : c.verdict}</p>
+          <ul className="mt-1 text-xs text-stone-400">
+            <li>{t('cmp.overlap', { n: c.overlap, k: c.k })}</li>
+            {c.newRelations.length > 0 && <li>{t('cmp.new', { names: c.newRelations.map((x) => `${x.name}${x.baselineRank ? ` (${t('cmp.baselineRank', { n: x.baselineRank })})` : ''}`).join(', ') })}</li>}
+            {c.confirmations.length > 0 && <li>{t('cmp.confirm', { names: c.confirmations.join(', ') })}</li>}
+            <li>{t('cmp.pending', { n: c.pending })}</li>
+          </ul>
+        </div>
+      )}
+      {result.qlooProposals.length > 0 && (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-stone-300">{t('disc.all', { n: result.qlooProposals.length })}</summary>
+          <ul className="mt-2 space-y-2">
+            {result.qlooProposals.map((p) => (
+              <li key={p.qlooEntityId} className="rounded-lg border border-white/10 p-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-semibold">{p.name}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] ${p.outcome === 'ranked' ? 'bg-emerald-400/10 text-emerald-300' : p.outcome === 'pending' ? 'bg-fuchsia-500/15 text-fuchsia-200' : 'bg-white/10 text-stone-400'}`}>
+                    {t(`disc.outcome.${p.outcome}` as Parameters<typeof t>[0])} · {lang === 'es' ? p.reasonEs : p.reason}
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-500">{t('disc.rank', { n: p.qlooRank })} · {t('disc.signal', { s: p.signal })}</p>
+                <ul className="mt-1 space-y-0.5 text-xs text-stone-400">
+                  {p.checks.map((ch) => (
+                    <li key={ch.check}>
+                      <span className="mr-1 font-mono">{CHECK_ICON(ch.ok)}</span>
+                      {t(`check.${ch.check}` as Parameters<typeof t>[0])}: {lang === 'es' ? ch.detailEs : ch.detail}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {result.discoveries.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs uppercase tracking-widest text-stone-500">{t('disc.pendingTitle')}</p>
+          <ul className="mt-2 space-y-2">
+            {result.discoveries.map((d) => (
+              <li key={d.qlooEntityId} className="rounded-lg border border-white/10 p-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-semibold">{d.name}</span>
+                  <span className="text-xs text-stone-500">{t('disc.rank', { n: d.qlooRank })}{d.popularity !== undefined ? ` · ${t('disc.popularity', { p: Math.round(d.popularity * 100) })}` : ''}</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px]"><StatusChips rec={d} show={show} /></div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -362,10 +496,11 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
           <h3 className="font-display text-3xl">{t('recs.title')}</h3>
           <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
         </div>
+        <AnalysisSummary result={result} show={show} />
         {warnings.map((w) => <div key={w} className="rounded-xl border border-brass-400/30 bg-brass-400/10 px-4 py-3 text-sm text-brass-300">{w}</div>)}
         {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
         {result.recommendations.map((r) => <RecommendationCard key={r.key} rec={r} show={show} result={result} />)}
-        <DiscoveriesPanel result={result} show={show} />
+        <DiscoveryPanel result={result} show={show} />
         {result.discarded.length > 0 && (
           <details className="card p-4 text-sm text-stone-300">
             <summary className="cursor-pointer font-semibold">{t('recs.discarded', { n: result.discarded.length })}</summary>

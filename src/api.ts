@@ -1,4 +1,5 @@
 import type { AgentResult } from '../core/agent/agent';
+import type { BaselineComparison } from '../core/discovery';
 import type { BacktestResult } from '../core/backtest';
 import type { PodcastSource } from '../core/types';
 import type { GuestProfile } from '../core/profiles';
@@ -7,7 +8,12 @@ import type catalogJson from '../data/catalog.json';
 export type Catalog = typeof catalogJson;
 export type CatalogShow = Catalog['shows'][number];
 
-export type RecommendResult = AgentResult & { profiles: Record<string, GuestProfile | null> };
+export type RecommendResult = AgentResult & {
+  profiles: Record<string, GuestProfile | null>;
+  /** LIVE only: the same analysis without Qloo, to show what Qloo added. */
+  comparison: BaselineComparison | null;
+  origin: CatalogShow['origin'] | null;
+};
 
 export interface ShowSummary {
   id: string;

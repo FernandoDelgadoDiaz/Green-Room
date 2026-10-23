@@ -61,4 +61,6 @@ export interface Appearance {
   url: string | null;
   /** Extraction confidence of the guest name in this appearance's title. */
   confidence?: GuestMention['confidence'];
+  /** Language of this interview: its title when clear-cut, else the show's declared language. */
+  language?: string;
 }

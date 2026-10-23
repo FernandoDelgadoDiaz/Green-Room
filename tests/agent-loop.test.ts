@@ -48,7 +48,9 @@ describe('agent loop: observe → decide → act → verify → replan', () => {
     const q = new ScriptedQloo({ guestContext: true });
     const r = await runAgent({ target: byId('lex-fridman'), others: others('lex-fridman'), qloo: q });
     expect(r.signalStrategy).toBe('guests');
-    expect(tools(r)).not.toContain('qloo_find_podcast');
+    // No signal fallback before the audience signal is settled (the discovery may still replan later).
+    const order = tools(r);
+    expect(order.slice(0, order.indexOf('settle_signals'))).not.toContain('qloo_find_podcast');
     expect(r.discoveries.map((d) => d.name)).toEqual(['Someone Brand New']);
     for (const s of r.trace) expect(s.why && s.es.why).toBeTruthy();
   });

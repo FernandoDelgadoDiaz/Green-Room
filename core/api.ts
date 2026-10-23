@@ -8,7 +8,8 @@ import type { PodcastDataset } from './types';
 import { runAgent } from './agent/agent';
 import { runBacktest } from './backtest';
 import { LiveQlooAdapter, summarizeMetrics, type QlooLimits } from './qloo/client';
-import { MockQlooAdapter } from './qloo/mock';
+import { MockQlooAdapter, NoQlooAdapter } from './qloo/mock';
+import { compareWithBaseline } from './discovery';
 import { QlooError, type QlooAdapter } from './qloo/types';
 import { HourlyQuota, limitsFromEnv, liveSwitch, verifyBearer, type LiveEnv } from './access';
 import { runComparison, runCoverage, runOriginality, summarizeComparison, summarizeCoverage } from './experiment';
@@ -23,6 +24,8 @@ export const CORE_DATASETS: PodcastDataset[] = ALL_DATASETS.filter((d) => CORE_I
 
 export type CatalogShow = (typeof catalogJson)['shows'][number];
 export const CATALOG = catalogJson;
+/** Verified origin country per show (shows without a verified origin are absent). */
+export const ORIGIN_OF = new Map(CATALOG.shows.filter((s) => s.origin.status === 'verified' && s.origin.country).map((s) => [s.id, s.origin.country as string]));
 
 export interface Env extends LiveEnv {
   /** Set to "0" to skip live Wikipedia lookups (tests, offline environments). */
@@ -112,7 +115,11 @@ async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter):
   if (!target) return { status: 404, body: { error: `Unknown show ${req.showId}` } };
   const others = DATASETS.filter((d) => d.id !== target.id);
   if (req.action === 'recommend') {
-    const result = await runAgent({ target, others, qloo: qlooFor(), k: Math.min(Math.max(req.k ?? 5, 1), 10) });
+    const k = Math.min(Math.max(req.k ?? 5, 1), 10);
+    const qloo = qlooFor();
+    const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF });
+    // LIVE: also run the baseline (no Qloo, no API calls) on the same data and rules, to show what Qloo added.
+    const comparison = qloo.mode === 'LIVE' ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF }), result) : null;
     const profiles = await profilesFor(result.recommendations, env.PROFILE_LOOKUP !== '0');
     // "Probable" language: an identity-checked Wikipedia article exists in the show's language.
     // Indirect evidence only; it never becomes "confirmed".
@@ -128,7 +135,7 @@ async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter):
         };
       }
     }
-    return { status: 200, body: { ...result, ranked: undefined, profiles } };
+    return { status: 200, body: { ...result, ranked: undefined, profiles, comparison, origin: CATALOG.shows.find((s) => s.id === target.id)?.origin ?? null } };
   }
   if (req.action === 'backtest') {
     if (!/^\d{4}-\d{2}-\d{2}/.test(req.cutoff)) return { status: 400, body: { error: 'cutoff must be YYYY-MM-DD' } };

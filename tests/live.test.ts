@@ -94,6 +94,20 @@ describe('private endpoint access control', () => {
     expect(JSON.stringify(r.body)).not.toContain(KEY);
   });
 
+  it('LIVE recommend carries the baseline comparison, the funnel and the verified origin; public stays MOCK without them', async () => {
+    vi.stubGlobal('fetch', fakeQloo().impl);
+    const r = await handleLive({ action: 'recommend', showId: 'creativo' }, liveEnv(), auth);
+    expect(r.status).toBe(200);
+    const b = r.body as { comparison: { k: number; proposed: number; baselineTop: string[] } | null; funnel: { proposed: number }; origin: { country: string } };
+    expect(b.comparison).not.toBeNull();
+    expect(b.comparison!.baselineTop.length).toBe(b.comparison!.k);
+    expect(b.comparison!.proposed).toBe(b.funnel.proposed);
+    expect(b.origin.country).toBe('mx');
+    const pub = await handleApi({ action: 'recommend', showId: 'creativo' }, liveEnv());
+    expect((pub.body as { qlooMode: string; comparison: unknown }).qlooMode).toBe('MOCK');
+    expect((pub.body as { comparison: unknown }).comparison).toBeNull();
+  });
+
   it('diagnose auth reports a rejected key without leaking it', async () => {
     vi.stubGlobal('fetch', fakeQloo(0, 401).impl);
     const r = await handleLive({ action: 'diagnose', test: 'auth' }, liveEnv(), auth);

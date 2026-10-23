@@ -9,9 +9,18 @@ import { parseFeed } from '../core/feed';
 import { extractGenericGuests } from '../core/extract-generic';
 import type { Episode, PodcastDataset } from '../core/types';
 
+interface Origin {
+  country: string | null;
+  status: 'verified' | 'unverified';
+  basis: 'production' | 'host' | null;
+  evidence: Array<{ url: string; quote: string }>;
+  note?: string;
+}
+
 interface SourceShow {
   id: string;
-  country: string;
+  /** Apple Podcasts chart the show was taken from (null when added for its verified origin). Not its origin. */
+  country: string | null;
   chartRank: number | null;
   alsoCharts?: Record<string, number>;
   appleId: number;
@@ -27,9 +36,10 @@ interface SourceShow {
   appleUrl: string;
   existing?: boolean;
   notAnalyzable?: 'feed_not_snapshotted' | 'inactive_solo';
+  origin: Origin;
 }
 
-const src = JSON.parse(readFileSync('data/catalog/sources.json', 'utf8')) as { retrievedAt: string; charts: Record<string, { url: string; updated: string }>; shows: SourceShow[] };
+const src = JSON.parse(readFileSync('data/catalog/sources.json', 'utf8')) as { retrievedAt: string; originRule: string; originCheckedAt: string; charts: Record<string, { url: string; updated: string }>; shows: SourceShow[] };
 const MAX_EPISODES = 500;
 const NOW = new Date(`${src.retrievedAt}T12:00:00Z`);
 const rerun = /\b(TOP RATED|BEST OF|Recomendado|Rebroadcast|Encore|REPLAY|Re-?release)\b/i;
@@ -81,18 +91,22 @@ for (const s of src.shows) {
   const ageDays = (NOW.getTime() - new Date(last).getTime()) / 86400_000;
   let status: 'analyzable' | 'limited' | 'not_analyzable' = 'analyzable';
   let reason: string | null = null;
-  if (s.notAnalyzable === 'inactive_solo' || ageDays > 365) (status = 'not_analyzable'), (reason = 'inactive');
+  if (s.notAnalyzable === 'inactive_solo') (status = 'not_analyzable'), (reason = 'inactive');
   else if (!ds) (status = 'not_analyzable'), (reason = 'feed_not_snapshotted');
   else if (coverage < 0.3) (status = 'limited'), (reason = 'few_guest_names');
+  // A feed with no episode in the last year can still be analyzed, but the history is old: say so.
+  else if (ageDays > 365) (status = 'limited'), (reason = 'feed_stale');
   out.push({
     id: s.id,
     name: s.name,
     host: s.host,
     artwork: s.artwork,
     genre: s.genre,
-    language: ds?.language ?? (s.country === 'us' || s.country === 'gb' ? 'en' : 'es'),
+    language: ds?.language ?? (s.origin.country === 'us' || s.origin.country === 'gb' || s.country === 'us' || s.country === 'gb' ? 'en' : 'es'),
+    origin: s.origin,
     description: ds?.description ?? null,
-    charts: [{ country: s.country, rank: s.chartRank }, ...Object.entries(s.alsoCharts ?? {}).map(([country, rank]) => ({ country, rank }))],
+    // Popularity only: a chart position never decides the country a show is listed under.
+    charts: [...(s.country ? [{ country: s.country, rank: s.chartRank }] : []), ...Object.entries(s.alsoCharts ?? {}).map(([country, rank]) => ({ country, rank }))],
     appleUrl: s.appleUrl,
     feedUrl: s.feedUrl,
     appleTrackCount: s.trackCount,
@@ -101,11 +115,11 @@ for (const s of src.shows) {
     status,
     statusReason: reason,
   });
-  console.log(`${s.id.padEnd(22)} ${status.padEnd(15)} eps=${String(eps.length).padStart(4)} guests=${Math.round(coverage * 100)}% last=${last.slice(0, 10)}`);
+  console.log(`${s.id.padEnd(22)} ${(s.origin.country ?? '??').padEnd(3)} ${status.padEnd(15)} eps=${String(eps.length).padStart(4)} guests=${Math.round(coverage * 100)}% last=${last.slice(0, 10)}`);
 }
 writeFileSync(
   'data/catalog.json',
-  JSON.stringify({ retrievedAt: src.retrievedAt, charts: src.charts, countries: ['us', 'mx', 'gb', 'ar', 'es'], shows: out }, null, 1) + '\n',
+  JSON.stringify({ retrievedAt: src.retrievedAt, originRule: src.originRule, originCheckedAt: src.originCheckedAt, charts: src.charts, countries: ['us', 'mx', 'gb', 'ar', 'es'], shows: out }, null, 1) + '\n',
 );
 
 // Static imports so the Netlify Function bundles every dataset.
