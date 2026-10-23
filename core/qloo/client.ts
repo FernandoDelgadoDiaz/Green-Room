@@ -21,8 +21,14 @@ export interface QlooLimits {
   timeoutMs: number;
   /** Wall-clock budget for the whole analysis; no new request starts after it. */
   deadlineMs: number;
-  /** Extra attempts for 429/5xx/network errors (bounded by the deadline). */
+  /** Extra attempts for 5xx/network errors (bounded by the deadline). */
   retries: number;
+  /** Extra attempts for HTTP 429 (default: `retries`). Each one is a real call and counts in maxCalls. */
+  retries429?: number;
+  /** Minimum spacing between request starts, so bursts do not trip Qloo's rate limit (default 0). */
+  minIntervalMs?: number;
+  /** Longest wait honored from a Retry-After header (default 2 s; bounded by the deadline). */
+  maxRetryWaitMs?: number;
 }
 
 export const DEFAULT_LIMITS: QlooLimits = { maxCalls: 80, concurrency: 6, timeoutMs: 8000, deadlineMs: 45000, retries: 1 };
@@ -48,6 +54,8 @@ export interface QlooMetrics {
   maxInFlight: number;
   latenciesMs: number[];
   startedAt: number;
+  /** Requests that finally failed (after any retries): answers the analysis really lost. */
+  lost?: number;
 }
 
 export function summarizeMetrics(m: QlooMetrics) {
@@ -121,21 +129,51 @@ export class LiveQlooAdapter implements QlooAdapter {
   readonly mode = 'LIVE' as const;
   readonly calls: QlooCall[] = [];
   readonly limits: QlooLimits;
-  readonly metrics: QlooMetrics = { networkCalls: 0, cacheHits: 0, retries: 0, errors: {}, statuses: {}, maxInFlight: 0, latenciesMs: [], startedAt: Date.now() };
+  readonly metrics: QlooMetrics = { networkCalls: 0, cacheHits: 0, retries: 0, errors: {}, statuses: {}, maxInFlight: 0, latenciesMs: [], startedAt: Date.now(), lost: 0 };
   private readonly baseUrl: string;
   private readonly fetchImpl: FetchLike;
   private inFlight = 0;
   private readonly waiting: Array<() => void> = [];
+  /** Adaptive concurrency: halved on every 429, raised back one step after a run of successes. */
+  private cap: number;
+  private okStreak = 0;
+  /** Rate gate shared by every request of this adapter: spacing between starts and 429 cool-down. */
+  private nextStartAt = 0;
+  private cooldownUntil = 0;
 
   constructor(private readonly opts: LiveQlooOptions) {
     if (!opts.apiKey) throw new QlooError('QLOO_API_KEY is not set', null, 'config');
     this.baseUrl = opts.baseUrl || QLOO_HACKATHON_BASE_URL;
     this.fetchImpl = opts.fetchImpl ?? (globalThis.fetch as unknown as FetchLike);
     this.limits = { ...DEFAULT_LIMITS, ...Object.fromEntries(Object.entries(opts.limits ?? {}).filter(([, v]) => v !== undefined && Number.isFinite(v))) };
+    this.cap = this.limits.concurrency;
+  }
+
+  /** Qloo calls still allowed for this analysis (the agent uses it to skip optional steps in time). */
+  budgetLeft(): number {
+    return Math.max(0, this.limits.maxCalls - (this.opts.sharedBudget ?? this.metrics).networkCalls);
+  }
+
+  /** Waits for the rate gate: minimum spacing between starts and any 429 cool-down. */
+  private async pace() {
+    const now = Date.now();
+    const at = Math.max(now, this.nextStartAt, this.cooldownUntil);
+    this.nextStartAt = at + (this.limits.minIntervalMs ?? 0);
+    if (at > now) await new Promise((r) => setTimeout(r, at - now));
+  }
+
+  private throttled(waitMs: number) {
+    this.cooldownUntil = Math.max(this.cooldownUntil, Date.now() + waitMs);
+    this.cap = Math.max(1, Math.floor(this.cap / 2));
+    this.okStreak = 0;
+  }
+
+  private succeeded() {
+    if (++this.okStreak >= 8 && this.cap < this.limits.concurrency) ((this.cap += 1), (this.okStreak = 0));
   }
 
   private async slot<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.inFlight >= this.limits.concurrency) await new Promise<void>((r) => this.waiting.push(r));
+    while (this.inFlight >= this.cap) await new Promise<void>((r) => this.waiting.push(r));
     this.inFlight++;
     this.metrics.maxInFlight = Math.max(this.metrics.maxInFlight, this.inFlight);
     try {
@@ -161,6 +199,11 @@ export class LiveQlooAdapter implements QlooAdapter {
     if (remaining <= 0) {
       this.fail('deadline');
       throw new QlooError(`Analysis time budget reached (${this.limits.deadlineMs} ms)`, null, 'deadline');
+    }
+    await this.pace();
+    if (budget.networkCalls >= this.limits.maxCalls) {
+      this.fail('budget');
+      throw new QlooError(`Qloo call budget reached (${this.limits.maxCalls} per analysis)`, null, 'budget');
     }
     this.metrics.networkCalls++;
     if (this.opts.sharedBudget) this.opts.sharedBudget.networkCalls++;
@@ -203,11 +246,16 @@ export class LiveQlooAdapter implements QlooAdapter {
             this.metrics.retries++;
             continue;
           }
+          const ra = Number(res.headers?.get('retry-after'));
+          const wait = Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : 1000 * 2 ** attemptNo, this.limits.maxRetryWaitMs ?? 2000);
+          if (res.status === 429) this.throttled(wait); // every request of this analysis backs off, not just this one
+          else if (res.ok) this.succeeded();
+          const maxRetries = res.status === 429 ? (this.limits.retries429 ?? this.limits.retries) : this.limits.retries;
           const retryable = res.status === 429 || res.status >= 500;
-          if (retryable && attemptNo < this.limits.retries) {
+          const timeLeft = this.limits.deadlineMs - (Date.now() - (this.opts.sharedBudget ?? this.metrics).startedAt);
+          if (retryable && attemptNo < maxRetries && this.budgetLeft() > 0 && timeLeft > wait + 1000) {
             this.metrics.retries++;
-            const ra = Number(res.headers?.get('retry-after'));
-            await new Promise((r) => setTimeout(r, Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : 500 * 2 ** attemptNo, 2000)));
+            await new Promise((r) => setTimeout(r, wait));
             continue;
           }
           if (res.status === 404) {
@@ -235,6 +283,7 @@ export class LiveQlooAdapter implements QlooAdapter {
         }
       });
     } catch (err) {
+      this.metrics.lost = (this.metrics.lost ?? 0) + 1;
       if (err instanceof QlooError) {
         if (err.kind !== 'http') this.calls.push({ endpoint: path, params, status: 'error', ms: Date.now() - started, resultCount: 0, note: err.message });
         throw err;

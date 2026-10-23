@@ -1,24 +1,10 @@
 // Public endpoint: POST /api/discover. Real Qloo for anyone, no token, inside the shared limits of
 // core/public-live/guard.ts. Off unless QLOO_PUBLIC_ENABLED=true (independent of QLOO_LIVE_ENABLED).
-// Only status / recommend / analyze exist here; private diagnostics stay on /api/live.
+// Only status / recommend / analyze / job exist here; private diagnostics stay on /api/live.
+// The analysis itself runs in discover-run-background (up to 15 min); this function answers in seconds.
 import { handlePublicLive } from '../../core/public-live/handler';
 import { blobsStore } from '../../core/public-live/blobs-store';
-
-const ENV_KEYS = [
-  'QLOO_PUBLIC_ENABLED',
-  'QLOO_API_KEY',
-  'QLOO_BASE_URL',
-  'PUBLIC_DAILY_QLOO_CALLS',
-  'PUBLIC_CALLS_PER_ANALYSIS',
-  'PUBLIC_MAX_CONCURRENT',
-  'PUBLIC_FRESH_PER_IP_PER_DAY',
-  'PUBLIC_OPEN_FEEDS_PER_DAY',
-  'PUBLIC_CACHE_HOURS',
-  'PUBLIC_IP_SALT',
-  'EXTERNAL_VERIFY',
-  'EXTERNAL_VERIFY_MAX',
-  'PROFILE_LOOKUP',
-] as const;
+import { publicEnv } from '../../core/public-live/env';
 
 export default async (req: Request, context?: { ip?: string }): Promise<Response> => {
   const headers = { 'Cache-Control': 'no-store' };
@@ -29,17 +15,28 @@ export default async (req: Request, context?: { ip?: string }): Promise<Response
   } catch {
     return Response.json({ error: 'Invalid JSON' }, { status: 400, headers });
   }
-  const env = Object.fromEntries(ENV_KEYS.map((k) => [k, process.env[k]]));
+  // Starts the background runner; Netlify answers 202 as soon as the invocation is accepted.
+  const trigger = async (jobId: string) => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    try {
+      const res = await fetch(new URL('/api/discover-run', req.url), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jobId }), signal: ctrl.signal });
+      return res.status === 202 || res.ok;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
   try {
-    const { status, body: out } = await handlePublicLive(body, env, { store: blobsStore(), ip: context?.ip ?? req.headers.get('x-nf-client-connection-ip') });
+    const { status, body: out } = await handlePublicLive(body, publicEnv(), { store: blobsStore(), ip: context?.ip ?? req.headers.get('x-nf-client-connection-ip'), trigger });
     return Response.json(out, { status, headers });
   } catch {
     return Response.json({ code: 'internal', message: { en: 'Internal error. Nothing was substituted.', es: 'Error interno. No se reemplazó por otro resultado.' }, retry: true }, { status: 500, headers });
   }
 };
 
-// Per-IP burst limit at Netlify's edge, on top of the shared daily limits.
+// Per-IP burst limit at Netlify's edge, on top of the shared daily limits. Polling a job is one
+// request every few seconds, so the window allows it.
 export const config = {
   path: '/api/discover',
-  rateLimit: { windowLimit: 10, windowSize: 60, aggregateBy: ['ip', 'domain'] },
+  rateLimit: { windowLimit: 40, windowSize: 60, aggregateBy: ['ip', 'domain'] },
 };

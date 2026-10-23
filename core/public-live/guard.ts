@@ -63,6 +63,9 @@ export interface PublicEnv {
   PUBLIC_FRESH_PER_IP_PER_DAY?: string;
   PUBLIC_OPEN_FEEDS_PER_DAY?: string;
   PUBLIC_CACHE_HOURS?: string;
+  PUBLIC_PARTIAL_CACHE_HOURS?: string;
+  PUBLIC_JOB_MAX_SECONDS?: string;
+  PUBLIC_EXTERNAL_VERIFY_MAX?: string;
   PUBLIC_IP_SALT?: string;
 }
 
@@ -73,6 +76,12 @@ export interface PublicConfig {
   freshPerIpPerDay: number;
   openFeedsPerDay: number;
   cacheHours: number;
+  /** Results with some lost Qloo answers are cached for less time, labeled partial. */
+  partialCacheHours: number;
+  /** Wall-clock budget of one background analysis (Qloo deadline plus verification and baseline). */
+  jobMaxMs: number;
+  /** Qloo proposals verified in Wikidata/Wikipedia per public analysis (free sources; time is the cost). */
+  externalVerifyMax: number;
   /** A lease not settled after this long is considered dead (its reservation stays spent). */
   leaseMs: number;
 }
@@ -83,14 +92,18 @@ const clamp = (v: string | undefined, def: number, min: number, max: number) => 
 };
 
 export function publicConfig(env: PublicEnv): PublicConfig {
+  const jobMaxMs = clamp(env.PUBLIC_JOB_MAX_SECONDS, 240, 60, 840) * 1000;
   return {
     dailyCalls: clamp(env.PUBLIC_DAILY_QLOO_CALLS, 400, 0, 5000),
-    callsPerAnalysis: clamp(env.PUBLIC_CALLS_PER_ANALYSIS, 60, 10, 150),
+    callsPerAnalysis: clamp(env.PUBLIC_CALLS_PER_ANALYSIS, 80, 10, 150),
     maxConcurrent: clamp(env.PUBLIC_MAX_CONCURRENT, 2, 1, 5),
     freshPerIpPerDay: clamp(env.PUBLIC_FRESH_PER_IP_PER_DAY, 3, 1, 20),
     openFeedsPerDay: clamp(env.PUBLIC_OPEN_FEEDS_PER_DAY, 10, 0, 100),
     cacheHours: clamp(env.PUBLIC_CACHE_HOURS, 24, 1, 168),
-    leaseMs: 75_000,
+    partialCacheHours: clamp(env.PUBLIC_PARTIAL_CACHE_HOURS, 1, 0, 24),
+    jobMaxMs,
+    externalVerifyMax: clamp(env.PUBLIC_EXTERNAL_VERIFY_MAX, 24, 1, 30),
+    leaseMs: jobMaxMs + 60_000,
   };
 }
 
@@ -190,14 +203,14 @@ export class PublicGuard {
   }
 
   async cached<T>(cacheKey: string): Promise<{ at: string; body: T; fresh: boolean } | null> {
-    const hit = (await this.store.get(`result/${cacheKey}`))?.data as { at: string; body: T } | undefined;
+    const hit = (await this.store.get(`result/${cacheKey}`))?.data as { at: string; body: T; ttlHours?: number } | undefined;
     if (!hit) return null;
-    return { ...hit, fresh: this.now() - Date.parse(hit.at) < this.cfg.cacheHours * 3600_000 };
+    return { at: hit.at, body: hit.body, fresh: this.now() - Date.parse(hit.at) < (hit.ttlHours ?? this.cfg.cacheHours) * 3600_000 };
   }
 
-  async saveResult(cacheKey: string, body: unknown): Promise<string> {
+  async saveResult(cacheKey: string, body: unknown, ttlHours = this.cfg.cacheHours): Promise<string> {
     const at = new Date(this.now()).toISOString();
-    await this.store.put(`result/${cacheKey}`, { at, body });
+    await this.store.put(`result/${cacheKey}`, { at, body, ttlHours });
     return at;
   }
 }

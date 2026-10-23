@@ -2,7 +2,7 @@
 // Qloo is a scripted LIVE-shaped adapter here: these tests prove the guard and the handler, not Qloo.
 import { describe, expect, it } from 'vitest';
 import { MemoryCasStore, PublicGuard, publicConfig, type CasStore } from '../core/public-live/guard';
-import { handlePublicLive, liveHealth, type PublicLiveEnv } from '../core/public-live/handler';
+import { handlePublicLive, liveHealth, runPublicJob, type PublicLiveDeps, type PublicLiveEnv } from '../core/public-live/handler';
 import { handleLive } from '../core/api';
 import { sha256Hex } from '../core/access';
 import { QlooError, type QlooAdapter, type QlooCall } from '../core/qloo/types';
@@ -56,6 +56,16 @@ function deps(store: CasStore | null, opts: { mode?: Parameters<typeof scripted>
   };
 }
 
+/** Public request as the browser makes it: start (202 + jobId) → background job → poll the outcome. */
+async function live(req: unknown, env: PublicLiveEnv, d: PublicLiveDeps) {
+  const jobs: Promise<void>[] = [];
+  const full: PublicLiveDeps = { ...d, trigger: d.trigger ?? (async (id) => (jobs.push(runPublicJob(id, env, d)), true)) };
+  const r = await handlePublicLive(req, env, full);
+  if (r.status !== 202) return r;
+  await Promise.all(jobs);
+  return handlePublicLive({ action: 'job', jobId: (r.body as { jobId: string }).jobId }, env, full);
+}
+
 describe('shared guard: limits hold across concurrent requests (CAS on one daily document)', () => {
   it('never over-commits the daily budget, whatever the concurrency', async () => {
     const store = new MemoryCasStore();
@@ -81,7 +91,7 @@ describe('shared guard: limits hold across concurrent requests (CAS on one daily
     let now = T0;
     const g = new PublicGuard(new MemoryCasStore(), publicConfig({ PUBLIC_CALLS_PER_ANALYSIS: '60' }), () => now);
     expect((await g.reserve('catalog', '1.1.1.1')).ok).toBe(true);
-    now += 80_000;
+    now += g.cfg.leaseMs + 1000; // longer than a background job may run
     expect(await g.usage()).toMatchObject({ used: 60, inFlight: 0 });
   });
 
@@ -111,7 +121,7 @@ describe('public endpoint: scope and switches', () => {
 
   it('off by default: no switch → 503, and Qloo is never built', async () => {
     const built: QlooAdapter[] = [];
-    const r = await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, { ...ENV, QLOO_PUBLIC_ENABLED: undefined }, deps(new MemoryCasStore(), { built }));
+    const r = await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, { ...ENV, QLOO_PUBLIC_ENABLED: undefined }, deps(new MemoryCasStore(), { built }));
     expect(r).toMatchObject({ status: 503, body: { code: 'disabled' } });
     expect(built).toHaveLength(0);
     // The private switch does not turn the public path on.
@@ -120,10 +130,10 @@ describe('public endpoint: scope and switches', () => {
 
   it('fails closed without the shared store (no reliable limit → no Qloo call)', async () => {
     const built: QlooAdapter[] = [];
-    const r = await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(null, { built }));
+    const r = await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(null, { built }));
     expect(r).toMatchObject({ status: 503, body: { code: 'guard_unavailable' } });
     const broken: CasStore = { get: async () => { throw new Error('blobs down'); }, set: async () => false, put: async () => undefined };
-    expect(await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(broken, { built }))).toMatchObject({ status: 503, body: { code: 'guard_unavailable' } });
+    expect(await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(broken, { built }))).toMatchObject({ status: 503, body: { code: 'guard_unavailable' } });
     expect(built).toHaveLength(0);
   });
 
@@ -138,7 +148,7 @@ describe('public endpoint: LIVE results, cache and honest failures', () => {
   it('runs LIVE once, labels it, includes the baseline comparison, then serves it from cache at zero Qloo cost', async () => {
     const store = new MemoryCasStore();
     const built: QlooAdapter[] = [];
-    const r1 = await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }));
+    const r1 = await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }));
     expect(r1.status).toBe(200);
     const b1 = r1.body as { live: { mode: string; cached: boolean; qlooCalls: number }; qlooMode: string; comparison: unknown; recommendations: unknown[] };
     expect(b1.live).toMatchObject({ mode: 'LIVE', cached: false });
@@ -146,7 +156,7 @@ describe('public endpoint: LIVE results, cache and honest failures', () => {
     expect(b1.qlooMode).toBe('LIVE');
     expect(b1.comparison).not.toBeNull();
     expect(JSON.stringify(b1)).not.toContain(KEY);
-    const r2 = await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, ip: '198.51.100.1' }));
+    const r2 = await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, ip: '198.51.100.1' }));
     expect((r2.body as { live: { cached: boolean } }).live.cached).toBe(true);
     expect(built).toHaveLength(1);
     const usage = await new PublicGuard(store, publicConfig(ENV), () => T0).usage();
@@ -155,35 +165,40 @@ describe('public endpoint: LIVE results, cache and honest failures', () => {
 
   it('Qloo down → 502 with an explanation and retry; no result, no MOCK, nothing cached', async () => {
     const store = new MemoryCasStore();
-    const r = await handlePublicLive({ action: 'recommend', showId: 'creativo' }, ENV, deps(store, { mode: 'down' }));
+    const r = await live({ action: 'recommend', showId: 'creativo' }, ENV, deps(store, { mode: 'down' }));
     expect(r).toMatchObject({ status: 502, body: { code: 'qloo_unavailable', retry: true } });
     expect(JSON.stringify(r.body)).not.toMatch(/recommendations|MOCK/);
     expect(await new PublicGuard(store, publicConfig(ENV), () => T0).cached('show-x')).toBeNull();
   });
 
   it('Qloo rejects the key → 502 qloo_auth (the key itself is never echoed)', async () => {
-    const r = await handlePublicLive({ action: 'recommend', showId: 'creativo' }, ENV, deps(new MemoryCasStore(), { mode: 'auth' }));
+    const r = await live({ action: 'recommend', showId: 'creativo' }, ENV, deps(new MemoryCasStore(), { mode: 'auth' }));
     expect(r).toMatchObject({ status: 502, body: { code: 'qloo_auth' } });
     expect(JSON.stringify(r.body)).not.toContain(KEY);
   });
 
-  it('partial Qloo failures are shown as partial and not cached', async () => {
+  it('partial results are labeled partial and cached only for PUBLIC_PARTIAL_CACHE_HOURS (default 1 h)', async () => {
+    let now = T0;
     const store = new MemoryCasStore();
     const built: QlooAdapter[] = [];
-    const r = await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { mode: 'partial', built }));
+    const r = await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { mode: 'partial', built, now: () => now }));
     expect(r.status).toBe(200);
     expect((r.body as { live: { partial: boolean; errors: Record<string, number> } }).live).toMatchObject({ partial: true, errors: { timeout: expect.any(Number) } });
-    await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, ip: '198.51.100.2' }));
-    expect(built).toHaveLength(2); // re-run, not served from cache
+    const again = await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, ip: '198.51.100.2', now: () => now }));
+    expect((again.body as { live: { cached: boolean; partial: boolean } }).live).toMatchObject({ cached: true, partial: true });
+    expect(built).toHaveLength(1);
+    now += 61 * 60_000;
+    await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, ip: '198.51.100.3', now: () => now }));
+    expect(built).toHaveLength(2); // partial entry expired: a new run
   });
 
   it('when a limit refuses a new run, an earlier dated LIVE result is offered (never MOCK)', async () => {
     let now = T0;
     const store = new MemoryCasStore();
-    await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { now: () => now }));
+    await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { now: () => now }));
     now += 25 * 3600_000; // cache expired
     await new PublicGuard(store, publicConfig(ENV), () => now).setPaused(true, 'incident');
-    const r = await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { now: () => now }));
+    const r = await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { now: () => now }));
     expect(r).toMatchObject({ status: 503, body: { code: 'paused', staleLive: { live: { mode: 'LIVE', stale: true } } } });
   });
 
@@ -202,7 +217,7 @@ describe('public endpoint: open search shows (Apple directory only)', () => {
 
   it('the feed address comes from Apple’s directory, not from the client; the feed is analyzed LIVE', async () => {
     const asked: string[] = [];
-    const r = await handlePublicLive({ action: 'analyze', appleId: 4242, feedUrl: 'https://evil.example/x' }, ENV, {
+    const r = await live({ action: 'analyze', appleId: 4242, feedUrl: 'https://evil.example/x' }, ENV, {
       ...deps(new MemoryCasStore()),
       fetchJson: apple('https://feeds.example.com/show.rss'),
       fetchText: async (u) => (asked.push(u), { url: u, status: 200, contentType: 'application/rss+xml', text: rss('Show de Prueba') }),
@@ -214,7 +229,7 @@ describe('public endpoint: open search shows (Apple directory only)', () => {
 
   it('a feed whose title does not match Apple’s entry is refused before any Qloo call', async () => {
     const built: QlooAdapter[] = [];
-    const r = await handlePublicLive({ action: 'analyze', appleId: 4242 }, ENV, {
+    const r = await live({ action: 'analyze', appleId: 4242 }, ENV, {
       ...deps(new MemoryCasStore(), { built }),
       fetchJson: apple('https://feeds.example.com/show.rss'),
       fetchText: async (u) => ({ url: u, status: 200, contentType: 'application/rss+xml', text: rss('Otro Programa Distinto') }),
@@ -224,12 +239,12 @@ describe('public endpoint: open search shows (Apple directory only)', () => {
   });
 
   it('SSRF protection still applies to the feed Apple lists', async () => {
-    const r = await handlePublicLive({ action: 'analyze', appleId: 4242 }, ENV, { ...deps(new MemoryCasStore()), fetchJson: apple('https://127.0.0.1/feed') });
+    const r = await live({ action: 'analyze', appleId: 4242 }, ENV, { ...deps(new MemoryCasStore()), fetchJson: apple('https://127.0.0.1/feed') });
     expect(r).toMatchObject({ status: 400, body: { code: 'unsafe_feed' } });
   });
 
   it('rejects a non-numeric appleId', async () => {
-    expect(await handlePublicLive({ action: 'analyze', appleId: '../../etc' }, ENV, deps(new MemoryCasStore()))).toMatchObject({ status: 400 });
+    expect(await live({ action: 'analyze', appleId: '../../etc' }, ENV, deps(new MemoryCasStore()))).toMatchObject({ status: 400 });
   });
 });
 
@@ -241,10 +256,10 @@ describe('emergency pause from the private endpoint (no redeploy)', () => {
     expect(await handleLive({ action: 'public-pause' }, PENV, 'Bearer wrong-token-wrong-token-wrong-token', { store })).toMatchObject({ status: 401 });
     expect(await handleLive({ action: 'public-pause', note: 'incident' }, PENV, `Bearer ${TOKEN}`, { store })).toMatchObject({ status: 200, body: { control: { paused: true } } });
     const built: QlooAdapter[] = [];
-    expect(await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }))).toMatchObject({ status: 503, body: { code: 'paused' } });
+    expect(await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }))).toMatchObject({ status: 503, body: { code: 'paused' } });
     expect(built).toHaveLength(0);
     await handleLive({ action: 'public-resume' }, PENV, `Bearer ${TOKEN}`, { store });
-    expect((await handlePublicLive({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }))).status).toBe(200);
+    expect((await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }))).status).toBe(200);
     const usage = await handleLive({ action: 'public-usage' }, PENV, `Bearer ${TOKEN}`, { store });
     expect(usage.body).toMatchObject({ publicEnabled: true, control: { paused: false }, usage: { analyses: 1 } });
   });

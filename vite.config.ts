@@ -21,7 +21,12 @@ function devApi(env: Record<string, string>): Plugin {
         devStore ??= new (await server!.ssrLoadModule('/core/public-live/guard.ts')).MemoryCasStore();
         const out =
           path === '/api/discover'
-            ? await (await server!.ssrLoadModule('/core/public-live/handler.ts')).handlePublicLive(body, env, { store: devStore, ip: req.socket.remoteAddress ?? null })
+            ? await (async () => {
+                const h = await server!.ssrLoadModule('/core/public-live/handler.ts');
+                // Dev: the "background function" is the same process, not awaited.
+                const trigger = async (jobId: string) => (void h.runPublicJob(jobId, env, { store: devStore }), true);
+                return h.handlePublicLive(body, env, { store: devStore, ip: req.socket.remoteAddress ?? null, trigger });
+              })()
             : path === '/api/agent'
             ? await mod.handleApi(body, { PROFILE_LOOKUP: env.PROFILE_LOOKUP })
             : path === '/api/podcasts'

@@ -404,6 +404,7 @@ function DiscoveryPanel({ result, show, part }: { result: RecommendResult; show:
       {(f.typePending > 0 || f.externalOverCap > 0) && <p className="mt-1 text-xs text-stone-400">{t('funnel.pendingDetail', { t: f.typePending, c: f.externalOverCap })}</p>}
       {result.signalDiagnostics.verdict !== 'ok' && result.signalDiagnostics.verdict !== 'not_run' && <p className="mt-1 text-xs text-brass-300">{t(`sigv.${result.signalDiagnostics.verdict}`)}</p>}
       {f.attempts.length > 1 && <p className="mt-1 text-xs text-sky-200/80">{t('disc.replanned', { a: f.attempts.map((x) => `${x.signal} (${x.proposed})`).join(' → ') })}</p>}
+      <NewFromQloo result={result} />
       {c && (
         <div className="mt-3 rounded-lg border border-white/10 p-3">
           <p className="text-xs uppercase tracking-widest text-stone-500">{t('cmp.title')}</p>
@@ -418,6 +419,32 @@ function DiscoveryPanel({ result, show, part }: { result: RecommendResult; show:
           </ul>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Admitted Qloo proposals with no interviews in our corpus: what only Qloo could bring, with their real position. */
+function NewFromQloo({ result }: { result: RecommendResult }) {
+  const { lang, t } = useI18n();
+  const fresh = result.discoveryPositions.filter((p) => p.source === 'qloo-external' && p.eligible).sort((a, b) => a.qlooRank - b.qlooRank).slice(0, 8);
+  if (!fresh.length) return null;
+  return (
+    <div className="mt-3 rounded-lg border border-emerald-400/20 p-3">
+      <p className="text-xs uppercase tracking-widest text-emerald-300/80">{t('disc.newTitle')}</p>
+      <p className="mt-1 text-[11px] text-stone-400">{t('disc.newNote')}</p>
+      <ul className="mt-2 space-y-2">
+        {fresh.map((p) => (
+          <li key={p.name}>
+            <p className="text-stone-100">
+              {p.name}
+              {p.inTopK && <span className="ml-2 text-xs text-emerald-300">{t('disc.newInTop')}</span>}
+              {!p.languageConfirmed && <span className="ml-2 text-xs text-brass-300">{t('disc.newLang')}</span>}
+            </p>
+            <p className="text-[11px] text-stone-500">{t('disc.newRow', { q: p.qlooRank, f: Math.round(p.themeFit * 100), p: p.finalRank ?? '—' })}</p>
+            {!p.inTopK && <p className="text-[11px] text-stone-400">{lang === 'es' ? p.reasonEs : p.reason}</p>}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
