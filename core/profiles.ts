@@ -42,6 +42,8 @@ export function contentWords(text: string): Set<string> {
     stripAccents(text)
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, ' ')
+      // Short forms that the 4-letter minimum would drop ("F1" in a title, "Fórmula 1" in the page).
+      .replace(/\bf1\b/g, 'formula')
       .split(/\s+/)
       .filter((w) => w.length >= 4 && !STOP.has(w)),
   );

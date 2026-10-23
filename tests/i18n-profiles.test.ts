@@ -121,6 +121,10 @@ describe('guest profiles (photos and bios)', () => {
     expect(p.photo).toMatchObject({ license: 'CC BY 3.0', artist: 'Someone' });
   });
 
+  it('matches "F1" in a title with "Fórmula 1" on the page', () => {
+    expect(contextOverlap('Toto Wolff', 'director ejecutivo de Mercedes-Benz en Fórmula 1', ['Toto Wolff: F1 Dominance & Hamilton Relationship'])).toContain('formula');
+  });
+
   it('falls back to the Spanish Wikipedia when there is no English page, with the same context check', async () => {
     const fetchJson = async (url: string) => {
       const u = new URL(url);
