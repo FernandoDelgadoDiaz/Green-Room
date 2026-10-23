@@ -599,10 +599,6 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
       </section>
 
       <section className="order-1 space-y-4 lg:order-2">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <h3 className="font-display text-3xl">{t('recs.title')}</h3>
-          <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
-        </div>
         <QlooContribution result={result} />
         <AnalysisSummary result={result} show={show} />
         <DiscoveryPanel result={result} show={show} part="head" />
@@ -612,6 +608,11 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
             <ul className="mt-2 list-disc space-y-1 pl-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
           </details>
         )}
+        {/* The heading sits right above the five cards, so the Qloo card is not read as one of them. */}
+        <div className="flex flex-wrap items-end justify-between gap-2 pt-4">
+          <h3 className="font-display text-3xl">{t('recs.title')}</h3>
+          <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
+        </div>
         {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
         {result.recommendations.map((r) => <RecommendationCard key={r.key} rec={r} show={show} result={result} />)}
         <DiscoveryPanel result={result} show={show} part="details" />

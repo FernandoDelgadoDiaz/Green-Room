@@ -58,27 +58,21 @@ export type ApiRequest =
 
 const STATIC_PROFILES = profilesJson as unknown as Record<string, GuestProfile>;
 const runtimeProfiles = new Map<string, GuestProfile | null>();
+const WIKI_HOSTS = ['www.wikidata.org', 'en.wikipedia.org', 'es.wikipedia.org'];
 
 /** Wikipedia/Wikidata lookup for people not in data/profiles.json. Best effort: any failure → null (initials avatar). */
 async function liveProfiles(people: Array<{ name: string; appearanceTitles: string[] }>): Promise<void> {
   const todo = people.filter((p) => !runtimeProfiles.has(nameKey(p.name)));
   if (!todo.length) return;
-  const fetchJson = async (url: string) => {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 4000);
-    try {
-      const res = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'GreenRoom/0.1 (Qloo hackathon demo)' } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } finally {
-      clearTimeout(timer);
-    }
-  };
+  // Same client and User-Agent (with contact URL) as the Wikidata verifier: Wikimedia's API policy
+  // requires an identifiable agent.
+  const fetchJson = (url: string) => safeJson(url, { allowHosts: WIKI_HOSTS, timeoutMs: 6000 });
   try {
     const found = await resolveProfiles(todo, fetchJson, new Date().toISOString().slice(0, 10));
     for (const [name, prof] of found) runtimeProfiles.set(nameKey(name), prof);
-  } catch {
-    for (const p of todo) runtimeProfiles.set(nameKey(p.name), null);
+  } catch (e) {
+    // Not cached: a transient failure must not leave these people without a photo for the instance's life.
+    console.warn('profile lookup failed:', e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -115,8 +109,6 @@ export function showSummaries() {
 export async function handleApi(req: ApiRequest, env: Env): Promise<{ status: number; body: unknown }> {
   return runAction(req, env, () => new MockQlooAdapter());
 }
-
-const WIKI_HOSTS = ['www.wikidata.org', 'en.wikipedia.org', 'es.wikipedia.org'];
 
 /** Wikidata/Wikipedia verifier, used only with LIVE Qloo (it verifies Qloo's proposals). */
 export function makeVerifier(env: Env) {
