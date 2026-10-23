@@ -293,6 +293,8 @@ export interface AgentInput {
   qlooDiscovery?: boolean;
   /** Wall-clock budget for the loop; Qloo tools are skipped once it is spent. */
   deadlineMs?: number;
+  /** Public fast path: prioritize Qloo person discovery over expensive optional enrichment. */
+  publicFast?: boolean;
   /** Verified origin country per show id (unverified shows absent): used for the international-guest history. */
   originOf?: Map<string, string>;
   /** Blend Qloo affinity into the score of existing candidates (default true; LIVE only). Arms B and C of the comparison turn one of the two Qloo effects off. */
@@ -397,6 +399,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   // (e.g. too few confirmed guest identities → try the show as a Qloo podcast entity → theme tags).
   // ============================================================================================
   const MAX_STEPS = 40;
+  const publicFast = input.publicFast === true;
   const startedAt = Date.now();
   const deadlineMs = input.deadlineMs ?? 50_000;
   const outOfTime = () => Date.now() - startedAt > deadlineMs;
@@ -732,7 +735,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     },
 
     qloo_resolve_guests: async () => {
-      const recentGuests = [...pastGuests.values()].sort((a, b) => b.published.localeCompare(a.published)).slice(0, 25);
+      const recentGuests = [...pastGuests.values()].sort((a, b) => b.published.localeCompare(a.published)).slice(0, publicFast ? 6 : 25);
       // Lookups run concurrently (the adapter bounds concurrency); results are consumed in list order,
       // so the outcome does not depend on response timing.
       const lookups = await Promise.all(recentGuests.map((g) => qloo.searchPerson(g.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
@@ -809,7 +812,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     qloo_find_theme_tags: async () => {
       // Specific theme words only (generic ones like "music" or "TV" are skipped), in their English
       // form when one exists, so Spanish-language shows can reach Qloo's tags.
-      const { queries: tq, skippedGeneric } = buildTagQueries(themes);
+      const { queries: rawQueries, skippedGeneric } = buildTagQueries(themes);
+      const tq = publicFast ? rawQueries.slice(0, 3) : rawQueries;
       const queries = tq.map((x) => x.query);
       for (const s of skippedGeneric) if (!sig.skippedGeneric.includes(s)) sig.skippedGeneric.push(s);
       for (const { query: q, accepts, word } of tq) {
@@ -1457,7 +1461,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         };
       return { tool: 'settle_signals', why: outOfTime() ? ['Time budget reached for Qloo lookups: deciding with what I have.', 'Llegué al límite de tiempo para Qloo: decido con lo que tengo.'] : ['All signal strategies tried: deciding which one to use.', 'Probé todas las estrategias de señal: decido cuál usar.'] };
     }
-    if (qlooUsable && !done.has('qloo_cross_domain') && !outOfTime()) return { tool: 'qloo_cross_domain', why: ['A usable audience signal exists: look for cultural hooks across domains.', 'Hay una señal de audiencia utilizable: busco referencias culturales en otros dominios.'] };
+    if (!publicFast && qlooUsable && !done.has('qloo_cross_domain') && !outOfTime()) return { tool: 'qloo_cross_domain', why: ['A usable audience signal exists: look for cultural hooks across domains.', 'Hay una señal de audiencia utilizable: busco referencias culturales en otros dominios.'] };
     if (!done.has('build_pool')) return { tool: 'build_pool', why: ['Look for people with verified interviews on comparable shows.', 'Busco personas con entrevistas verificadas en programas comparables.'] };
     if (qlooUsable && input.qlooDiscovery !== false && !done.has('qloo_discover_people') && !outOfTime())
       return { tool: 'qloo_discover_people', why: ['Ask Qloo for people outside our sources with affinity to this audience.', 'Pido a Qloo personas fuera de nuestras fuentes con afinidad con esta audiencia.'] };
@@ -1474,7 +1478,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         ],
       };
     // Replanning the discovery: Qloo's people could not be turned into verified candidates.
-    if (qloo.mode === 'LIVE' && discoveryAttempts === 1 && rankedProposals() === 0 && !outOfTime()) {
+    if (!publicFast && qloo.mode === 'LIVE' && discoveryAttempts === 1 && rankedProposals() === 0 && !outOfTime()) {
       const why = funnelDiagnosis.diagnosisText;
       const whyEs = funnelDiagnosis.diagnosisTextEs;
       if (signalStrategy === 'guests' && !done.has('qloo_find_theme_tags') && themes.length)
@@ -1484,7 +1488,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       if (altPodcast || altTags.length)
         return { tool: 'qloo_discover_people', why: ['Alternative signal found: asking Qloo once more (one retry, within the call budget).', 'Encontré una señal alternativa: le pregunto a Qloo una vez más (un solo reintento, dentro del límite de consultas).'] };
     }
-    if (qlooUsable && useAffinity && !done.has('qloo_score_affinity') && !outOfTime()) return { tool: 'qloo_score_affinity', why: ['Add Qloo affinity for candidates whose identity can be confirmed.', 'Agrego la afinidad de Qloo para los candidatos cuya identidad se pueda confirmar.'] };
+    if (!publicFast && qlooUsable && useAffinity && !done.has('qloo_score_affinity') && !outOfTime()) return { tool: 'qloo_score_affinity', why: ['Add Qloo affinity for candidates whose identity can be confirmed.', 'Agrego la afinidad de Qloo para los candidatos cuya identidad se pueda confirmar.'] };
     if (eligible().length < k && minFit > 0) return { tool: 'relax_threshold', why: [`Only ${eligible().length} candidates pass the topical-fit bar (need ${k}).`, `Solo ${eligible().length} candidatos superan el ajuste temático mínimo (necesito ${k}).`] };
     if (eligible().length < k && windowMonths < 72 && !done.has('widen_window')) return { tool: 'widen_window', why: [`Still ${eligible().length} eligible after relaxing: widen the time window.`, `Siguen siendo ${eligible().length} elegibles después de relajar: amplío la ventana de tiempo.`] };
     if (!done.has('check_language')) return { tool: 'check_language', why: [`Habitual language(s) “${acceptedLabel()}”: check which candidates have a verified interview in them.`, `Idioma(s) habitual(es) “${acceptedLabel()}”: reviso quién tiene una entrevista verificada en ellos.`] };
