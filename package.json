@@ -17,7 +17,9 @@
     "qloo:experiment": "tsx scripts/qloo-experiment.ts",
     "live:token": "tsx scripts/live-token.ts",
     "live:diagnose": "tsx scripts/live-diagnose.ts",
-    "perf:sim": "tsx scripts/perf-sim.ts"
+    "perf:sim": "tsx scripts/perf-sim.ts",
+    "editorial:prepare": "tsx scripts/editorial-prepare.ts",
+    "editorial:score": "tsx scripts/editorial-score.ts"
   },
   "devDependencies": {
     "@netlify/functions": "^2.8.2",

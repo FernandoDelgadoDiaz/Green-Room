@@ -3,7 +3,7 @@
 
 import type { Appearance, PodcastDataset, Provenance } from '../types';
 import { nameKey } from '../names';
-import { resolvePerson } from '../qloo/resolve';
+import { checkIdentity } from '../qloo/resolve';
 import { THEMES, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
 import type { QlooAdapter, QlooEntity } from '../qloo/types';
 
@@ -39,6 +39,49 @@ export interface Recommendation {
   qlooEntityId: string | null;
   source: 'verified-pool' | 'qloo-person-insights';
   rationale: Array<{ text: string; textEs: string; provenance: Provenance }>;
+  /** Who this person is in Qloo: confirmed only with context evidence, never by name alone. */
+  identity: IdentityStatus;
+  language: LanguageStatus;
+  /** What "not a past guest" is worth, given how much of the show's history has guest names. */
+  history: HistoryStatus;
+}
+
+export interface IdentityStatus {
+  /** confirmed: exact unique name + shared context; pending: needs a human check; not_checked: Qloo not used. */
+  status: 'confirmed' | 'pending' | 'not_checked';
+  reason?: 'no_context' | 'ambiguous' | 'fuzzy' | 'not_found' | 'qloo_only';
+  evidence: string[];
+}
+
+export interface LanguageStatus {
+  /** confirmed: verified interview in the show's language; probable: indirect evidence; unknown: no evidence either way. */
+  status: 'confirmed' | 'probable' | 'unknown';
+  target: string;
+  evidenceLanguages: string[];
+  evidenceEs?: string;
+  evidenceEn?: string;
+}
+
+export interface HistoryStatus {
+  /** complete: every episode in the history has an identified guest; partial: some episodes have none. */
+  status: 'not_found_complete' | 'not_found_partial';
+  pastGuestCount: number;
+  episodesChecked: number;
+  episodesWithoutGuestName: number;
+  coverage: number;
+}
+
+/** Person proposed by Qloo person insights with no verified appearance in our feeds. */
+export interface Discovery {
+  name: string;
+  key: string;
+  qlooEntityId: string;
+  /** Rank of this person in Qloo's list (1 = strongest affinity). */
+  qlooRank: number;
+  popularity?: number;
+  identity: IdentityStatus;
+  language: LanguageStatus;
+  history: HistoryStatus;
 }
 
 export interface Discarded {
@@ -57,6 +100,10 @@ export interface AgentResult {
   themes: Array<{ id: ThemeId; label: string; labelEs: string; share: number; words: string[] }>;
   pastGuestCount: number;
   historyEpisodeCount: number;
+  /** Share of history episodes with at least one identified guest. */
+  guestCoverage: number;
+  /** Qloo-proposed people outside our verified pool, kept apart from the ranking: pending verification. */
+  discoveries: Discovery[];
   culturalAffinities: Array<{ type: string; entities: QlooEntity[]; provenance: Provenance }>;
   recommendations: Recommendation[];
   /** Full ranking (used by the backtest). */
@@ -94,6 +141,7 @@ interface Candidate {
   source: Recommendation['source'];
   qlooEntityId: string | null;
   qlooAffinity: number | null;
+  identity: IdentityStatus;
   themeFit: number;
   momentum: number;
   recency: number;
@@ -160,6 +208,19 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     }
   }
   const coverage = history.length ? withGuests.length / history.length : 0;
+  // Interview titles per person (this show and comparison shows, before asOf): the context used to
+  // confirm an identity in Qloo.
+  const titlesByKey = new Map<string, string[]>();
+  for (const show of [target, ...others])
+    for (const e of show.episodes)
+      if (e.published && e.published < asOf) for (const g of e.guests) titlesByKey.set(nameKey(g.name), [...(titlesByKey.get(nameKey(g.name)) ?? []), e.title]);
+  const historyStatus: HistoryStatus = {
+    status: withGuests.length === history.length ? 'not_found_complete' : 'not_found_partial',
+    pastGuestCount: pastGuests.size,
+    episodesChecked: history.length,
+    episodesWithoutGuestName: history.length - withGuests.length,
+    coverage,
+  };
   step({
     title: ['Read the show’s public episode history', 'Leer el historial público de episodios'],
     tool: 'load_history',
@@ -219,7 +280,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   // Simulated affinities must never change the ranking.
   const blend = qloo.mode === 'LIVE' ? QLOO_BLEND : 0;
   const qlooProvenance: Provenance = qloo.mode === 'OFF' ? 'INFERRED' : qloo.mode;
-  const ambiguousGuests: string[] = [];
+  const unconfirmedGuests: string[] = [];
   if (qloo.mode === 'OFF') {
     step({
       title: ['Ask Qloo about the audience’s taste', 'Consultar a Qloo sobre el gusto de la audiencia'],
@@ -236,9 +297,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     recentGuests.forEach((g, i) => {
       const l = lookups[i];
       if ('err' in l) return void guestErrors.push(String(l.err));
-      const r = resolvePerson(l.hits, g.name);
-      if (r.status === 'exact') resolved.push(r.entity);
-      else if (r.status === 'ambiguous') ambiguousGuests.push(g.name);
+      const r = checkIdentity(l.hits, g.name, titlesByKey.get(nameKey(g.name)) ?? []);
+      if (r.status === 'confirmed') resolved.push(r.entity);
+      else if (r.status === 'pending') unconfirmedGuests.push(g.name);
     });
     if (guestErrors.length)
       warn([
@@ -250,12 +311,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       title: ['Resolve past guests in Qloo’s taste graph', 'Ubicar a los invitados anteriores en el grafo de gustos de Qloo'],
       tool: 'qloo.search',
       detail: [
-        `${resolved.length} of the ${recentGuests.length} most recent guests resolved to Qloo person entities (unique exact name match only)${ambiguousGuests.length ? `; ${ambiguousGuests.length} skipped as ambiguous (namesakes in Qloo)` : ''}.`,
-        `${resolved.length} de los ${recentGuests.length} invitados más recientes se encontraron como personas en Qloo (solo coincidencia exacta y única de nombre)${ambiguousGuests.length ? `; ${ambiguousGuests.length} omitidos por ambiguos (homónimos en Qloo)` : ''}.`,
+        `${resolved.length} of the ${recentGuests.length} most recent guests confirmed in Qloo (unique exact name AND Qloo's description shares context with their interview titles)${unconfirmedGuests.length ? `; ${unconfirmedGuests.length} left out as unverified (name only, namesakes or no context)` : ''}.`,
+        `${resolved.length} de los ${recentGuests.length} invitados más recientes confirmados en Qloo (nombre exacto y único Y la descripción de Qloo comparte contexto con los títulos de sus entrevistas)${unconfirmedGuests.length ? `; ${unconfirmedGuests.length} quedan afuera sin verificar (solo nombre, homónimos o sin contexto)` : ''}.`,
       ],
       decision: qlooUsable
         ? ['Using these guests as the taste signal for the audience.', 'Uso a estos invitados como señal del gusto de la audiencia.']
-        : ['Too few guests resolved (<3). Continuing without Qloo signals rather than guessing.', 'Muy pocos invitados encontrados (<3). Continúo sin señales de Qloo en lugar de adivinar.'],
+        : ['Too few confirmed identities (<3). Continuing without Qloo signals rather than guessing.', 'Muy pocas identidades confirmadas (<3). Continúo sin señales de Qloo en lugar de adivinar.'],
       provenance: qlooProvenance,
     });
     if (qlooUsable) {
@@ -296,7 +357,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           if (!key || showHostKeys.has(key)) continue;
           const c =
             pool.get(key) ??
-            ({ key, name: g.name, appearances: [], vector: emptyVector(), matched: new Map(), source: 'verified-pool', qlooEntityId: null, qlooAffinity: null, themeFit: 0, momentum: 0, recency: 0, base: 0, score: 0 } as Candidate);
+            ({ key, name: g.name, appearances: [], vector: emptyVector(), matched: new Map(), source: 'verified-pool', qlooEntityId: null, qlooAffinity: null, identity: { status: 'not_checked', evidence: [] }, themeFit: 0, momentum: 0, recency: 0, base: 0, score: 0 } as Candidate);
           c.appearances.push({ showId: show.id, showName: show.name, episodeId: e.id, title: e.title, published: e.published, url: e.url });
           const { vector, matched } = themesOfTitle(e.title, [g.name]);
           addInto(c.vector, vector);
@@ -328,30 +389,44 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     provenance: 'VERIFIED',
   });
 
+  const discoveries: Discovery[] = [];
   if (qlooUsable && input.qlooDiscovery !== false) {
     try {
       const people = await qloo.personInsights({ signalIds: resolved.map((r) => r.entityId), excludeIds: resolved.map((r) => r.entityId), take: 30 });
-      let added = 0;
-      for (const p of people) {
+      let inPool = 0;
+      people.forEach((p, i) => {
         const key = nameKey(p.name);
-        if (!key || pool.has(key)) {
-          const existing = pool.get(key);
-          if (existing) existing.qlooEntityId = p.entityId;
-          continue;
+        if (!key) return;
+        // Same name as someone in our pool is NOT proof it is the same person: no merge by name.
+        if (pool.has(key)) return void inPool++;
+        if (pastGuests.has(key) || targetHostKeys.has(key)) {
+          discarded.push({ name: p.name, reason: `Proposed by Qloo, but the name matches a past guest or host of ${target.name}`, reasonEs: `Propuesto por Qloo, pero el nombre coincide con un invitado anterior o el conductor de ${target.name}` });
+          return;
         }
-        pool.set(key, { key, name: p.name, appearances: [], vector: emptyVector(), matched: new Map(), source: 'qloo-person-insights', qlooEntityId: p.entityId, qlooAffinity: p.affinity ?? null, themeFit: 0, momentum: 0, recency: 0, base: 0, score: 0 });
-        added++;
-      }
+        discoveries.push({
+          name: p.name,
+          key,
+          qlooEntityId: p.entityId,
+          qlooRank: i + 1,
+          popularity: p.popularity,
+          identity: { status: 'pending', reason: 'qloo_only', evidence: p.description ? [p.description] : [] },
+          language: { status: 'unknown', target: target.language, evidenceLanguages: [], evidenceEn: 'No verified interview in our sources.', evidenceEs: 'Sin entrevistas verificadas en nuestras fuentes.' },
+          history: historyStatus,
+        });
+      });
       step({
         title: ['Ask Qloo who else this audience has affinity for', 'Preguntar a Qloo con quién más tiene afinidad esta audiencia'],
         tool: 'qloo.insights (person)',
-        detail: [`${people.length} people returned; ${added} new to the candidate pool.`, `${people.length} personas devueltas; ${added} nuevas para el grupo de candidatos.`],
-        decision: people.length
+        detail: [
+          `${people.length} people returned; ${discoveries.length} are new to our sources, ${inPool} share a name with someone in our pool.`,
+          `${people.length} personas devueltas; ${discoveries.length} son nuevas para nuestras fuentes y ${inPool} comparten nombre con alguien de nuestro grupo.`,
+        ],
+        decision: discoveries.length
           ? [
-              'Adding them; they have no verified appearance on the comparison shows, so their evidence is Qloo affinity only.',
-              'Las agrego; no tienen apariciones verificadas en los programas de comparación, así que su evidencia es solo la afinidad de Qloo.',
+              'Listing the new people separately as discoveries pending verification: identity and language come only from Qloo, so they are not mixed into the verified ranking.',
+              'Muestro a las personas nuevas por separado como descubrimientos pendientes de verificación: su identidad e idioma solo vienen de Qloo, así que no se mezclan con el ranking verificado.',
             ]
-          : ['Nothing returned; staying with the verified pool.', 'No devolvió nada; sigo con el grupo verificado.'],
+          : ['No new people; staying with the verified pool.', 'Ninguna persona nueva; sigo con el grupo verificado.'],
         provenance: qlooProvenance,
       });
     } catch (err) {
@@ -407,14 +482,17 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
   if (qlooUsable) {
     const shortlist = [...pool.values()].sort((a, b) => b.base - a.base).slice(0, 40);
-    const toResolve = shortlist.filter((c) => !c.qlooEntityId);
+    const toResolve = shortlist;
     const found = await Promise.all(toResolve.map((c) => qloo.searchPerson(c.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
     const candidateErrors: string[] = [];
     toResolve.forEach((c, i) => {
       const f = found[i];
       if ('err' in f) return void candidateErrors.push(String(f.err));
-      const r = resolvePerson(f.hits, c.name);
-      if (r.status === 'exact') c.qlooEntityId = r.entity.entityId;
+      const r = checkIdentity(f.hits, c.name, titlesByKey.get(c.key) ?? c.appearances.map((a) => a.title));
+      if (r.status === 'confirmed') {
+        c.qlooEntityId = r.entity.entityId;
+        c.identity = { status: 'confirmed', evidence: r.evidence };
+      } else c.identity = { status: 'pending', reason: r.status === 'pending' ? r.reason : 'not_found', evidence: [] };
     });
     if (candidateErrors.length)
       warn([
@@ -440,8 +518,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       title: ['Score candidates against the audience’s taste', 'Puntuar candidatos según el gusto de la audiencia'],
       tool: 'qloo.insights (filter.results.entities)',
       detail: [
-        `${ids.length} of the top ${shortlist.length} candidates resolved in Qloo; ${affinities.size} received an affinity score.`,
-        `${ids.length} de los ${shortlist.length} mejores candidatos se encontraron en Qloo; ${affinities.size} recibieron puntaje de afinidad.`,
+        `${ids.length} of the top ${shortlist.length} candidates confirmed in Qloo with context evidence; ${affinities.size} received an affinity score. The rest keep a neutral value and are marked pending verification.`,
+        `${ids.length} de los ${shortlist.length} mejores candidatos confirmados en Qloo con evidencia de contexto; ${affinities.size} recibieron puntaje de afinidad. El resto queda con un valor neutro y marcado como pendiente de verificación.`,
       ],
       decision:
         blend > 0
@@ -459,7 +537,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
   // 7. Threshold loop: relax requirements only when the data forces it --------------------------
   let minFit = 0.35;
-  const eligible = () => [...pool.values()].filter((c) => c.themeFit >= minFit || c.source === 'qloo-person-insights');
+  const eligible = () => [...pool.values()].filter((c) => c.themeFit >= minFit);
   while (eligible().length < k && minFit > 0) {
     const before = minFit;
     minFit = Math.max(0, Math.round((minFit - 0.1) * 100) / 100);
@@ -489,7 +567,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   // Language: prefer candidates with a verified appearance in the show's language.
   const targetLang = target.language;
   const langOf = new Map(others.map((o) => [o.id, o.language]));
-  const speaksTarget = (c: Candidate) => c.source === 'qloo-person-insights' || c.appearances.some((a) => langOf.get(a.showId) === targetLang);
+  // Confirmed only by a verified interview in the show's language. Nobody is assumed to speak it.
+  const speaksTarget = (c: Candidate) => c.appearances.some((a) => langOf.get(a.showId) === targetLang);
   const sameLanguage = eligible().filter(speaksTarget).length;
   let languageFilter = false;
   if (sameLanguage >= k) {
@@ -501,7 +580,10 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         `${sameLanguage} eligible candidates have a verified appearance on a "${targetLang}" show.`,
         `${sameLanguage} candidatos elegibles tienen una aparición verificada en un programa en "${targetLang}".`,
       ],
-      decision: ['Keeping only same-language candidates.', 'Me quedo solo con candidatos del mismo idioma.'],
+      decision: [
+        'Picking the shortlist among confirmed-language candidates. Others keep their place in the full ranking with language "unknown": not having an interview in this language does not prove they do not speak it.',
+        'Elijo la lista corta entre candidatos con idioma confirmado. Los demás conservan su lugar en el ranking completo con idioma "desconocido": no tener una entrevista en este idioma no prueba que no lo hablen.',
+      ],
       provenance: 'INFERRED',
     });
   } else {
@@ -525,9 +607,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   }
 
   // 8. Diversity-aware selection (MMR) ---------------------------------------------------------
-  const ranked = [...pool.values()]
-    .filter((c) => !languageFilter || speaksTarget(c))
-    .sort((a, b) => b.score - a.score);
+  // Confirmed-language candidates first, then the rest; nobody is removed for an unknown language.
+  const ranked = [...pool.values()].sort((a, b) => (languageFilter ? Number(speaksTarget(b)) - Number(speaksTarget(a)) : 0) || b.score - a.score);
   const picks: Candidate[] = [];
   const candidates = eligible()
     .filter((c) => !languageFilter || speaksTarget(c))
@@ -576,7 +657,15 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           provenance: 'VERIFIED',
         });
     }
-    rationale.push({ text: `Not found among ${pastGuests.size} past guests of ${target.name}.`, textEs: `No figura entre los ${pastGuests.size} invitados anteriores de ${target.name}.`, provenance: 'VERIFIED' });
+    rationale.push(
+      historyStatus.status === 'not_found_complete'
+        ? { text: `Not found among the ${pastGuests.size} guests of ${target.name}'s ${history.length} episodes.`, textEs: `No figura entre los ${pastGuests.size} invitados de los ${history.length} episodios de ${target.name}.`, provenance: 'VERIFIED' }
+        : {
+            text: `Not found among the ${pastGuests.size} guests identified in ${target.name}; ${historyStatus.episodesWithoutGuestName} of ${history.length} episodes have no guest name in the feed, so an earlier appearance cannot be ruled out.`,
+            textEs: `No figura entre los ${pastGuests.size} invitados identificados en ${target.name}; ${historyStatus.episodesWithoutGuestName} de ${history.length} episodios no tienen nombre de invitado en el RSS, así que no se puede descartar una participación anterior.`,
+            provenance: 'VERIFIED',
+          },
+    );
     if (sharedThemes.length)
       rationale.push({
         text: `Shares the show’s themes: ${sharedThemes.map((s) => s.label).join(', ')}.`,
@@ -594,10 +683,17 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       });
     }
     const crossLanguage = !speaksTarget(c);
+    const langs = [...new Set(c.appearances.map((a) => langOf.get(a.showId) ?? '?'))];
     if (crossLanguage && c.appearances.length)
       rationale.push({
-        text: `Cross-language suggestion: known appearances are not in “${targetLang}”.`,
-        textEs: `Sugerencia de otro idioma: sus apariciones conocidas no son en “${targetLang}”.`,
+        text: `Language to verify: verified interviews are in ${langs.join(', ')}, not “${targetLang}”. That does not show they cannot speak it.`,
+        textEs: `Idioma por verificar: sus entrevistas verificadas son en ${langs.join(', ')}, no en “${targetLang}”. Eso no demuestra que no lo hable.`,
+        provenance: 'INFERRED',
+      });
+    if (c.identity.status === 'pending')
+      rationale.push({
+        text: 'Qloo identity pending verification: no context evidence that Qloo’s entity is this person.',
+        textEs: 'Identidad en Qloo pendiente de verificación: no hay evidencia de contexto de que la entidad de Qloo sea esta persona.',
         provenance: 'INFERRED',
       });
     return {
@@ -627,6 +723,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       qlooEntityId: c.qlooEntityId,
       source: c.source,
       rationale,
+      identity: c.identity,
+      language: crossLanguage
+        ? { status: 'unknown', target: targetLang, evidenceLanguages: langs, evidenceEn: `Verified interviews in: ${langs.join(', ')}`, evidenceEs: `Entrevistas verificadas en: ${langs.join(', ')}` }
+        : { status: 'confirmed', target: targetLang, evidenceLanguages: [targetLang], evidenceEn: `Verified interview in “${targetLang}”`, evidenceEs: `Entrevista verificada en “${targetLang}”` },
+      history: historyStatus,
     };
   });
   step({
@@ -649,6 +750,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     themes,
     pastGuestCount: pastGuests.size,
     historyEpisodeCount: history.length,
+    guestCoverage: coverage,
+    discoveries,
     culturalAffinities,
     recommendations,
     ranked: ranked.map((c) => ({ key: c.key, name: c.name, score: c.score })),

@@ -79,3 +79,8 @@ Qloo's graph is a current snapshot and cannot be queried "as of" a cutoff. Two t
 T5 therefore measures **agreement with today's graph**, and any gain is an upper bound. Only Green Room's own inputs pass the leakage audit (the RSS data, the candidate pool, the signals).
 
 The only fully clean test is prospective: freeze recommendations now and check bookings later. It cannot be finished before the deadline.
+
+## Change after Phase 4 (2026-10-23)
+- Qloo discoveries no longer enter the verified ranking (docs/AGENT_AUDIT.md). The T5 "+discovery" arm therefore now equals the "with Qloo" arm.
+- Identity now requires context evidence, so live T5 runs made before this change are **not comparable** with runs made after it. Repeating T5 is only meaningful as a test of the new identity rule. It must not be rerun hoping for a better number.
+- Editorial quality is evaluated separately and blind: docs/EDITORIAL_EVAL.md.

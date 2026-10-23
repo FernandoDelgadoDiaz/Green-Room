@@ -194,8 +194,8 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
   const spec = specialty(profile, lang);
   const latest = rec.appearances[0];
   const themes = rec.sharedThemes.map((s) => (lang === 'es' ? s.labelEs : s.label));
-  const crossLang = rec.rationale.some((r) => r.text.startsWith('Cross-language'));
-  const isMock = rec.components.qlooAffinity.provenance === 'MOCK';
+  // Flag simulated values only when one is actually present on this card.
+  const isMock = rec.components.qlooAffinity.provenance === 'MOCK' && rec.components.qlooAffinity.value !== null;
   return (
     <article className="card rise p-5">
       <div className="flex items-start gap-4">
@@ -219,8 +219,7 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
             <span className="text-[10px] uppercase tracking-widest text-stone-500 underline decoration-dotted underline-offset-2">{t('card.score')}</span>
           </p>
           <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-            <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-emerald-300">✓ {t('card.neverOn', { show: show.name, n: result.pastGuestCount })}</span>
-            {crossLang && <span className="rounded-full bg-brass-400/10 px-2.5 py-1 text-brass-300">{t('card.crossLang')}</span>}
+            <StatusChips rec={rec} show={show} />
           </div>
         </div>
       </div>
@@ -251,6 +250,53 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
 
       {pitch && <ProposalModal rec={rec} show={show} result={result} onClose={() => setPitch(false)} />}
     </article>
+  );
+}
+
+/** History, language and identity, each with how sure we are. Shared by recommendations and discoveries. */
+function StatusChips({ rec, show }: { rec: Pick<Recommendation, 'history' | 'language' | 'identity'>; show: ShowSummary }) {
+  const { lang, t } = useI18n();
+  const h = rec.history;
+  const langEvidence = lang === 'es' ? rec.language.evidenceEs : rec.language.evidenceEn;
+  return (
+    <>
+      {h.status === 'not_found_complete' ? (
+        <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-emerald-300">✓ {t('card.notFoundComplete', { show: show.name, n: h.pastGuestCount, e: h.episodesChecked })}</span>
+      ) : (
+        <span className="rounded-full bg-sky-400/10 px-2.5 py-1 text-sky-200" title={t('card.notFoundPartialHelp', { m: h.episodesWithoutGuestName, e: h.episodesChecked })}>
+          {t('card.notFoundPartial', { show: show.name, n: h.pastGuestCount, c: Math.round(h.coverage * 100) })}
+        </span>
+      )}
+      <span
+        title={langEvidence}
+        className={`rounded-full px-2.5 py-1 ${rec.language.status === 'confirmed' ? 'bg-emerald-400/10 text-emerald-300' : rec.language.status === 'probable' ? 'bg-sky-400/10 text-sky-200' : 'bg-brass-400/10 text-brass-300'}`}
+      >
+        {t(`card.lang.${rec.language.status}`, { lang: rec.language.target.toUpperCase() })}
+      </span>
+      {rec.identity.status === 'pending' && <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-fuchsia-200">{t('card.identityPending')}</span>}
+    </>
+  );
+}
+
+function DiscoveriesPanel({ result, show }: { result: RecommendResult; show: ShowSummary }) {
+  const { t } = useI18n();
+  if (!result.discoveries?.length) return null;
+  return (
+    <div className="card border-fuchsia-400/30 p-5">
+      <h3 className="flex items-center gap-2 font-display text-2xl">{t('disc.title')} <Badge p="LIVE" /></h3>
+      <p className="mt-1 text-sm text-stone-400">{t('disc.note')}</p>
+      <ul className="mt-4 space-y-3">
+        {result.discoveries.map((d) => (
+          <li key={d.qlooEntityId} className="rounded-xl border border-white/10 p-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="font-semibold">{d.name}</span>
+              <span className="text-xs text-stone-500">{t('disc.rank', { n: d.qlooRank })}{d.popularity !== undefined ? ` · ${t('disc.popularity', { p: Math.round(d.popularity * 100) })}` : ''}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2 text-[11px]"><StatusChips rec={d} show={show} /></div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -317,6 +363,7 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
         {warnings.map((w) => <div key={w} className="rounded-xl border border-brass-400/30 bg-brass-400/10 px-4 py-3 text-sm text-brass-300">{w}</div>)}
         {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
         {result.recommendations.map((r) => <RecommendationCard key={r.key} rec={r} show={show} result={result} />)}
+        <DiscoveriesPanel result={result} show={show} />
         {result.discarded.length > 0 && (
           <details className="card p-4 text-sm text-stone-300">
             <summary className="cursor-pointer font-semibold">{t('recs.discarded', { n: result.discarded.length })}</summary>

@@ -84,6 +84,9 @@ describe('credentials', () => {
   });
 });
 
+const TITLES = new Map<string, string[]>();
+for (const d of DATASETS) for (const ep of d.episodes) for (const g of ep.guests) TITLES.set(nameKey(g.name), [...(TITLES.get(nameKey(g.name)) ?? []), ep.title]);
+
 // Test double with the LIVE mode flag, so the agent applies the real blend. It is never used outside tests.
 class FakeLiveQloo implements QlooAdapter {
   readonly mode = 'LIVE' as const;
@@ -91,7 +94,8 @@ class FakeLiveQloo implements QlooAdapter {
   constructor(private readonly affinity: (key: string) => number | undefined) {}
   async searchPerson(name: string) {
     this.calls.push({ endpoint: '/search', params: { query: name }, status: 200, ms: 0, resultCount: 1 });
-    return [e(`id:${nameKey(name)}`, name, { description: 'test person' })];
+    // Context evidence: a description built from this person's real interview titles.
+    return [e(`id:${nameKey(name)}`, name, { description: TITLES.get(nameKey(name))?.join(' ') ?? 'test person' })];
   }
   async personInsights() {
     return [];

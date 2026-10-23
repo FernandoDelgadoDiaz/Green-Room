@@ -1,4 +1,4 @@
-# Agent audit (2026-10-23)
+# Agent audit (2026-10-23, updated after the live Qloo tests)
 
 Question: which decisions does Green Room really take from data, and which are fixed rules?
 
@@ -49,3 +49,40 @@ Provider options and cost:
 - The official harness supports a model only through the interactive `qloo explore`. That route is not meant for an app backend.
 - A backend needs a model API (Anthropic or OpenAI). That is pay-per-use.
 - **Not activated. It requires your authorization and a cost estimate from the provider's current price list first.**
+
+## Update after the live tests and the Phase 4 fixes
+Facts:
+- The user reported the outcome of the live T2/T4/T5 runs: Qloo finds new candidates, but it did not improve historical hits.
+- The written report (Green-Room-pruebas-Qloo.md) was not available in this environment, so this audit cites no figures from it.
+
+Changes made in Phase 4. They are rule changes, still deterministic:
+- **Identity.** A Qloo entity counts as the guest only with an exact, unique name **and** shared context between Qloo's description/tags and the guest's own interview titles. Everything else is "pending verification". This applies to the taste signals and to the candidates that get scored. Names are never merged by name alone.
+- **Language.** Confirmed only by a verified interview in the show's language. Probable when an identity-checked Wikipedia article exists in that language. Unknown otherwise. Unknown candidates are no longer removed from the ranking, and Qloo-proposed people are no longer assumed to speak the show's language.
+- **History.** "Never a guest" is no longer claimed when part of the feed has no guest names. The card shows the coverage.
+- **Discovery.** Qloo-proposed people are kept apart as *discoveries pending verification*. They no longer enter the verified ranking, which also removes the score-scale mismatch noted above. Consequence: the exploratory "+discovery" backtest arm is now identical to the "with Qloo" arm.
+
+## Does it meet the "agentic" bar? Critical view
+No, not convincingly. The system observes data and branches, but:
+- the **goal never changes the plan**: the tool order is fixed;
+- **no step chooses its next tool** from what it just learned, beyond fixed if/else thresholds;
+- **nothing is re-planned after a failure**: for example, low Qloo identity coverage does not lead it to try other signals such as podcast entities or tags;
+- there is **no reasoning in natural language** over the evidence.
+
+Judges of an agentic hackathon will most likely read it as a well-documented pipeline.
+
+## Minimal improvement proposed (not activated; no paid service)
+1. **A tool-calling loop, with the planner behind an interface.**
+   - Expose the existing steps as tools with typed inputs and outputs:
+     - `read_history`, `infer_themes`, `resolve_identity`;
+     - `qloo_person_insights`, `qloo_podcast_entities`, `qloo_tags_for_themes`;
+     - `score_candidates`, `check_language`, `select_shortlist`, `draft_invitation`.
+   - The loop asks a planner for the next tool given the goal, the observations so far and the remaining call budget, and stops on "done", on the budget or on the deadline.
+   - Ship two planners:
+     - **RulePlanner**, deterministic. It reproduces today's behavior and adds one real re-plan: if fewer than 3 identities are confirmed, try Qloo podcast entities or theme tags as the taste signal instead of giving up.
+     - **LLMPlanner**, behind the same interface. It is off until you authorize a model provider.
+2. **Explainer.** An LLM writes the "why" from evidence objects only. A validator drops any sentence without an evidence id. Off until authorized; today's template text stays as the fallback.
+3. **The ranking stays deterministic**, so every evaluation remains comparable.
+
+Free routes:
+- Step 1 with the RulePlanner costs nothing and makes the agentic structure real.
+- A model call needs your authorization. The official Qloo harness's `qloo explore` uses your own model sign-in for interactive use only; it is not a backend route.

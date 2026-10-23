@@ -107,6 +107,20 @@ async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter):
   if (req.action === 'recommend') {
     const result = await runAgent({ target, others, qloo: qlooFor(), k: Math.min(Math.max(req.k ?? 5, 1), 10) });
     const profiles = await profilesFor(result.recommendations, env.PROFILE_LOOKUP !== '0');
+    // "Probable" language: an identity-checked Wikipedia article exists in the show's language.
+    // Indirect evidence only; it never becomes "confirmed".
+    for (const rec of result.recommendations) {
+      const p = profiles[rec.key];
+      const lang = target.language as 'en' | 'es';
+      if (rec.language.status === 'unknown' && p && p.extract?.[lang]) {
+        rec.language = {
+          ...rec.language,
+          status: 'probable',
+          evidenceEn: `${rec.language.evidenceEn}; Wikipedia article in “${lang}” (identity-checked)`,
+          evidenceEs: `${rec.language.evidenceEs}; artículo de Wikipedia en “${lang}” (identidad verificada)`,
+        };
+      }
+    }
     return { status: 200, body: { ...result, ranked: undefined, profiles } };
   }
   if (req.action === 'backtest') {
