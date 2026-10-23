@@ -422,7 +422,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   let signalsSettled = qloo.mode === 'OFF';
   let qlooUsable = false;
   const culturalAffinities: AgentResult['culturalAffinities'] = [];
-  const useAffinity = input.qlooAffinity !== false;
+  const useAffinity = input.qlooAffinity !== false && !publicFast; // public path measures discovery first, not affinity
   const blend = qloo.mode === 'LIVE' && useAffinity ? QLOO_BLEND : 0; // simulated affinities never change the ranking
   const qlooProvenance: Provenance = qloo.mode === 'OFF' ? 'INFERRED' : qloo.mode;
   const unconfirmedGuests: string[] = [];
