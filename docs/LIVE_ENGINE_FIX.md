@@ -112,3 +112,23 @@ SIM_RPS=2 SIM_BURST=2 SIM_LATENCY_MS=800 npx tsx scripts/live-engine-bench.ts cu
 - **Background functions on this site** (plan, the `-background` naming, Blobs access from them) are unverified until that preview.
   - A known Netlify CLI issue affects `config.background`. This uses the filename suffix instead.
 - **Editorial value is still unmeasured.** The blind evaluation set (`editorial` on `/api/live`) needs raters.
+
+## 6. LIVE validation (2026-10-23, deploy preview of PR #2, real Qloo)
+Preview limits during the test: 80 calls per analysis, concurrency 1, shared pause.
+
+| Show | Total time | Qloo calls | 429 | Health | Second request |
+|---|---|---|---|---|---|
+| Diary of a CEO | 22.7 s | 48 | 0 | complete | cache, 0.6 s, 0 calls |
+| Marco Antonio Regil | 33.1 s | 65 | 0 | complete | cache, 0.4 s, 0 calls |
+| CREATIVO | 81.4 s | 74 | 0 | partial: 8 timeouts on `/v2/insights` (12 tag ids) | cache (partial, labeled), 0.4 s |
+
+Before this engine, production showed a 502 at 30 s and 17 × 429, and no complete or cacheable result.
+
+**Verified Qloo discoveries.** None entered the top 5. In every case the reason is shown and nobody is forced in.
+- DOAC: Andrew Yang and Howard Schultz, both below the editorial band.
+- Marco Regil: David Bach, Sara Blakely, Mark Hyman and Kelly McGonigal. Their Spanish is not confirmed, while at least 5 candidates have it.
+
+**Follow-ups fixed after this run:**
+- the background per-call timeout goes from 10 s to 25 s (the CREATIVO timeouts);
+- guest lookup waves stop at the call budget (Qloo unreachable: 27 → 7 budget cut-offs);
+- `/api/live` reads every public variable, so `public-usage` reports the real job limits.

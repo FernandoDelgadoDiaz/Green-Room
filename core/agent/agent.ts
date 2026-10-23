@@ -745,8 +745,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       const recentGuests: typeof candidates = [];
       const lookups: Array<{ hits: QlooEntity[] } | { err: unknown }> = [];
       let confirmed = 0;
-      for (let i = 0; i < candidates.length && confirmed < GUEST_SIGNAL_TARGET && !outOfTime(); i += GUEST_WAVE) {
-        const wave = candidates.slice(i, i + GUEST_WAVE);
+      // A wave never asks for more lookups than the Qloo budget still allows.
+      const budgetLeft = () => qloo.budgetLeft?.() ?? Infinity;
+      for (let i = 0; i < candidates.length && confirmed < GUEST_SIGNAL_TARGET && !outOfTime() && budgetLeft() > 0; ) {
+        const wave = candidates.slice(i, i + Math.min(GUEST_WAVE, budgetLeft()));
+        i += wave.length;
         const got = await Promise.all(wave.map((g) => qloo.searchPerson(g.name).then((hits) => ({ hits }), (err: unknown) => ({ err }))));
         recentGuests.push(...wave);
         lookups.push(...got);

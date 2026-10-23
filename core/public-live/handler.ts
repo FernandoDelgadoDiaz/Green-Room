@@ -296,7 +296,9 @@ export function backgroundLimits(cfg: PublicConfig): QlooLimits {
     maxCalls: cfg.callsPerAnalysis,
     concurrency: 3,
     minIntervalMs: 250,
-    timeoutMs: 10_000,
+    // Measured LIVE (2026-10-23, CREATIVO): /v2/insights with 12 tag ids took over 10 s. The background
+    // job has minutes, so a slow answer is waited for instead of being lost.
+    timeoutMs: 25_000,
     deadlineMs: Math.max(30_000, cfg.jobMaxMs - 60_000),
     retries: 1,
     retries429: 3,
