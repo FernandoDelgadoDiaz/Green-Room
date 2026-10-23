@@ -1,63 +1,66 @@
-# Demo script (≈ 3 minutes)
+# Demo script (≈ 2 minutes)
 
 Rules for the recording:
-- Every number on screen comes from the app.
-- Say "rule-based planner", never "the AI reasons", because no language model is used.
-- Do not claim that Qloo improves historical predictions: our live backtests did not show that.
+- Every number and name on screen comes from the app. Read what the screen shows, not this script.
+- Say "rule-based planner", never "the AI reasons" or "the AI thinks", because no language model is used.
+- Do not claim that Qloo improves the top five or historical predictions: our live backtests did not show that.
+- Do not claim we know a show's listeners. Qloo describes aggregate taste.
+- Qloo's answers are not stored in this public repository (developer guide), so this script names no person, artist, film or tag returned by Qloo. Use the ones on screen.
+
+## Before recording
+- Open https://greenroom1.netlify.app and check that the header says **Qloo LIVE**. If it says MOCK, do not record.
+- Warm the shows you will use: analyze **CREATIVO** (Mexico) and **The Diary Of A CEO** once, 30–90 s each. The recording then opens them instantly from the cache, and the banner says "served from cache".
+  - Each fresh analysis uses the daily Qloo budget (it resets at 00:00 UTC, 21:00 in Argentina).
+- To show a live analysis, record it and cut the wait in editing.
+- Desktop screen, browser zoom 110 %, language switched to **English** (top right). Keep it under 2:30.
 
 ## English (for the jury)
 
-**0:00 · The problem (15 s).** "Podcast producers book guests from the same small circle. Green Room is an agent that studies a real show and proposes guests it can defend with evidence."
+**0:00 · The problem (15 s).**
+🎬 Home page, with the **Qloo LIVE** indicator in the header.
+> "Podcast producers book guests from the same small circle, from memory and gut feeling. Green Room is an agent that studies a real show and proposes guests it can defend with evidence. And it uses Qloo's taste graph to find people the show's own history could never surface."
 
-**0:15 · Moment 1: discovery (35 s).**
-- Choose **Argentina**. The cards come from Apple Podcasts' official chart for Argentina. "The rank is Apple's, the selection of interview shows is ours, and we show no audience numbers because none are verifiable."
-- Point out that one show is marked *not analyzable: inactive feed*. "The agent will not pretend."
-- Choose **Santiago Bilinkis – Futuro en Construcción**.
+**0:15 · Pick a real show (20 s).**
+🎬 **Mexico** → **CREATIVO** → **Analyze**. Point at the green banner: "Built with the real Qloo API · computed … · N Qloo queries".
+> "I pick CREATIVO, one of Mexico's top interview podcasts on Apple's chart. Green Room reads its real public RSS feed: hundreds of episodes and past guests. The analysis runs against the real Qloo API, in the background."
 
-**0:50 · Moment 2: the agent changes strategy (60 s).**
-- Open "What the agent did". Each step has a "Why".
-- Read the third step: "Only 3% of episodes name a guest, so guests cannot carry the audience signal; trying the show itself in Qloo."
-- "This is a real re-plan, chosen from what it just observed."
-- Then: it tries the show as a Qloo podcast entity, then the show's themes as Qloo tags, and only then decides which signal to use, or says it has none.
-- In a LIVE session (`?private=1` plus the judge token), show the same trace with real Qloo calls and the "Unexpected guests found by Qloo" panel.
-- Point out the verification step: in The Diary Of A CEO, the agent rejects a pick whose name already appears in one of the show's episode titles, and re-selects.
+**0:35 · What Qloo added (30 s), the central moment.**
+🎬 Point at the **What Qloo added** card, at the top of the results.
+> "This is what Qloo added. The agent asked Qloo who else this audience has affinity for, then verified every person: identity on Wikidata, the theme, not a past guest, the interview language.
+> Here's [first person on the card], who has never been interviewed on any of the shows in our sources. Qloo found them. The card says where they rank and why.
+> Qloo also gives conversation hooks: music, films and books. These are tastes associated with the show's signals, not data about its listeners."
 
-**1:50 · Moment 3: defensible proposals (60 s).**
-- Open the first card.
-- Status chips:
-  - history: "not among the N identified guests; names found in X% of episodes";
-  - language: confirmed, probable or unknown;
-  - identity: confirmed with context, or pending.
-- "View evidence": interview titles and links, the identity check, the photo license.
-- "Prepare invitation": every sentence cites a verified appearance or a shared theme.
-- Scroll to **Unexpected guests found by Qloo**. "Qloo proposes people outside our sources. Their identity and language come only from Qloo, so they stay apart, pending verification."
+- Point at the folded line "N more without a confirmed language": "They are verified, but we don't know they can do the interview in Spanish, so they stay folded."
 
-**2:50 · Close (10 s).** "Qloo finds the cultural neighbourhood; Green Room's agent checks it against public evidence. The producer decides."
+**1:05 · The agent decides and explains (25 s).**
+🎬 Open **What the agent did** and scroll the steps.
+> "Every step is a decision by a rule-based planner, with the reason it ran. Here, few past guests could be confirmed in Qloo, so the agent re-planned: it translated the show's Spanish themes into Qloo tags and used them as the audience signal."
+
+- Read the step's "Why" as the screen shows it. If the trace chose another signal, narrate that one.
+- Optional: open the discovery panel and read the funnel (proposed → verified).
+
+**1:30 · Defensible guests (20 s).**
+🎬 Scroll to the five cards. Open one → **View evidence** → **Prepare invitation**.
+> "The five picks are ranked on evidence: real interviews on comparable shows, with links, an identity check and the interview language. Qloo's affinity can only reorder comparable candidates; it never pushes a weaker one in. And the invitation cites only verified facts."
+
+**1:50 · Close (10 s).**
+🎬 Back up to **What Qloo added**.
+> "Qloo finds the cultural neighborhood. Green Room's agent checks it against public evidence. The producer decides."
 
 ## Español (referencia)
 
-**0:00 · Problema.** "Los productores invitan siempre al mismo círculo. Green Room es un agente que estudia un programa real y propone invitados defendibles con evidencias."
+**0:00 · Problema.** Pantalla de inicio con "Qloo LIVE". "Los productores invitan siempre al mismo círculo. Green Room es un agente que estudia un programa real, propone invitados defendibles y usa el grafo de gustos de Qloo para encontrar personas que el historial del programa nunca mostraría."
 
-**0:15 · Momento 1: descubrimiento.**
-- Elegir **Argentina**. Ranking oficial de Apple Podcasts del país; la selección de programas de entrevistas es nuestra; no mostramos cifras de audiencia.
-- Un programa aparece como *no analizable: feed inactivo*.
-- Elegir **Santiago Bilinkis**.
+**0:15 · Elegir un programa real.** México → CREATIVO → Analizar. Señalar el banner verde. "Lee el feed RSS público real; el análisis corre contra la API real de Qloo, en segundo plano."
 
-**0:50 · Momento 2: el agente cambia de estrategia.**
-- Abrir "Qué hizo el agente" y leer el "Por qué" de cada paso.
-- "Solo el 3% de los episodios nombra a un invitado… pruebo con el propio programa en Qloo", después etiquetas temáticas, y después decide qué señal usar.
-- En LIVE (`?private=1` más el token del jurado), las mismas decisiones con consultas reales y el panel de descubrimientos.
-- La verificación descarta a alguien cuyo nombre ya aparece en un título del programa, y vuelve a elegir.
+**0:35 · Lo que aportó Qloo (momento central).**
+- "El agente le preguntó a Qloo con quién más tiene afinidad esta audiencia y verificó a cada persona: identidad, tema, que no haya sido invitado, idioma."
+- Nombrar a la primera persona de la tarjeta: nunca fue entrevistada en los programas de nuestras fuentes, la encontró Qloo, y la tarjeta dice en qué puesto queda y por qué.
+- Ideas para la conversación (música, películas, libros): gustos asociados, no datos de los oyentes.
+- La línea plegada "N más sin idioma confirmado": verificadas, pero sin evidencia de que entrevisten en español.
 
-**1:50 · Momento 3: propuestas defendibles.**
-- Etiquetas de historial, idioma e identidad.
-- Evidencias con enlaces.
-- Invitación basada solo en evidencia.
-- Descubrimientos de Qloo separados y pendientes de verificación.
+**1:05 · El agente decide y lo explica.** Abrir "Qué hizo el agente". "Cada paso es una decisión de un planificador por reglas, con su motivo." Leer el "Por qué" que muestra la pantalla: con pocos invitados confirmados, tradujo los temas a etiquetas de Qloo.
 
-**2:50 · Cierre.** "Qloo encuentra el vecindario cultural; el agente de Green Room lo contrasta con evidencia pública. El productor decide."
+**1:30 · Invitados defendibles.** Cinco tarjetas → Ver evidencia → Preparar invitación. "Se ordenan por evidencia. La afinidad de Qloo solo reordena candidatos comparables. La invitación cita solo hechos verificados."
 
-## Before recording
-- MOCK mode is enough to show the re-plan: MOCK Qloo returns no podcast entity and no tags, so the agent visibly falls back and says so.
-- Show real Qloo results only in a LIVE session approved for the recording, and switch `QLOO_LIVE_ENABLED` back to `false` afterwards.
-- If LIVE returns other decisions than the ones in this script, narrate what the trace says. Do not use the script's wording.
+**1:50 · Cierre.** "Qloo encuentra el vecindario cultural; el agente de Green Room lo contrasta con evidencia pública. El productor decide."
