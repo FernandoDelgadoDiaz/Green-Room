@@ -20,6 +20,11 @@
   "es": {
    "url": "https://rss.applemarketingtools.com/api/v2/es/podcasts/top/25/podcasts.json",
    "updated": "2026-10-23T03:48:18Z"
+  },
+  "ar-spotify": {
+   "url": "https://podstatus.com/charts/spotify/ar/top-podcasts",
+   "updated": "2026-10-23",
+   "note": "Daily public copy of Spotify's Top Podcasts chart for Argentina (the official page returned HTTP 503 when read)."
   }
  },
  "lookup": "https://itunes.apple.com/lookup?id=<ids>&entity=podcast",
@@ -798,6 +803,248 @@
      }
     ],
     "note": "Added 2026-10-24 for its verified origin, not from a chart."
+   }
+  },
+  {
+   "id": "la-formula",
+   "country": "ar",
+   "chartRank": 1,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "La Fórmula Podcast",
+   "host": "Mili Hadad",
+   "hostAliases": [
+    "Mili Hadad"
+   ],
+   "brand": "La Fórmula",
+   "feedUrl": "https://open.spotify.com/show/2TZKJJmj9WQkcTZ34T09or",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/2TZKJJmj9WQkcTZ34T09or",
+   "spotifyId": "2TZKJJmj9WQkcTZ34T09or",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#1, Podstatus copy, 2026-10-23); host nationality not yet sourced."
+   }
+  },
+  {
+   "id": "la-cruda",
+   "country": "ar",
+   "chartRank": 16,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "La Cruda",
+   "host": "Migue Granados",
+   "hostAliases": [
+    "Migue Granados",
+    "Miguel Granados"
+   ],
+   "brand": "La Cruda",
+   "feedUrl": "https://open.spotify.com/show/2G0HRZba65w6T9NDNScNK2",
+   "genre": "Comedia",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/2G0HRZba65w6T9NDNScNK2",
+   "spotifyId": "2G0HRZba65w6T9NDNScNK2",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://es.wikipedia.org/wiki/Miguel_Granados",
+      "quote": "Miguel «Migue» Granados (Rosario, 2 de septiembre de 1986) es un humorista, músico y presentador de radio y televisión argentino."
+     }
+    ]
+   }
+  },
+  {
+   "id": "el-buscador",
+   "country": "ar",
+   "chartRank": 22,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "El Buscador",
+   "host": "Julio Leiva",
+   "hostAliases": [
+    "Julio Leiva"
+   ],
+   "brand": "El Buscador",
+   "feedUrl": "https://open.spotify.com/show/44Vtu1B21sSjukrvs6L2dq",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/44Vtu1B21sSjukrvs6L2dq",
+   "spotifyId": "44Vtu1B21sSjukrvs6L2dq",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://www.elpais.com.uy/tvshow/personajes/julio-leiva-el-creador-de-caja-negra-el-desafio-es-ir-contra-los-propios-prejuicios",
+      "quote": "Julio Leiva, el periodista argentino que está al frente de un par de fenómenos de los medios argentinos"
+     }
+    ]
+   }
+  },
+  {
+   "id": "la-sesion-sofi-calvo",
+   "country": "ar",
+   "chartRank": 23,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "La Sesión de Sofi Calvo",
+   "host": "Sofi Calvo",
+   "hostAliases": [
+    "Sofi Calvo",
+    "Sofía Calvo"
+   ],
+   "brand": "La Sesión",
+   "feedUrl": "https://open.spotify.com/show/26PI3K0UtVPuope1oN9fAq",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/26PI3K0UtVPuope1oN9fAq",
+   "spotifyId": "26PI3K0UtVPuope1oN9fAq",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://x.com/sofiecalvo",
+      "quote": "Psicóloga, escritora. Tengo un podcast: La sesión - Hispa. Santa Fe, Argentina."
+     }
+    ],
+    "note": "Host's own public profile."
+   }
+  },
+  {
+   "id": "hay-amor",
+   "country": "ar",
+   "chartRank": 78,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "Hay Amor con Nacho Elizalde",
+   "host": "Nacho Elizalde",
+   "hostAliases": [
+    "Nacho Elizalde"
+   ],
+   "brand": "Hay Amor",
+   "feedUrl": "https://open.spotify.com/show/1D0BNoKIeUuPciBJ8zHqeP",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/1D0BNoKIeUuPciBJ8zHqeP",
+   "spotifyId": "1D0BNoKIeUuPciBJ8zHqeP",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#78); host nationality not yet sourced."
+   }
+  },
+  {
+   "id": "ferne-con-grego",
+   "country": "ar",
+   "chartRank": 85,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "Ferné con Grego",
+   "host": "Grego Rossello",
+   "hostAliases": [
+    "Grego Rossello",
+    "Gregorio Rossello"
+   ],
+   "brand": "Ferné con Grego",
+   "feedUrl": "https://open.spotify.com/show/3oBSdxfVxwGDsGo5xOtknZ",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/3oBSdxfVxwGDsGo5xOtknZ",
+   "spotifyId": "3oBSdxfVxwGDsGo5xOtknZ",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#85); host nationality not yet sourced."
+   }
+  },
+  {
+   "id": "sensible-yoyi-francella",
+   "country": "ar",
+   "chartRank": 31,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "Sensible x Yoyi Francella",
+   "host": "Yoyi Francella",
+   "hostAliases": [
+    "Yoyi Francella",
+    "Johanna Francella"
+   ],
+   "brand": "Sensible",
+   "feedUrl": "https://open.spotify.com/show/18yxjvfq8CM7JasTy9Rf3v",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/18yxjvfq8CM7JasTy9Rf3v",
+   "spotifyId": "18yxjvfq8CM7JasTy9Rf3v",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#31); host nationality not yet sourced."
+   }
+  },
+  {
+   "id": "agus-creevy",
+   "country": "ar",
+   "chartRank": 62,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "Agus Creevy",
+   "host": "Agustín Creevy",
+   "hostAliases": [
+    "Agustín Creevy",
+    "Agus Creevy"
+   ],
+   "brand": "Agus Creevy",
+   "feedUrl": "https://open.spotify.com/show/033eZ5bDSCu40b5b5JOc8y",
+   "genre": "Deportes",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/033eZ5bDSCu40b5b5JOc8y",
+   "spotifyId": "033eZ5bDSCu40b5b5JOc8y",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#62); host nationality not yet sourced."
    }
   }
  ],

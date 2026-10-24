@@ -5,7 +5,7 @@
 //   - data/raw/catalog/<id>.xml: snapshots of each show's official RSS feed (gitignored).
 // Usage: npm run catalog:build
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { parseFeed } from '../core/feed';
+import { parseFeed, type ParsedFeed } from '../core/feed';
 import { extractGenericGuests } from '../core/extract-generic';
 import type { Episode, PodcastDataset } from '../core/types';
 
@@ -23,7 +23,7 @@ interface SourceShow {
   country: string | null;
   chartRank: number | null;
   alsoCharts?: Record<string, number>;
-  appleId: number;
+  appleId: number | null;
   name: string;
   host: string;
   hostAliases: string[];
@@ -36,6 +36,11 @@ interface SourceShow {
   appleUrl: string;
   existing?: boolean;
   notAnalyzable?: 'feed_not_snapshotted' | 'inactive_solo';
+  /** Shows on Spotify with no public RSS: episodes come from the Spotify Web API (scripts/fetch-spotify.ts). */
+  spotifyId?: string;
+  spotifyMarket?: string;
+  /** Which chart chartRank comes from (default Apple). */
+  chartSource?: 'apple' | 'spotify';
   origin: Origin;
 }
 
@@ -45,13 +50,32 @@ const NOW = new Date(`${src.retrievedAt}T12:00:00Z`);
 const rerun = /\b(TOP RATED|BEST OF|Recomendado|Rebroadcast|Encore|REPLAY|Re-?release)\b/i;
 const excluded = /\b(trailer|tr[aá]iler|teaser|avance|announcement|anuncio)\b/i;
 
+/** A Spotify Web API snapshot in the shape parseFeed returns (dated episodes only). */
+function spotifyFeed(path: string): ParsedFeed {
+  const j = JSON.parse(readFileSync(path, 'utf8')) as { show: { description: string; languages: string[] }; episodes: Array<{ id: string; title: string; published: string | null; url: string }> };
+  return {
+    language: (j.show.languages[0] ?? 'es').slice(0, 2).toLowerCase(),
+    description: j.show.description ?? '',
+    items: j.episodes.filter((e) => e.published).slice(0, MAX_EPISODES).map((e) => ({ guid: e.id, title: e.title, published: e.published!, url: e.url })),
+  } as ParsedFeed;
+}
+
 const out: unknown[] = [];
 for (const s of src.shows) {
+  // A Spotify show enters the catalog only once its episodes have been read (fetch-spotify.ts).
+  if (s.spotifyId && !existsSync(`data/raw/catalog/${s.id}.spotify.json`) && !existsSync(`data/podcasts/${s.id}.json`)) {
+    console.log(`${s.id.padEnd(22)} skipped: no Spotify snapshot yet`);
+    continue;
+  }
   let ds: PodcastDataset | null = null;
   const raw = `data/raw/catalog/${s.id}.xml`;
-  if (s.existing) ds = JSON.parse(readFileSync(`data/podcasts/${s.id}.json`, 'utf8'));
-  else if (!s.notAnalyzable && existsSync(raw)) {
-    const feed = parseFeed(readFileSync(raw, 'utf8'), MAX_EPISODES);
+  const spotifyRaw = `data/raw/catalog/${s.id}.spotify.json`;
+  const stored = `data/podcasts/${s.id}.json`;
+  if (s.existing) ds = JSON.parse(readFileSync(stored, 'utf8'));
+  // Snapshots are gitignored: where this run has none for a show (e.g. in CI), keep its stored dataset.
+  else if (!existsSync(raw) && !existsSync(spotifyRaw) && existsSync(stored)) ds = JSON.parse(readFileSync(stored, 'utf8'));
+  else if (!s.notAnalyzable && (existsSync(raw) || (s.spotifyId && existsSync(spotifyRaw)))) {
+    const feed = existsSync(raw) ? parseFeed(readFileSync(raw, 'utf8'), MAX_EPISODES) : spotifyFeed(spotifyRaw);
     const episodes: Episode[] = feed.items.map((it) => {
       const ex = excluded.test(it.title);
       return {
@@ -76,13 +100,17 @@ for (const s of src.shows) {
         feedUrl: s.feedUrl,
         website: s.appleUrl,
         retrievedAt: src.retrievedAt,
-        retrievedVia: 'Feed URL from the official Apple Podcasts lookup API; RSS snapshot fetched through a scraping service (the build container cannot reach feed hosts directly)',
+        retrievedVia: s.spotifyId && !existsSync(raw)
+          ? 'Episode list from the official Spotify Web API (show has no public RSS feed); snapshot taken by the "Build catalog from Spotify" workflow'
+          : 'Feed URL from the official Apple Podcasts lookup API; RSS snapshot fetched through a scraping service (the build container cannot reach feed hosts directly)',
         note: `Most recent ${MAX_EPISODES} items at most. Guest names come from a generic, conservative title rule (core/extract-generic.ts, confidence "low"); a spot check of 36 extractions found 3 non-person phrases.`,
       },
       episodes,
     };
     writeFileSync(`data/podcasts/${s.id}.json`, JSON.stringify(ds) + '\n');
   }
+  // Spotify shows: artwork and episode count from the API snapshot when this run has one.
+  const spotifyMeta = s.spotifyId && existsSync(spotifyRaw) ? (JSON.parse(readFileSync(spotifyRaw, 'utf8')).show as { total: number; artwork: string | null }) : null;
   const eps = ds?.episodes.filter((e) => !e.excluded) ?? [];
   const dates = eps.map((e) => e.published).filter(Boolean).sort();
   const withGuests = eps.filter((e) => e.guests.length).length;
@@ -100,16 +128,17 @@ for (const s of src.shows) {
     id: s.id,
     name: s.name,
     host: s.host,
-    artwork: s.artwork,
+    artwork: spotifyMeta?.artwork ?? s.artwork,
+    platform: s.spotifyId ? 'spotify' : 'apple',
     genre: s.genre,
     language: ds?.language ?? (s.origin.country === 'us' || s.origin.country === 'gb' || s.country === 'us' || s.country === 'gb' ? 'en' : 'es'),
     origin: s.origin,
     description: ds?.description ?? null,
     // Popularity only: a chart position never decides the country a show is listed under.
-    charts: [...(s.country ? [{ country: s.country, rank: s.chartRank }] : []), ...Object.entries(s.alsoCharts ?? {}).map(([country, rank]) => ({ country, rank }))],
+    charts: [...(s.country ? [{ country: s.country, rank: s.chartRank, source: s.chartSource ?? 'apple' }] : []), ...Object.entries(s.alsoCharts ?? {}).map(([country, rank]) => ({ country, rank, source: 'apple' }))],
     appleUrl: s.appleUrl,
     feedUrl: s.feedUrl,
-    appleTrackCount: s.trackCount,
+    appleTrackCount: spotifyMeta?.total ?? s.trackCount,
     lastRelease: last,
     snapshot: ds ? { episodes: eps.length, withGuestNames: withGuests, coverage: Math.round(coverage * 100) / 100, first: dates[0] ?? null, last: dates[dates.length - 1] ?? null } : null,
     status,

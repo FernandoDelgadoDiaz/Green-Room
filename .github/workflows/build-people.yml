@@ -12,6 +12,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: catalog-data-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,4 +41,5 @@ jobs:
           git add data/people.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "Data: people.json from Wikidata (workflow run ${{ github.run_id }})"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
           git push
