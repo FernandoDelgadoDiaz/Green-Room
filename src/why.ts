@@ -26,7 +26,10 @@ export function audienceSubtitle(rec: Recommendation, lang: Lang): string | null
   // The occupation that makes them the right kind of guest for this show, when there is one.
   // Wikidata lists the main occupation first: keep that order, taking the first one the show shares.
   const occ = fittingOccupation(a).occ?.[lang] ?? (a.categories[0] ? CATEGORY_LABELS[a.categories[0]][lang] : null);
-  const where = a.countries[0] ? countryName(a.countries[0], lang) : null;
+  // Dual citizens show the country that ties them to this audience (Musk: United States, not South Africa).
+  const tie = a.sameCountry ? (a.matchedCountry ?? a.showCountry) : null;
+  const code = tie && a.countries.includes(tie) ? tie : a.countries[0];
+  const where = code ? countryName(code, lang) : null;
   return [occ && cap(occ), where].filter(Boolean).join(' · ') || null;
 }
 

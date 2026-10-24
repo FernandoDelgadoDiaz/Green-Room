@@ -5,7 +5,7 @@
 |---|---|
 | Working agentic app integrating the Qloo API | **Done.** https://greenroom1.netlify.app runs every analysis on the real Qloo API. |
 | Link to a functional demo, externally hosted, free and unrestricted until judging ends | https://greenroom1.netlify.app (no login) |
-| **Public** repo with an **open-source license** visible in About | MIT `LICENSE` is in the repo. **Pending: switch the repository to public** (GitHub → Settings → General → Danger Zone → Change visibility). No secrets in history, no Qloo responses stored. |
+| **Public** repo with an **open-source license** visible in About | **Done.** Public, MIT `LICENSE`. No secrets in history, no Qloo responses stored. |
 | English text description | Below |
 | Testing instructions | [docs/JUDGE_ACCESS.md](JUDGE_ACCESS.md) (ready to paste) |
 | Demo video | **Not required** ("Demo videos are not required. Instead … something judges can actually use"). Judges may still decide on text, images and video alone: upload the screenshots in `docs/screenshots/`. Script kept in [docs/DEMO.md](DEMO.md) if a video is added. |
@@ -50,7 +50,7 @@ Without Qloo, Green Room can still list credible people. It can't tell a produce
 - A shared daily Qloo budget, a per-visitor cap and a server-side cache protect the hackathon key.
 - An emergency pause stops new Qloo calls without a redeploy.
 - Qloo data is never committed to the public repo.
-- 213 automated tests.
+- 214 automated tests.
 
 **Honest limits.**
 - Qloo describes aggregate taste, not individual listeners, and the app says so on every Qloo value.
