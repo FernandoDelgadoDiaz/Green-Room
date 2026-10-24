@@ -1621,7 +1621,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         let best = 0;
         let bestVal = -Infinity;
         candidates.forEach((c, i) => {
-          const redundancy = picks.length ? Math.max(...picks.map((p) => cosine(p.vector, c.vector))) : 0;
+          // Too similar to a pick already made: same themes, or (with people data) the same kind of guest.
+          const sameKind = (p: Candidate) => {
+            const a = new Set(personOf(p)?.categories ?? []);
+            const b = personOf(c)?.categories ?? [];
+            return a.size && b.length ? b.filter((x) => a.has(x)).length / new Set([...a, ...b]).size : 0;
+          };
+          const redundancy = picks.length ? Math.max(...picks.map((p) => Math.max(cosine(p.vector, c.vector), sameKind(p)))) : 0;
           // Out-of-band candidates are only picked once no band member is left.
           const val = (c.inBand === false ? -1 : 0) + 0.75 * c.score - 0.25 * redundancy * c.score;
           if (val > bestVal) {
