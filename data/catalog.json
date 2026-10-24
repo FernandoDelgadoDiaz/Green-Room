@@ -431,16 +431,16 @@
    "genre": "Business",
    "language": "es",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "mx",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
      {
-      "url": "https://podcasts.apple.com/bz/podcast/cracks-podcast-con-oso-trava/id1450858380?l=es-MX",
-      "quote": "presentado por Oso Trava, emprendedor y fundador de InstaFit, quien ha sido nombrado emprendedor del año por la revista Expansión"
+      "url": "https://www.sdpnoticias.com/deportes/quien-es-oso-trava-fundador-de-cracks-podcast/",
+      "quote": "Oswaldo Trava, mejor conocido como Oso Trava, es un emprendedor, inversionista y creador de contenido mexicano"
      }
     ],
-    "note": "Strong indications (Shark Tank México, the Expansión award, Mexican guests) but no source states the show’s or host’s country explicitly."
+    "note": "Verified 2026-10-24 from the host's nationality (SDP Noticias)."
    },
    "description": "Cracks es un podcast de entrevistas con enfoque de negocios y mentalidad que le enseñará a cualquiera que aspire a la grandeza los hábitos y trucos que usan los mejores en deportes, negocios, tecnología y medios para…",
    "charts": [
@@ -623,9 +623,9 @@
    "genre": "Comedy",
    "language": "es",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
      {
       "url": "https://es.wikipedia.org/wiki/Lucas_Lauriente",
@@ -636,7 +636,7 @@
       "quote": "Un podcast en donde Lucas Lauriente, Lucho Mellera, Nicolas De Tracy y Nanutria van a decir muchas palabras juntas"
      }
     ],
-    "note": "One of the four hosts is an Argentine comedian; no source states where the show is produced. Comedy chat, not an interview format."
+    "note": "Verified 2026-10-24: host Lucas Lauriente is an Argentine comedian (Wikipedia quote above)."
    },
    "description": "Un podcast en donde Lucas Lauriente, Lucho Mellera, Nicolas De Tracy y Nanutria van a decir muchas palabras juntas para que a ustedes les cause",
    "charts": [
@@ -909,16 +909,20 @@
    "genre": "Sociedad y cultura",
    "language": "es",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
+     {
+      "url": "https://www.elpais.com.uy/tvshow/personajes/julio-leiva-el-creador-de-caja-negra-el-desafio-es-ir-contra-los-propios-prejuicios",
+      "quote": "Julio Leiva, el periodista argentino que está al frente de un par de fenómenos de los medios argentinos"
+     },
      {
       "url": "https://eter.edu.ar/pasa-en-eter/julio-leiva-y-el-detras-de-escena-de-lo-que-significa-entrevistar",
       "quote": "El director de \"Filo News\" y creador del programa “Caja Negra” volvió a nuestra escuela -donde se formó como periodista-"
      }
     ],
-    "note": "Interview show by Filo.news (guests are mostly Argentine) but no source found that states the outlet’s or host’s country explicitly."
+    "note": "Verified 2026-10-24 from the host's nationality (El País, Uruguay)."
    },
    "description": "Caja Negra es un viaje. Es el lugar donde todo queda registrado. Es donde queda guardado un momento de tu vida. ¿En qué momento de tu vida hiciste el clic que te cambió para",
    "charts": [],

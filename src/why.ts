@@ -3,7 +3,7 @@
 // alike when the evidence is alike.
 
 import type { Recommendation } from '../core/agent/agent';
-import { CATEGORY_LABELS } from '../core/people';
+import { CATEGORY_LABELS, categoriesOf } from '../core/people';
 
 type Lang = 'en' | 'es';
 
@@ -23,9 +23,16 @@ const clip = (s: string, n = 70) => (s.length > n ? `${s.slice(0, n - 1).trimEnd
 export function audienceSubtitle(rec: Recommendation, lang: Lang): string | null {
   const a = rec.audience;
   if (!a) return null;
-  const occ = a.occupations[0]?.[lang] ?? (a.categories[0] ? CATEGORY_LABELS[a.categories[0]][lang] : null);
+  // The occupation that makes them the right kind of guest for this show, when there is one.
+  const fitting = a.sharedCategories.length ? a.occupations.find((o) => categoriesOf([o.en]).includes(a.sharedCategories[0])) : undefined;
+  const occ = (fitting ?? a.occupations[0])?.[lang] ?? (a.categories[0] ? CATEGORY_LABELS[a.categories[0]][lang] : null);
   const where = a.countries[0] ? countryName(a.countries[0], lang) : null;
   return [occ && cap(occ), where].filter(Boolean).join(' · ') || null;
+}
+
+function occOf(a: NonNullable<Recommendation['audience']>, lang: Lang): string | null {
+  const o = a.occupations.find((x) => categoriesOf([x.en]).includes(a.sharedCategories[0])) ?? a.occupations[0];
+  return o ? o[lang] : null;
 }
 
 /** Up to three sentences, each one only when its evidence exists. */
@@ -41,15 +48,18 @@ export function whySentences(rec: Recommendation, showName: string, lang: Lang):
     const kind = CATEGORY_LABELS[a.sharedCategories[0]];
     out.push(
       es
-        ? `${showName} ya recibió a ${kind.esPlural} como ${list(a.similarPastGuests, lang)}; ${rec.name} tiene ese mismo perfil${a.occupations[0] ? ` (${a.occupations[0].es})` : ''}.`
-        : `${showName} has already hosted ${kind.enPlural} such as ${list(a.similarPastGuests, lang)}; ${rec.name} has that same profile${a.occupations[0] ? ` (${a.occupations[0].en})` : ''}.`,
+        ? `${showName} ya recibió a ${kind.esPlural} como ${list(a.similarPastGuests, lang)}; ${rec.name} tiene ese mismo perfil${occOf(a, 'es') ? ` (${occOf(a, 'es')})` : ''}.`
+        : `${showName} has already hosted ${kind.enPlural} such as ${list(a.similarPastGuests, lang)}; ${rec.name} has that same profile${occOf(a, 'en') ? ` (${occOf(a, 'en')})` : ''}.`,
     );
   } else if (themes.length) {
     out.push(es ? `Sus entrevistas tocan ${list(themes, lang)}, temas frecuentes en ${showName}.` : `Their interviews cover ${list(themes, lang)}, frequent topics on ${showName}.`);
   }
 
   // 2. Known by this audience: same country (and where they were interviewed), or widely known.
-  if (a?.sameCountry && a.showCountry) {
+  if (a?.sameCountry && a.matchedCountry && a.matchedCountry !== a.showCountry) {
+    const country = countryName(a.matchedCountry, lang);
+    out.push(es ? `Es una figura de ${country}, de donde viene buena parte de los invitados de ${showName}.` : `A public figure from ${country}, where many of ${showName}’s guests come from.`);
+  } else if (a?.sameCountry && a.showCountry) {
     const country = countryName(a.showCountry, lang);
     out.push(
       a.sameCountryShows.length

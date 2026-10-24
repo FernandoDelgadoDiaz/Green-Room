@@ -95,7 +95,9 @@ export interface RecommendationAudience {
   sharedCategories: OccupationCategory[];
   countries: string[];
   showCountry: string | null;
+  /** Citizen of one of the audience's countries (the show's own, or one many of its guests come from). */
   sameCountry: boolean;
+  matchedCountry: string | null;
   /** Comparison shows from the show's country where this person was interviewed. */
   sameCountryShows: string[];
   wikipedias: number;
@@ -504,6 +506,10 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const people = input.people ?? null;
   // Verified origin; for shows outside the catalog, the country most of its documented guests share (≥ 50 %).
   let showCountry = input.originOf?.get(target.id) ?? null;
+  // The audience's countries: the show's own, plus any country at least 15 % of its documented past
+  // guests come from (an English-language show from London interviewing Americans is heard by both).
+  let audienceCountries = new Set(showCountry ? [showCountry] : []);
+  const AUDIENCE_COUNTRY_SHARE = 0.15;
   let guestProfile: ShowGuestProfile | null = null;
   let themeEvidence = 1;
   const catShare = new Map<OccupationCategory, number>();
@@ -542,7 +548,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       const nb = Math.sqrt([...catShare.values()].reduce((sum, v) => sum + v * v, 0));
       typeFit = na && nb ? dot / (na * nb) : 0;
     }
-    const regionFit = showCountry && p?.countries.includes(showCountry) ? 1 : sameCountryShows(c).length ? 0.6 : 0;
+    const regionFit = p?.countries.some((cc) => audienceCountries.has(cc)) ? 1 : sameCountryShows(c).length ? 0.6 : 0;
     const known = p ? Math.min(1, Math.log2(1 + p.wikipedias) / Math.log2(31)) : 0;
     return { typeFit, regionFit, known };
   };
@@ -553,12 +559,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     const p = personOf(c);
     if (!p) return false;
     if (level === 2) return true;
-    const intl = p.wikipedias >= INTERNATIONAL_WIKIPEDIAS;
-    if (level === 1) return intl || (c.regionFit ?? 0) >= 0.6;
-    return (intl || (c.regionFit ?? 0) === 1) && (!profileStrong() || (c.typeFit ?? 0) > 0);
+    if (level === 1) return p.wikipedias >= INTERNATIONAL_WIKIPEDIAS || (c.regionFit ?? 0) >= 0.6;
+    return (c.regionFit ?? 0) === 1 && (!profileStrong() || (c.typeFit ?? 0) > 0);
   };
   const gateText = (): Bi[] => [
-    [`documented people from ${showCountry?.toUpperCase() ?? 'the show’s country'} (or known in ${INTERNATIONAL_WIKIPEDIAS}+ Wikipedias) who match the kind of guest the show interviews`, `personas documentadas de ${showCountry?.toUpperCase() ?? 'el país del programa'} (o conocidas en ${INTERNATIONAL_WIKIPEDIAS}+ Wikipedias) del mismo tipo de invitado que entrevista el programa`],
+    [`documented people from the audience’s countries (${[...audienceCountries].join('/').toUpperCase() || '—'}) who match the kind of guest the show interviews`, `personas documentadas de los países de su audiencia (${[...audienceCountries].join('/').toUpperCase() || '—'}) del mismo tipo de invitado que entrevista el programa`],
     [`documented people from ${showCountry?.toUpperCase() ?? 'the show’s country'}, interviewed on its shows, or known in ${INTERNATIONAL_WIKIPEDIAS}+ Wikipedias`, `personas documentadas de ${showCountry?.toUpperCase() ?? 'el país del programa'}, entrevistadas en sus programas, o conocidas en ${INTERNATIONAL_WIKIPEDIAS}+ Wikipedias`],
     ['people documented in Wikidata, from any country', 'personas documentadas en Wikidata, de cualquier país'],
     ['anyone with verified interviews (people data does not cover enough candidates)', 'cualquiera con entrevistas verificadas (los datos de personas no cubren suficientes candidatos)'],
@@ -1421,6 +1426,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       const topCountry = [...countries.entries()].sort((a, b) => b[1] - a[1])[0];
       const strong = known.length >= GUEST_PROFILE_MIN && totalCats > 0;
       if (!showCountry && topCountry && known.length >= GUEST_PROFILE_MIN && topCountry[1] / known.length >= 0.5) showCountry = topCountry[0];
+      audienceCountries = new Set([...(showCountry ? [showCountry] : []), ...(known.length >= GUEST_PROFILE_MIN ? [...countries.entries()].filter(([, n]) => n / known.length >= AUDIENCE_COUNTRY_SHARE).map(([cc]) => cc) : [])]);
       guestProfile = {
         resolved: known.length,
         pastGuests: pastGuests.size,
@@ -1739,6 +1745,10 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     if (qlooUsable && useAffinity && !done.has('qloo_score_affinity') && !outOfTime()) return { tool: 'qloo_score_affinity', why: ['Add Qloo affinity for candidates whose identity can be confirmed.', 'Agrego la afinidad de Qloo para los candidatos cuya identidad se pueda confirmar.'] };
     // Cultural hooks come last: they explain, they do not rank, so they never take budget from discovery.
     if (qlooUsable && !done.has('qloo_cross_domain') && !outOfTime()) return { tool: 'qloo_cross_domain', why: ['A usable audience signal exists: look for cultural hooks across domains.', 'Hay una señal de audiencia utilizable: busco referencias culturales en otros dominios.'] };
+    // Older interviews of people this audience knows beat recent ones of people it does not: widen the
+    // window before letting the "known by this audience" rule go down a level.
+    if (people && gateLevel > 0 && windowMonths < 72 && !done.has('widen_window') && done.has('score_candidates'))
+      return { tool: 'widen_window', why: [`Fewer than ${k} candidates from the audience’s countries in ${windowMonths} months: look further back before relaxing who counts as known.`, `Menos de ${k} candidatos de los países de su audiencia en ${windowMonths} meses: busco más atrás antes de relajar quién cuenta como conocido.`] };
     if (eligible().length < k && minFit > 0) return { tool: 'relax_threshold', why: [`Only ${eligible().length} candidates pass the topical-fit bar (need ${k}).`, `Solo ${eligible().length} candidatos superan el ajuste temático mínimo (necesito ${k}).`] };
     if (eligible().length < k && windowMonths < 72 && !done.has('widen_window')) return { tool: 'widen_window', why: [`Still ${eligible().length} eligible after relaxing: widen the time window.`, `Siguen siendo ${eligible().length} elegibles después de relajar: amplío la ventana de tiempo.`] };
     if (!done.has('check_language')) return { tool: 'check_language', why: [`Habitual language(s) “${acceptedLabel()}”: check which candidates have a verified interview in them.`, `Idioma(s) habitual(es) “${acceptedLabel()}”: reviso quién tiene una entrevista verificada en ellos.`] };
@@ -1864,7 +1874,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       sharedCategories: shared,
       countries: p.countries,
       showCountry,
-      sameCountry: Boolean(showCountry && p.countries.includes(showCountry)),
+      sameCountry: p.countries.some((cc) => audienceCountries.has(cc)),
+      matchedCountry: p.countries.find((cc) => cc === showCountry) ?? p.countries.find((cc) => audienceCountries.has(cc)) ?? null,
       sameCountryShows: sameCountryShows(c),
       wikipedias: p.wikipedias,
       similarPastGuests: similar,

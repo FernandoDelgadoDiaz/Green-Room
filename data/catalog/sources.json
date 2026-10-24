@@ -345,16 +345,16 @@
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/10/c3/ea/10c3eaa9-a610-70c3-2d4b-fd8b957cd5f4/mza_8126512650065582333.jpg/600x600bb.jpg",
    "appleUrl": "https://podcasts.apple.com/mx/podcast/cracks-podcast-con-oso-trava/id1450858380",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "mx",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
      {
-      "url": "https://podcasts.apple.com/bz/podcast/cracks-podcast-con-oso-trava/id1450858380?l=es-MX",
-      "quote": "presentado por Oso Trava, emprendedor y fundador de InstaFit, quien ha sido nombrado emprendedor del año por la revista Expansión"
+      "url": "https://www.sdpnoticias.com/deportes/quien-es-oso-trava-fundador-de-cracks-podcast/",
+      "quote": "Oswaldo Trava, mejor conocido como Oso Trava, es un emprendedor, inversionista y creador de contenido mexicano"
      }
     ],
-    "note": "Strong indications (Shark Tank México, the Expansión award, Mexican guests) but no source states the show’s or host’s country explicitly."
+    "note": "Verified 2026-10-24 from the host's nationality (SDP Noticias)."
    }
   },
   {
@@ -495,9 +495,9 @@
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/9c/65/37/9c6537b9-8bd1-32a8-cced-12d36526430f/mza_2382673899373874267.jpg/600x600bb.jpg",
    "appleUrl": "https://podcasts.apple.com/ar/podcast/aislados-el-podcast/id1535862495",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
      {
       "url": "https://es.wikipedia.org/wiki/Lucas_Lauriente",
@@ -508,7 +508,7 @@
       "quote": "Un podcast en donde Lucas Lauriente, Lucho Mellera, Nicolas De Tracy y Nanutria van a decir muchas palabras juntas"
      }
     ],
-    "note": "One of the four hosts is an Argentine comedian; no source states where the show is produced. Comedy chat, not an interview format."
+    "note": "Verified 2026-10-24: host Lucas Lauriente is an Argentine comedian (Wikipedia quote above)."
    }
   },
   {
@@ -722,16 +722,20 @@
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/04/38/2e/04382eb4-d8d4-2b86-b21d-38f2157d0106/mza_14970601487603893436.jpeg/600x600bb.jpg",
    "appleUrl": "https://podcasts.apple.com/ar/podcast/caja-negra/id1488487424",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
+     {
+      "url": "https://www.elpais.com.uy/tvshow/personajes/julio-leiva-el-creador-de-caja-negra-el-desafio-es-ir-contra-los-propios-prejuicios",
+      "quote": "Julio Leiva, el periodista argentino que está al frente de un par de fenómenos de los medios argentinos"
+     },
      {
       "url": "https://eter.edu.ar/pasa-en-eter/julio-leiva-y-el-detras-de-escena-de-lo-que-significa-entrevistar",
       "quote": "El director de \"Filo News\" y creador del programa “Caja Negra” volvió a nuestra escuela -donde se formó como periodista-"
      }
     ],
-    "note": "Interview show by Filo.news (guests are mostly Argentine) but no source found that states the outlet’s or host’s country explicitly."
+    "note": "Verified 2026-10-24 from the host's nationality (El País, Uruguay)."
    }
   }
  ],
