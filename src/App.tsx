@@ -288,8 +288,8 @@ function Shell() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-brass-400">Green Room</p>
-          <h1 className="font-display text-4xl sm:text-5xl">{t('brand.tagline')}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-stone-400">{t('brand.subtitle')}</p>
+          <h1 className={`font-display ${selected ? 'text-3xl sm:text-4xl' : 'text-4xl sm:text-5xl'}`}>{t('brand.tagline')}</h1>
+          {!selected && <p className="mt-2 max-w-2xl text-sm text-stone-400">{t('brand.subtitle')}</p>}
           {!selected && demos.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="text-xs uppercase tracking-widest text-brass-400">{t('home.demo')}</span>
@@ -343,8 +343,7 @@ function Shell() {
             {show && result && (
               <section>
                 <h2 className="mb-3 text-xs uppercase tracking-widest text-stone-500">{t('step.results')} {show.name}</h2>
-                <div className="mb-4"><LiveBanner result={result} /></div>
-                <RecommendView show={show} result={result} />
+                <RecommendView show={show} result={result} banner={<LiveBanner result={result} />} />
               </section>
             )}
           </>

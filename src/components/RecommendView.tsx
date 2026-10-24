@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Recommendation, TraceStep } from '../../core/agent/agent';
 import type { GuestProfile } from '../../core/profiles';
@@ -6,7 +6,7 @@ import { draftProposal } from '../../core/pitch';
 import type { RecommendResult, ShowSummary } from '../api';
 import { useI18n } from '../i18n';
 import { Badge } from './Badge';
-import { GuestAvatar } from './GuestAvatar';
+import { GuestAvatar, initials } from './GuestAvatar';
 import { audienceSubtitle, whySentences } from '../why';
 
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}`);
@@ -628,8 +628,8 @@ function Portrait({ name, profile }: { name: string; profile: GuestProfile | nul
     return <img src={photo.thumbUrl} alt={name} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="aspect-[4/5] w-full object-cover object-top" />;
   }
   return (
-    <div className="flex aspect-[4/5] w-full items-start justify-center bg-gradient-to-br from-white/10 to-black pt-8">
-      <GuestAvatar name={name} profile={null} />
+    <div className="flex aspect-[4/5] w-full items-start justify-center bg-gradient-to-br from-stage-600 via-stage-800 to-black pt-[22%]">
+      <span className="font-display text-7xl text-brass-300/90">{initials(name)}</span>
     </div>
   );
 }
@@ -672,7 +672,7 @@ function AudienceChart({ result }: { result: RecommendResult }) {
   );
 }
 
-export function RecommendView({ show, result }: { show: ShowSummary; result: RecommendResult }) {
+export function RecommendView({ show, result, banner }: { show: ShowSummary; result: RecommendResult; banner?: ReactNode }) {
   const { lang, t } = useI18n();
   const [visible, setVisible] = useState(0);
   useEffect(() => {
@@ -686,6 +686,7 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
   return (
     <div className="space-y-8">
     <GuestLineup result={result} show={show} />
+    {banner}
     <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <section className="order-2 space-y-6 lg:order-1">
         <AudienceChart result={result} />
