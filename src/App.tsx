@@ -4,6 +4,7 @@ import { CatalogPicker } from './components/CatalogPicker';
 import { Badge } from './components/Badge';
 import { RecommendView } from './components/RecommendView';
 import { BacktestView } from './components/BacktestView';
+import { CoverageView } from './components/CoverageView';
 import { LanguageProvider, LanguageSwitch, useI18n } from './i18n';
 import type { Provenance } from '../core/types';
 
@@ -13,6 +14,7 @@ function MethodView({ shows, mode }: { shows: ShowSummary[]; mode: 'LIVE' | 'MOC
   const { t } = useI18n();
   return (
     <div className="grid gap-6 lg:grid-cols-2">
+      <CoverageView />
       <div className="card p-6">
         <h3 className="font-display text-3xl">{t('m.read')}</h3>
         <ul className="mt-4 space-y-3 text-sm">

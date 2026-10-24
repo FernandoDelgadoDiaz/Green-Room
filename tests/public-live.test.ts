@@ -266,3 +266,21 @@ describe('emergency pause from the private endpoint (no redeploy)', () => {
     expect(usage.body).toMatchObject({ publicEnabled: true, control: { paused: false }, usage: { analyses: 1 } });
   });
 });
+
+describe('public endpoint: Qloo coverage per market (counts only)', () => {
+  it('records each live run and returns its coverage, with the show’s verified country and no Qloo content', async () => {
+    const store = new MemoryCasStore();
+    await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store));
+    const r = await handlePublicLive({ action: 'coverage' }, ENV, deps(store));
+    expect(r.status).toBe(200);
+    const rows = (r.body as { rows: Array<Record<string, unknown>> }).rows;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ showId: 'diary-of-a-ceo', country: 'gb', guestsSearched: expect.any(Number), audienceKnown: expect.any(Boolean) });
+    expect(JSON.stringify(rows)).not.toMatch(/Some Artist|recommendations/);
+  });
+
+  it('answers with an empty list when nothing was analyzed or there is no store', async () => {
+    expect((await handlePublicLive({ action: 'coverage' }, ENV, deps(new MemoryCasStore()))).body).toEqual({ rows: [] });
+    expect((await handlePublicLive({ action: 'coverage' }, ENV, deps(null))).body).toEqual({ rows: [] });
+  });
+});
