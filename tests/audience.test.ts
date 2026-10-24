@@ -3,7 +3,7 @@ import { runAgent } from '../core/agent/agent';
 import { NoQlooAdapter } from '../core/qloo/mock';
 import type { PersonRecord } from '../core/people';
 import type { PodcastDataset } from '../core/types';
-import { audienceSubtitle, whySentences } from '../src/why';
+import { audienceSubtitle, citableThemes, whySentences } from '../src/why';
 
 // A show titled with guest names only (like El Método Rebord): its titles carry no themes, its past
 // guests say who it talks to: Argentine politicians and musicians.
@@ -83,5 +83,17 @@ describe('who the show interviews, and who its audience knows', () => {
     const r = await runAgent({ target, others: [argentine, spanish], qloo: new NoQlooAdapter(), k: 3, originOf, asOf: '2026-10-01T00:00:00.000Z' });
     expect(r.guestProfile).toBeNull();
     expect(r.recommendations.every((x) => x.audience === null)).toBe(true);
+  });
+});
+
+describe('why text: a theme is cited only with enough evidence', () => {
+  const rec = (words: string[]) =>
+    ({ name: 'Cantante', audience: null, appearances: [], sharedThemes: [{ id: 'psychology', label: 'Psychology & Mind', labelEs: 'Psicología y mente', words }] }) as never;
+  it('one word in one title ("autoestima") is not enough to say their interviews cover psychology', () => {
+    expect(citableThemes(rec(['autoestima']))).toHaveLength(0);
+    expect(whySentences(rec(['autoestima']), 'Aislados', 'es').join(' ')).not.toMatch(/Psicología/);
+  });
+  it('two different theme words are', () => {
+    expect(whySentences(rec(['autoestima', 'ansiedad']), 'Aislados', 'es').join(' ')).toMatch(/Sus entrevistas tocan Psicología y mente/);
   });
 });

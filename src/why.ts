@@ -45,13 +45,21 @@ function fittingOccupation(a: NonNullable<Recommendation['audience']>): { occ: {
   return { occ: a.occupations[0] ?? null, cat: a.sharedCategories[0] ?? null };
 }
 
+/**
+ * Themes we can honestly say a guest's interviews cover: at least two different theme words in their
+ * titles. One word is not enough ("autoestima" once does not make a singer a psychology guest).
+ */
+export function citableThemes(rec: Pick<Recommendation, 'sharedThemes'>): Recommendation['sharedThemes'] {
+  return rec.sharedThemes.filter((s) => new Set(s.words).size >= 2);
+}
+
 /** Up to three sentences, each one only when its evidence exists. */
 export function whySentences(rec: Recommendation, showName: string, lang: Lang): string[] {
   const es = lang === 'es';
   const a = rec.audience;
   const out: string[] = [];
   const latest = rec.appearances[0];
-  const themes = rec.sharedThemes.map((s) => (es ? s.labelEs : s.label));
+  const themes = citableThemes(rec).map((s) => (es ? s.labelEs : s.label));
 
   // 1. Same kind of guest as people the show already had.
   const fit = a ? fittingOccupation(a) : null;
@@ -76,7 +84,7 @@ export function whySentences(rec: Recommendation, showName: string, lang: Lang):
     out.push(
       a.sameCountryShows.length
         ? es
-          ? `Es una figura de ${country} con entrevistas en ${list(a.sameCountryShows, lang)}: su público ya la conoce.`
+          ? `Es una figura de ${country} con entrevistas en ${list(a.sameCountryShows, lang)}: es alguien que ese público ya conoce.`
           : `A public figure from ${country}, already interviewed on ${list(a.sameCountryShows, lang)}: this audience knows them.`
         : es
           ? `Es una figura de ${country}, el mismo público de ${showName}.`
