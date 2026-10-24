@@ -4,27 +4,43 @@
 
 Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/). Qloo's taste graph is the audience signal: past guests become the taste fingerprint of the show, and Qloo finds and scores people with affinity to it.
 
-> **Status (2026-10-23): live with the real Qloo API.** The public demo at https://greenroom1.netlify.app runs every analysis against Qloo's hackathon API, in a background job with a shared daily budget and a result cache. Validated end to end on Netlify with real Qloo: complete results with no rate-limit errors (see [docs/LIVE_ENGINE_FIX.md](docs/LIVE_ENGINE_FIX.md) and [docs/PUBLIC_LIVE.md](docs/PUBLIC_LIVE.md)). Podcasts, episodes, dates and guests come from official RSS feeds. Anything not returned by Qloo is labeled; a MOCK demo exists only when the visitor chooses it.
+> **Status (2026-10-24): live with the real Qloo API.** The public demo at https://greenroom1.netlify.app runs every analysis against Qloo's hackathon API, in a background job with a shared daily budget and a result cache. Validated end to end on Netlify with real Qloo: complete results with no rate-limit errors (see [docs/LIVE_ENGINE_FIX.md](docs/LIVE_ENGINE_FIX.md) and [docs/PUBLIC_LIVE.md](docs/PUBLIC_LIVE.md)). Podcasts, episodes, dates and guests come from official RSS feeds. Anything not returned by Qloo is labeled; a MOCK demo exists only when the visitor chooses it.
+
+## How Green Room uses Qloo
+
+Qloo is not a garnish here: the agent cannot describe a show's audience, find people outside its own sources, or say how a guest's audience compares with the show's without it.
+
+| Qloo API (hackathon base URL) | What the agent asks | Where it shows |
+|---|---|---|
+| `GET /search` (types `urn:entity:person`, `urn:entity:podcast`) | Confirm past guests (and the show itself) as Qloo entities, by context, never by name alone | Agent trace: the audience signal |
+| `GET /v2/tags` (semantic search) | Map the show's themes to Qloo tags when guests can't carry the signal (re-planning) | Agent trace |
+| `GET /v2/insights` `filter.type=urn:entity:person` | People this audience has affinity for, outside the show's history (discovery) | "What Qloo added" |
+| `GET /v2/insights` `filter.type=urn:entity:person` + `filter.results.entities` | Affinity of each comparable candidate to the show's audience signal | Ranking (inside an editorial band) and each card |
+| `GET /v2/insights` `filter.type=urn:demographics` | Age/gender affinity of the show's audience signals and of each recommended guest | "Who this show's audience is" and each card's profile match |
+| `GET /v2/trending` (`urn:entity:person`) | Each recommended guest's weekly popularity over the last 12 weeks | Each card: rising / steady / cooling |
+| `GET /v2/insights` `filter.type=urn:entity:artist`, `urn:entity:movie`, `urn:entity:book` | Cultural hooks of the audience across domains | "What Qloo added": conversation hooks |
+
+**Division of labour.** Verified public evidence (RSS interview history, Wikidata identity, country) decides *who can credibly be booked*; Qloo decides *whose audience matches yours, who your audience is, and who is on the rise*, and finds people your sources never had. Qloo values are labeled `LIVE`, inferred taste data, never presented as listener data. Qloo responses are cached privately on the server and never committed to this public repository (developer guide).
 
 ## What it does
 
-1. **Pick a country, then a podcast.** The catalog covers the US, Mexico, the UK, Argentina and Spain: 21 interview shows selected from Apple Podcasts' official charts. 15 are analyzable, 3 are limited (few guest names in titles) and 3 are not analyzable; each card says why. You can also search by name.
+1. **Pick a country, then a podcast.** The catalog covers the US, Mexico, the UK, Argentina and Spain: interview shows from Apple Podcasts' official charts, plus Argentine interview shows added for their verified origin. Each card says whether it is analyzable and why. You can also search any show in Apple's directory by name.
 2. **The agent loop runs: observe → decide → act → verify → replan.** A deterministic rule planner (no language model) picks each next tool from what it has observed, and every step records *why*. It re-plans when the data is thin:
    - not enough confirmed guest identities → the show as a Qloo podcast entity → theme tags;
    - too few candidates → relax the threshold → widen the window;
    - a failed verification → re-select.
 
    See [docs/AGENT_AUDIT.md](docs/AGENT_AUDIT.md).
-3. **Five recommendations**, each with:
-   - score components: topical fit, Qloo affinity, momentum and recency;
-   - verified appearances, with links;
-   - shared themes and conversation threads;
+3. **Five recommendations: people this audience knows.** Each show is profiled by who it interviews (its past guests' occupations and citizenship, from Wikidata), not only by its titles. Candidates must be documented people from the audience's countries and the same kind of guest, unless too few exist. Each card has:
+   - who they are (occupation · country, free photo) and a "why" built from their own evidence: similar past guests, where they were interviewed and on what;
+   - Qloo's read of their audience: affinity to the show's audience, demographic profile match, 12-week trend;
+   - verified appearances with links, identity and language checks;
    - a draft interview proposal built only from that evidence.
 4. **Backtest**: hide everything after a cutoff date, recommend with earlier data only, then count how many recommended people the host really booked later. The page also shows a random baseline, a leakage audit and limitations.
 
 ## Languages and guest profiles
 
-- **Español | English** selector in the header. Spanish is the default; the choice is remembered in the browser (localStorage). Switching language re-renders texts only: it does not re-run the analysis or change the ranking (checked in the browser QA run and in `tests/i18n-profiles.test.ts`).
+- **English | Español** selector in the header. English is the default except for Spanish-language browsers; `?lang=en` or `?lang=es` forces one, and the choice is remembered in the browser (localStorage). Switching language re-renders texts only: it does not re-run the analysis or change the ranking (checked in the browser QA run and in `tests/i18n-profiles.test.ts`).
 - Agent steps, decisions, reasons, warnings, backtest labels and interview proposals exist in both languages. Proper names, episode titles and quotes from sources stay in their original language.
 - **Guest cards** show the photo, name, specialty, score, "why we recommend them", an evidence button and an invitation button. Technical details and the VERIFIED/INFERRED/MOCK/LIVE labels are in a collapsible section; MOCK is also flagged on the collapsed summary.
 - **Photos** come from Wikimedia Commons with free licenses only. Author and license are shown in the evidence panel. A Wikipedia profile is attached only when its text matches the guest's own interview titles; otherwise the card shows initials. See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md#guest-photos-and-bios).

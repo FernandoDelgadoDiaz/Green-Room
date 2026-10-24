@@ -391,14 +391,18 @@ export function translate(lang: Lang, key: StringKey, params: Record<string, str
   return s;
 }
 
+/** ?lang=en|es first, then the visitor's saved choice, then Spanish only for Spanish-language browsers. */
 function initialLang(): Lang {
   try {
+    const q = new URLSearchParams(window.location.search).get('lang');
+    if (q === 'en' || q === 'es') return q;
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'en' || saved === 'es') return saved;
   } catch {
-    // storage unavailable: fall back to the default
+    // storage unavailable: fall back to the browser language
   }
-  return 'es';
+  const langs = typeof navigator !== 'undefined' ? (navigator.languages?.length ? navigator.languages : [navigator.language]) : [];
+  return langs.some((l) => /^es\b/i.test(l ?? '')) ? 'es' : 'en';
 }
 
 const Ctx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'es', setLang: () => {} });
