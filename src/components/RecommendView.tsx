@@ -628,8 +628,8 @@ function Portrait({ name, profile }: { name: string; profile: GuestProfile | nul
     return <img src={photo.thumbUrl} alt={name} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="aspect-[4/5] w-full object-cover object-top" />;
   }
   return (
-    <div className="flex aspect-[4/5] w-full items-start justify-center bg-gradient-to-br from-stage-600 via-stage-800 to-black pt-[22%]">
-      <span className="font-display text-7xl text-brass-300/90">{initials(name)}</span>
+    <div className="flex aspect-[4/5] w-full items-start justify-center bg-gradient-to-br from-stage-600 via-stage-800 to-black pt-[18%] lg:pt-[22%]">
+      <span className="font-display text-5xl text-brass-300/90 lg:text-7xl">{initials(name)}</span>
     </div>
   );
 }
