@@ -122,6 +122,12 @@ export function makeVerifier(env: Env) {
   return new WikidataVerifier({ fetchJson: (u) => safeJson(u, { allowHosts: WIKI_HOSTS, timeoutMs: 5000 }), maxCandidates: max });
 }
 
+/**
+ * Bumped when the evidence behind the card text changes. Version 2: "same kind of guest" comes from
+ * each person's description, not every occupation ever listed. Older cached results skip that claim.
+ */
+export const CARDS_VERSION = 2;
+
 /** One analysis: agent run, Wikipedia photos/profiles, and (LIVE) the baseline comparison. */
 export async function recommendFor(target: PodcastDataset, others: PodcastDataset[], qloo: QlooAdapter, env: Env, k: number, origin: unknown, options: { deadlineMs?: number } = {}) {
   const live = qloo.mode === 'LIVE';
@@ -163,7 +169,7 @@ export async function recommendFor(target: PodcastDataset, others: PodcastDatase
     }
   }
   // Cost of the external verification (Wikidata/Wikipedia calls), to size the per-run cap with data.
-  return { ...result, ranked: undefined, profiles, comparison, origin, externalVerification: verifier ? { calls: verifier.calls.length, cap: verifier.maxCandidates } : null };
+  return { ...result, ranked: undefined, profiles, comparison, origin, cardsVersion: CARDS_VERSION, externalVerification: verifier ? { calls: verifier.calls.length, cap: verifier.maxCandidates } : null };
 }
 
 async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter): Promise<{ status: number; body: unknown }> {

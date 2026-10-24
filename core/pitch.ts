@@ -2,6 +2,7 @@
 // No language model: every sentence is traceable to a field of the recommendation. Episode titles
 // are quoted in their original language; only our own wording changes with `lang`.
 
+import { cleanTopic } from './topic';
 import type { Recommendation } from './agent/agent';
 
 export type Lang = 'en' | 'es';
@@ -26,7 +27,7 @@ export function draftProposal(
   const joinAnd = (xs: string[]) => new Intl.ListFormat(lang, { type: 'conjunction' }).format(xs);
   const themeLine = shared.length ? joinAnd(shared) : joinAnd(themeLabels);
   const talkingPoints = [
-    ...rec.conversationTopics.slice(0, 3).map((t) => (es ? `Profundizar más que la última vez en: ${t}` : `Go deeper than before on: ${t}`)),
+    ...rec.conversationTopics.map((t) => cleanTopic(t)).filter((t): t is string => Boolean(t)).slice(0, 3).map((t) => (es ? `Profundizar más que la última vez en: ${t}` : `Go deeper than before on: ${t}`)),
     ...(shared.length
       ? [es ? `Conectar tu trabajo con lo que ${show.name} retoma una y otra vez: ${shared.join(', ')}` : `Connect your work to what ${show.name} keeps coming back to: ${shared.join(', ')}`]
       : []),

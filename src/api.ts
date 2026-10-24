@@ -35,6 +35,8 @@ export type RecommendResult = AgentResult & {
   /** LIVE only: the same analysis without Qloo, to show what Qloo added. */
   comparison: BaselineComparison | null;
   origin: CatalogShow['origin'] | null;
+  /** Version of the evidence behind the card text (core/api.ts CARDS_VERSION); absent on older results. */
+  cardsVersion?: number;
 };
 
 export interface ShowSummary {

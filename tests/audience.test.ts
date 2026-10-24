@@ -9,10 +9,11 @@ import { audienceSubtitle, citableThemes, whySentences } from '../src/why';
 // guests say who it talks to: Argentine politicians and musicians.
 const ep = (id: string, title: string, guests: string[], published: string) => ({ id, title, published, url: null, guests: guests.map((name) => ({ name, method: 'title-pattern' as const, confidence: 'high' as const })), excluded: false });
 const mk = (id: string, episodes: ReturnType<typeof ep>[]): PodcastDataset => ({ id, name: id, host: `Host ${id}`, hostAliases: [`Host ${id}`], language: 'es', description: '', source: { feedUrl: '', website: '', retrievedAt: '', retrievedVia: '', note: '' }, episodes });
+const EN_DESCRIPTION: Record<string, string> = { político: 'Argentine politician', cantante: 'Argentine singer', ingeniero: 'Spanish engineer', actor: 'American actor' };
 const person = (label: string, categories: PersonRecord['categories'], countries: string[], wikipedias: number, occ: string): PersonRecord => ({
   qid: `Q${label.length}${wikipedias}`,
   label,
-  description: { en: null, es: occ },
+  description: { en: EN_DESCRIPTION[occ] ?? null, es: occ },
   occupations: [{ en: occ, es: occ }],
   categories,
   countries,
@@ -69,14 +70,14 @@ describe('who the show interviews, and who its audience knows', () => {
     const r = await runAgent({ target, others: [argentine, spanish], qloo: new NoQlooAdapter(), k: 3, originOf, people, asOf: '2026-10-01T00:00:00.000Z' });
     const pol = r.recommendations.find((x) => x.name === 'Político Nuevo')!;
     const mus = r.recommendations.find((x) => x.name === 'Música Nueva')!;
-    const a = whySentences(pol, 'Rebordish', 'es').join(' ');
-    const b = whySentences(mus, 'Rebordish', 'es').join(' ');
+    const a = whySentences(pol, 'Rebordish', 'es', 0).join(' ');
+    const b = whySentences(mus, 'Rebordish', 'es', 0).join(' ');
     expect(a).toMatch(/ya recibió a políticos como/);
-    expect(a).toMatch(/Argentina/);
-    expect(a).toMatch(/cajaish/);
+    expect(a).toMatch(/Ya pasó por cajaish, del mismo país que el programa/);
     expect(b).toMatch(/músicos/);
     expect(a).not.toBe(b);
-    expect(audienceSubtitle(pol, 'es')).toBe('Político · Argentina');
+    // The subtitle is the person's own description (gender and main occupation already right).
+    expect(audienceSubtitle(pol, 'es')).toBe('Político');
   });
 
   it('without people data, the ranking is the topical one (unchanged)', async () => {
