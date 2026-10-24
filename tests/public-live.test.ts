@@ -256,10 +256,12 @@ describe('emergency pause from the private endpoint (no redeploy)', () => {
     expect(await handleLive({ action: 'public-pause' }, PENV, 'Bearer wrong-token-wrong-token-wrong-token', { store })).toMatchObject({ status: 401 });
     expect(await handleLive({ action: 'public-pause', note: 'incident' }, PENV, `Bearer ${TOKEN}`, { store })).toMatchObject({ status: 200, body: { control: { paused: true } } });
     const built: QlooAdapter[] = [];
-    expect(await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }))).toMatchObject({ status: 503, body: { code: 'paused' } });
+    // public-usage reads the real clock, so the runs use it too (a fixed T0 would land on another UTC day).
+    const now = () => Date.now();
+    expect(await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, now }))).toMatchObject({ status: 503, body: { code: 'paused' } });
     expect(built).toHaveLength(0);
     await handleLive({ action: 'public-resume' }, PENV, `Bearer ${TOKEN}`, { store });
-    expect((await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }))).status).toBe(200);
+    expect((await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, now }))).status).toBe(200);
     const usage = await handleLive({ action: 'public-usage' }, PENV, `Bearer ${TOKEN}`, { store });
     expect(usage.body).toMatchObject({ publicEnabled: true, control: { paused: false }, usage: { analyses: 1 } });
   });

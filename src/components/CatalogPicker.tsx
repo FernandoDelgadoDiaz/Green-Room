@@ -76,17 +76,23 @@ function ShowCard({ s, onSelect, selected }: { s: CatalogShow; onSelect: (id: st
       </div>
       <ul className="mt-3 space-y-1 text-xs text-stone-400">
         <li>
-          {ranks.length ? t('cat.popularity', { ranks: ranks.map((c) => `#${c.rank} ${countryName(c.country, lang)}`).join(' · ') }) : t('cat.noChart')}
+          {ranks.length ? t('cat.popularity', { ranks: ranks.map((c) => `#${c.rank} ${countryName(c.country, lang)} (${(c as { source?: string }).source === 'spotify' ? 'Spotify' : 'Apple Podcasts'})`).join(' · ') }) : t('cat.noChart')}
         </li>
-        <li>{t('cat.lastEpisode', { date: s.lastRelease.slice(0, 10) })} · {t('cat.appleCount', { n: s.appleTrackCount })}</li>
+        <li>{t('cat.lastEpisode', { date: s.lastRelease.slice(0, 10) })} · {t((s as { platform?: string }).platform === 'spotify' ? 'cat.spotifyCount' : 'cat.appleCount', { n: s.appleTrackCount })}</li>
         {s.snapshot && <li>{t('cat.snapshot', { n: s.snapshot.episodes, c: Math.round(s.snapshot.coverage * 100) })}</li>}
       </ul>
       <OriginLine s={s} />
       {s.description && <p className="mt-2 line-clamp-2 text-xs text-stone-500">{s.description}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <StatusBadge s={s} />
-        <a className="text-[11px] text-brass-300 hover:underline" href={s.appleUrl} target="_blank" rel="noreferrer">Apple Podcasts</a>
-        <a className="text-[11px] text-brass-300 hover:underline" href={s.feedUrl} target="_blank" rel="noreferrer">RSS</a>
+        {(s as { platform?: string }).platform === 'spotify' ? (
+          <a className="text-[11px] text-brass-300 hover:underline" href={s.appleUrl} target="_blank" rel="noreferrer">Spotify</a>
+        ) : (
+          <>
+            <a className="text-[11px] text-brass-300 hover:underline" href={s.appleUrl} target="_blank" rel="noreferrer">Apple Podcasts</a>
+            <a className="text-[11px] text-brass-300 hover:underline" href={s.feedUrl} target="_blank" rel="noreferrer">RSS</a>
+          </>
+        )}
       </div>
       <button className="btn-primary mt-4 self-start disabled:cursor-not-allowed disabled:opacity-40" disabled={disabled} onClick={() => onSelect(s.id)}>
         {disabled ? t('cat.notAnalyzableBtn') : t('cat.analyze')}

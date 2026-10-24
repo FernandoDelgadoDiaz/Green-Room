@@ -7,6 +7,7 @@ import type { RecommendResult, ShowSummary } from '../api';
 import { useI18n } from '../i18n';
 import { Badge } from './Badge';
 import { GuestAvatar } from './GuestAvatar';
+import { audienceSubtitle, whySentences } from '../why';
 
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}`);
 
@@ -231,9 +232,7 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
   const [open, setOpen] = useState(false);
   const [pitch, setPitch] = useState(false);
   const profile = result.profiles[rec.key];
-  const spec = specialty(profile, lang);
-  const latest = rec.appearances[0];
-  const themes = rec.sharedThemes.map((s) => (lang === 'es' ? s.labelEs : s.label));
+  const spec = audienceSubtitle(rec, lang) ?? specialty(profile, lang);
   // Flag simulated values only when one is actually present on this card.
   const isMock = rec.components.qlooAffinity.provenance === 'MOCK' && rec.components.qlooAffinity.value !== null;
   return (
@@ -266,10 +265,7 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
 
       <div className="mt-4">
         <p className="text-xs uppercase tracking-widest text-brass-400">{t('card.why')}</p>
-        <p className="mt-1 text-sm leading-relaxed text-stone-200">
-          {themes.length ? t('card.whyThemes', { themes: new Intl.ListFormat(lang, { type: 'conjunction' }).format(themes), show: show.name }) : t('card.whyNoThemes')}{' '}
-          {latest && t('card.whyLatest', { showName: latest.showName, date: latest.published.slice(0, 10) })}
-        </p>
+        <p className="mt-1 text-sm leading-relaxed text-stone-200">{whySentences(rec, show.name, lang).join(' ')}</p>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">

@@ -11,6 +11,7 @@ import { buildTagQueries, compactKey, GENERIC_WORDS, showNameVariants } from '..
 import { externalThemes } from '../verify/occupations';
 import { THEMES, THEME_IDS, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
 import { qlooKind, type QlooAdapter, type QlooEntity } from '../qloo/types';
+import { CATEGORY_LABELS, categoriesOf, type OccupationCategory, type PersonRecord } from '../people';
 
 export interface TraceStep {
   id: string;
@@ -39,6 +40,7 @@ export type ToolName =
   | 'verify_discoveries'
   | 'verify_external'
   | 'filter_repeats'
+  | 'profile_guests'
   | 'score_candidates'
   | 'qloo_score_affinity'
   | 'relax_threshold'
@@ -82,6 +84,47 @@ export interface Recommendation {
   history: HistoryStatus;
   /** Three separate readings, never merged into one claim. */
   assessment: Assessment;
+  /** Who this person is (Wikidata) and how that fits who the show interviews; null without people data. */
+  audience: RecommendationAudience | null;
+}
+
+export interface RecommendationAudience {
+  occupations: Array<{ en: string; es: string }>;
+  categories: OccupationCategory[];
+  /** Categories shared with the show's past guests, most frequent on the show first. */
+  sharedCategories: OccupationCategory[];
+  countries: string[];
+  showCountry: string | null;
+  /** Citizen of one of the audience's countries (the show's own, or one many of its guests come from). */
+  sameCountry: boolean;
+  matchedCountry: string | null;
+  /** Comparison shows from the show's country where this person was interviewed. */
+  sameCountryShows: string[];
+  wikipedias: number;
+  /** Past guests of the show with the same kind of profile (best documented first). */
+  similarPastGuests: string[];
+  /** The same, for each shared category. */
+  similarByCategory: Partial<Record<OccupationCategory, string[]>>;
+  typeFit: number | null;
+  regionFit: number;
+  known: number;
+  description: { en: string | null; es: string | null };
+  wikidataId: string;
+}
+
+/** Who a show interviews, from its past guests' Wikidata records. */
+export interface ShowGuestProfile {
+  resolved: number;
+  pastGuests: number;
+  strong: boolean;
+  country: string | null;
+  countryShare: number;
+  categories: Array<{ id: OccupationCategory; share: number; label: string; labelEs: string; examples: string[] }>;
+  /** Share of recent titles that name any theme: below 25 % the title themes are too thin to rank on. */
+  themeEvidence: number;
+  themesWeak: boolean;
+  /** How strictly "known by this audience" was applied: 0 strictest … 3 not applied (see the trace). */
+  gateLevel: number;
 }
 
 export interface Assessment {
@@ -279,6 +322,8 @@ export interface AgentResult {
   warnings: string[];
   warningsEs: string[];
   qlooCalls: QlooAdapter['calls'];
+  /** Who the show interviews (null without people data). */
+  guestProfile: ShowGuestProfile | null;
 }
 
 export interface AgentInput {
@@ -297,6 +342,8 @@ export interface AgentInput {
   deadlineMs?: number;
   /** Verified origin country per show id (unverified shows absent): used for the international-guest history. */
   originOf?: Map<string, string>;
+  /** Wikidata records of guests (data/people.json), keyed by nameKey: occupation, citizenship, reach. */
+  people?: Record<string, PersonRecord>;
   /** Blend Qloo affinity into the score of existing candidates (default true; LIVE only). Arms B and C of the comparison turn one of the two Qloo effects off. */
   qlooAffinity?: boolean;
   /** Independent verification of Qloo proposals with no record in our RSS (Wikidata/Wikipedia). */
@@ -305,6 +352,22 @@ export interface AgentInput {
 
 const MONTH_MS = 30.44 * 24 * 3600 * 1000;
 const WEIGHTS = { themeFit: 0.6, momentum: 0.25, recency: 0.15 };
+/**
+ * With people data the score also asks who the person is (rules fixed before looking at results):
+ * - type: same kind of guest as the show interviews (occupation categories, cosine);
+ * - region: citizen of the show's country (1), or interviewed on shows from that country (0.6);
+ * - known: how widely documented (number of Wikipedia editions, log scale, 30+ = 1).
+ * When the show's titles carry little theme evidence, the weight moves from themes to guest type.
+ */
+const AUDIENCE_WEIGHTS = {
+  profile: { themeFit: 0.25, typeFit: 0.25, region: 0.2, known: 0.15, momentum: 0.1, recency: 0.05 },
+  profileWeakThemes: { themeFit: 0.05, typeFit: 0.45, region: 0.2, known: 0.15, momentum: 0.1, recency: 0.05 },
+  noProfile: { themeFit: 0.45, typeFit: 0, region: 0.2, known: 0.15, momentum: 0.12, recency: 0.08 },
+};
+/** Wikipedia editions above which someone counts as known across countries. */
+export const INTERNATIONAL_WIKIPEDIAS = 25;
+/** Resolved past guests needed to describe who a show interviews. */
+const GUEST_PROFILE_MIN = 6;
 export const QLOO_BLEND = 0.5;
 /** Width of the editorial band inside which Qloo affinity may reorder candidates (see applyEditorialBand). */
 export const EDITORIAL_BAND = 0.15;
@@ -333,6 +396,11 @@ interface Candidate {
   /** Score with Qloo affinity blended in (LIVE); applied only inside the editorial band. */
   blended?: number;
   inBand?: boolean;
+  /** Wikidata record (people data, or the external check); null: not documented. */
+  person?: PersonRecord | null;
+  typeFit?: number;
+  regionFit?: number;
+  known?: number;
 }
 
 /** high: several interviews, or one with a curated/explicit name; medium: two automatic mentions; low: one automatic mention. */
@@ -435,6 +503,85 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const discoveries: Discovery[] = [];
   let affinityRank = new Map<string, number>();
   let minFit = 0.35;
+  // Who the show interviews (people data). Without it every audience term is off and the ranking is
+  // the topical one, unchanged.
+  const people = input.people ?? null;
+  // Verified origin; for shows outside the catalog, the country most of its documented guests share (≥ 50 %).
+  let showCountry = input.originOf?.get(target.id) ?? null;
+  // The audience's countries: the show's own, plus any country at least 15 % of its documented past
+  // guests come from (an English-language show from London interviewing Americans is heard by both).
+  let audienceCountries = new Set(showCountry ? [showCountry] : []);
+  const AUDIENCE_COUNTRY_SHARE = 0.15;
+  let guestProfile: ShowGuestProfile | null = null;
+  let themeEvidence = 1;
+  const catShare = new Map<OccupationCategory, number>();
+  const profileStrong = () => Boolean(guestProfile?.strong);
+  const themesWeak = () => Boolean(guestProfile?.themesWeak);
+  let gateLevel = 3;
+  const personOf = (c: Candidate): PersonRecord | null => {
+    if (c.person !== undefined) return c.person;
+    if (!people) return (c.person = null);
+    if (c.external?.wikidataId && c.external.kind === 'person') {
+      c.person = {
+        qid: c.external.wikidataId,
+        label: c.external.canonicalName,
+        description: c.external.description,
+        occupations: c.external.occupations.slice(0, 4),
+        categories: categoriesOf(c.external.occupations.map((o) => o.en)),
+        countries: [],
+        wikipedias: c.external.languages.articles.length,
+        articles: c.external.languages.articles.map((l) => `${l}wiki`),
+        photo: null,
+        match: ['qloo-external'],
+        matchEvidence: c.external.identityEvidence,
+      };
+      return c.person;
+    }
+    return (c.person = people[c.key] ?? null);
+  };
+  const sameCountryShows = (c: Candidate) => (showCountry ? [...new Set(c.appearances.filter((a) => input.originOf?.get(a.showId) === showCountry).map((a) => a.showName))] : []);
+  const audienceTerms = (c: Candidate) => {
+    const p = personOf(c);
+    const cats = p?.categories ?? [];
+    let typeFit = 0;
+    if (cats.length && catShare.size) {
+      const dot = cats.reduce((sum, cat) => sum + (catShare.get(cat) ?? 0) / cats.length, 0);
+      const na = Math.sqrt(cats.length * (1 / cats.length) ** 2);
+      const nb = Math.sqrt([...catShare.values()].reduce((sum, v) => sum + v * v, 0));
+      typeFit = na && nb ? dot / (na * nb) : 0;
+    }
+    const regionFit = p?.countries.some((cc) => audienceCountries.has(cc)) ? 1 : sameCountryShows(c).length ? 0.6 : 0;
+    const known = p ? Math.min(1, Math.log2(1 + p.wikipedias) / Math.log2(31)) : 0;
+    return { typeFit, regionFit, known };
+  };
+  // "Known by this audience", from strictest (0) to not applied (3). The loosest level is used only
+  // when stricter ones leave fewer than k candidates, and the trace says which one was used.
+  const audienceOk = (c: Candidate, level = gateLevel) => {
+    if (!people || level >= 3) return true;
+    const p = personOf(c);
+    if (!p) return false;
+    if (level === 2) return true;
+    if (level === 1) return p.wikipedias >= INTERNATIONAL_WIKIPEDIAS || (c.regionFit ?? 0) >= 0.6;
+    return (c.regionFit ?? 0) === 1 && (!profileStrong() || (c.typeFit ?? 0) > 0);
+  };
+  const gateText = (): Bi[] => [
+    [`documented people from the audience’s countries (${[...audienceCountries].join('/').toUpperCase() || '—'}) who match the kind of guest the show interviews`, `personas documentadas de los países de su audiencia (${[...audienceCountries].join('/').toUpperCase() || '—'}) del mismo tipo de invitado que entrevista el programa`],
+    [`documented people from ${showCountry?.toUpperCase() ?? 'the show’s country'}, interviewed on its shows, or known in ${INTERNATIONAL_WIKIPEDIAS}+ Wikipedias`, `personas documentadas de ${showCountry?.toUpperCase() ?? 'el país del programa'}, entrevistadas en sus programas, o conocidas en ${INTERNATIONAL_WIKIPEDIAS}+ Wikipedias`],
+    ['people documented in Wikidata, from any country', 'personas documentadas en Wikidata, de cualquier país'],
+    ['anyone with verified interviews (people data does not cover enough candidates)', 'cualquiera con entrevistas verificadas (los datos de personas no cubren suficientes candidatos)'],
+  ];
+  // Speaking the show's language is required at every level, as in the shortlist.
+  const settleGate = () => {
+    if (!people) return;
+    gateLevel = 3;
+    for (let level = 0; level < 3; level++) {
+      if ([...pool.values()].filter((c) => pertinent(c) && audienceOk(c, level) && speaksTarget(c)).length >= k) {
+        gateLevel = level;
+        break;
+      }
+    }
+    if (guestProfile) guestProfile.gateLevel = gateLevel;
+  };
   // Pertinence is not the same as cosine fit. A guest whose interviews (or documented occupation) sit
   // mostly in ONE of the show's established themes (≥ 10% of its titles) is pertinent even when the
   // cosine against the show's whole theme mix is low (e.g. a business guest on a multi-theme show).
@@ -446,14 +593,18 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     const th = themes.find((x) => x.id === best);
     return c.vector[best] / total >= 0.5 && th && th.share >= 0.1 ? th : null;
   };
-  const pertinent = (c: Candidate) => c.themeFit >= minFit || Boolean(establishedTheme(c));
+  const themePertinent = (c: Candidate) => (!themesWeak() && c.themeFit >= minFit) || Boolean(!themesWeak() && establishedTheme(c));
+  // With a guest profile, being the same kind of guest the show interviews is also pertinent; when the
+  // titles carry too little theme evidence, it is the main test (topical fit alone then needs 0.5).
+  const pertinent = (c: Candidate) =>
+    profileStrong() ? themePertinent(c) || (c.typeFit ?? 0) >= Math.max(0.25, minFit - 0.1) || (themesWeak() && c.themeFit >= 0.5) : c.themeFit >= minFit || Boolean(establishedTheme(c));
   const themeCheck = (c: Candidate, what: Bi): QlooProposal['checks'][number] => {
     const th = establishedTheme(c);
     if (c.themeFit >= minFit) return { check: 'theme', ok: true, detail: `${what[0]} fit the show’s theme mix at ${c.themeFit.toFixed(2)} ≥ ${minFit}.`, detailEs: `${what[1]} encaja con la mezcla temática del programa en ${c.themeFit.toFixed(2)} ≥ ${minFit}.` };
     if (th) return { check: 'theme', ok: true, detail: `${what[0]} sit mainly in “${th.label}”, an established theme of the show (${Math.round(th.share * 100)}% of titles); overall fit ${c.themeFit.toFixed(2)}.`, detailEs: `${what[1]} se ubica principalmente en “${th.labelEs}”, un tema establecido del programa (${Math.round(th.share * 100)}% de los títulos); ajuste global ${c.themeFit.toFixed(2)}.` };
     return { check: 'theme', ok: false, detail: `${what[0]} fit the show’s themes at ${c.themeFit.toFixed(2)} < ${minFit}, and their main theme is not one of the show’s established themes.`, detailEs: `${what[1]} encaja con los temas del programa en ${c.themeFit.toFixed(2)} < ${minFit}, y su tema principal no es uno de los temas establecidos del programa.` };
   };
-  const eligible = () => [...pool.values()].filter(pertinent);
+  const eligible = () => [...pool.values()].filter((c) => pertinent(c) && audienceOk(c));
   const targetLang = target.language;
   const langOf = new Map(others.map((o) => [o.id, o.language]));
   // Habitual languages of the show (from its own titles); until profiled, the declared language.
@@ -591,14 +742,17 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     }
   };
   const score = (p: Map<string, Candidate>) => {
+    const W = profileStrong() ? (themesWeak() ? AUDIENCE_WEIGHTS.profileWeakThemes : AUDIENCE_WEIGHTS.profile) : AUDIENCE_WEIGHTS.noProfile;
     for (const c of p.values()) {
       c.themeFit = cosine(c.vector, profile);
+      if (people) Object.assign(c, audienceTerms(c));
+      const audience = people ? W.typeFit * (c.typeFit ?? 0) + W.region * (c.regionFit ?? 0) + W.known * (c.known ?? 0) : 0;
       if (c.external) {
         // No interviews in our sources: momentum and recency are unknown, not zero. They are left
         // out and the remaining weight is renormalized, so absence from our corpus is not a penalty.
         c.momentum = 0;
         c.recency = 0;
-        c.base = c.themeFit;
+        c.base = people ? (W.themeFit * c.themeFit + audience) / (W.themeFit + W.typeFit + W.region + W.known) : c.themeFit;
         if (c.qlooEntityId && affinityRank.has(c.qlooEntityId)) c.qlooAffinity = affinityRank.get(c.qlooEntityId)!;
         c.blended = blend > 0 && affinityRank.size ? (1 - blend) * c.base + blend * (c.qlooAffinity ?? 0.5) : c.base;
         c.score = c.blended;
@@ -608,7 +762,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       c.momentum = Math.min(1, Math.log2(1 + recent) / 2);
       const last = c.appearances.reduce((m, a) => (a.published > m ? a.published : m), '');
       c.recency = last ? Math.exp(-monthsBetween(last, asOf) / 12) : 0;
-      c.base = WEIGHTS.themeFit * c.themeFit + WEIGHTS.momentum * c.momentum + WEIGHTS.recency * c.recency;
+      c.base = people ? W.themeFit * c.themeFit + audience + W.momentum * c.momentum + W.recency * c.recency : WEIGHTS.themeFit * c.themeFit + WEIGHTS.momentum * c.momentum + WEIGHTS.recency * c.recency;
       if (c.qlooEntityId && affinityRank.has(c.qlooEntityId)) c.qlooAffinity = affinityRank.get(c.qlooEntityId)!;
       // Candidates Qloo cannot score keep a neutral 0.5 instead of being penalized for coverage gaps.
       c.blended = blend > 0 && affinityRank.size ? (1 - blend) * c.base + blend * (c.qlooAffinity ?? 0.5) : c.base;
@@ -626,7 +780,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       for (const c of pool.values()) ((c.inBand = true), (c.score = c.blended ?? c.score));
       return;
     }
-    const bases = [...pool.values()].filter((c) => c.themeFit >= minFit).map((c) => c.base).sort((a, b) => b - a);
+    const bases = [...pool.values()].filter((c) => (people ? pertinent(c) && audienceOk(c) : c.themeFit >= minFit)).map((c) => c.base).sort((a, b) => b - a);
     const kth = bases[Math.min(k, bases.length) - 1] ?? 0;
     bandFloor = kth * (1 - EDITORIAL_BAND);
     for (const c of pool.values()) {
@@ -681,9 +835,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
     infer_themes: async () => {
       const profileWords = new Map<ThemeId, Map<string, number>>();
+      let withTheme = 0;
       for (const e of history.slice(0, 150)) {
         const ageYears = Math.max(0, monthsBetween(e.published, asOf) / 12);
         const { vector, matched } = themesOfTitle(e.title, e.guests.map((g) => g.name));
+        if (matched.size) withTheme++;
         addInto(profile, vector, Math.pow(0.5, ageYears));
         for (const [id, words] of matched) {
           const m = profileWords.get(id) ?? new Map<string, number>();
@@ -691,6 +847,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           profileWords.set(id, m);
         }
       }
+      themeEvidence = history.length ? withTheme / Math.min(150, history.length) : 0;
       themes = topThemes(profile, 5).map((t) => ({
         ...t,
         words: [...(profileWords.get(t.id) ?? new Map()).entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([w]) => w),
@@ -1257,6 +1414,54 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       });
     },
 
+    profile_guests: async () => {
+      const recs = [...pastGuests.entries()].map(([key, g]) => ({ name: g.name, p: people?.[key] ?? null }));
+      const known = recs.filter((r) => r.p);
+      const counts = new Map<OccupationCategory, Array<{ name: string; w: number }>>();
+      const countries = new Map<string, number>();
+      for (const r of known) {
+        for (const cat of r.p!.categories) counts.set(cat, [...(counts.get(cat) ?? []), { name: r.p!.label, w: r.p!.wikipedias }]);
+        for (const cc of r.p!.countries) countries.set(cc, (countries.get(cc) ?? 0) + 1);
+      }
+      const totalCats = [...counts.values()].reduce((s2, v) => s2 + v.length, 0);
+      for (const [cat, v] of counts) catShare.set(cat, v.length / (totalCats || 1));
+      const topCountry = [...countries.entries()].sort((a, b) => b[1] - a[1])[0];
+      const strong = known.length >= GUEST_PROFILE_MIN && totalCats > 0;
+      if (!showCountry && topCountry && known.length >= GUEST_PROFILE_MIN && topCountry[1] / known.length >= 0.5) showCountry = topCountry[0];
+      audienceCountries = new Set([...(showCountry ? [showCountry] : []), ...(known.length >= GUEST_PROFILE_MIN ? [...countries.entries()].filter(([, n]) => n / known.length >= AUDIENCE_COUNTRY_SHARE).map(([cc]) => cc) : [])]);
+      guestProfile = {
+        resolved: known.length,
+        pastGuests: pastGuests.size,
+        strong,
+        country: showCountry ?? topCountry?.[0] ?? null,
+        countryShare: known.length && (showCountry ?? topCountry?.[0]) ? (countries.get((showCountry ?? topCountry[0])!) ?? 0) / known.length : 0,
+        categories: [...counts.entries()]
+          .map(([id, v]) => ({ id, share: v.length / (totalCats || 1), label: CATEGORY_LABELS[id].enPlural, labelEs: CATEGORY_LABELS[id].esPlural, examples: v.sort((a, b) => b.w - a.w).slice(0, 3).map((x) => x.name) }))
+          .sort((a, b) => b.share - a.share)
+          .slice(0, 6),
+        themeEvidence,
+        themesWeak: strong && themeEvidence < 0.25,
+        gateLevel: 3,
+      };
+      const cats = guestProfile.categories.slice(0, 4);
+      const catText: Bi = [cats.map((c) => `${c.label} ${pct(c.share)}% (e.g. ${c.examples.join(', ')})`).join('; '), cats.map((c) => `${c.labelEs} ${pct(c.share)}% (p. ej. ${c.examples.join(', ')})`).join('; ')];
+      const where = guestProfile.country ? guestProfile.country.toUpperCase() : null;
+      step({
+        title: ['Profile who the show interviews', 'Perfilar a quién entrevista el programa'],
+        tool: 'profile_guests',
+        detail: [
+          `${known.length} of ${pastGuests.size} past guests documented in Wikidata. ${strong ? `Kinds of guest: ${catText[0]}.` : 'Too few to describe the kind of guest.'}${where ? ` ${pct(guestProfile.countryShare)}% are citizens of ${where}, the show’s country.` : ''} ${pct(themeEvidence)}% of recent titles name a theme.`,
+          `${known.length} de ${pastGuests.size} invitados anteriores documentados en Wikidata. ${strong ? `Tipos de invitado: ${catText[1]}.` : 'Son pocos para describir el tipo de invitado.'}${where ? ` El ${pct(guestProfile.countryShare)}% tiene ciudadanía de ${where}, el país del programa.` : ''} El ${pct(themeEvidence)}% de los títulos recientes nombra un tema.`,
+        ],
+        decision: guestProfile.themesWeak
+          ? ['Titles say little about topics (mostly the guest’s name): ranking on who the show interviews, its country and how known each person is; title themes count little.', 'Los títulos dicen poco de los temas (casi siempre solo el nombre del invitado): ordeno por a quién entrevista el programa, su país y qué tan conocida es cada persona; los temas de los títulos pesan poco.']
+          : strong
+            ? ['Ranking on themes and on the kind of guest, preferring people known to this audience (same country, or widely known).', 'Ordeno por temas y por tipo de invitado, prefiriendo personas conocidas por esta audiencia (mismo país, o muy conocidas).']
+            : ['Ranking on themes, preferring people known to this audience (same country, or widely known).', 'Ordeno por temas, prefiriendo personas conocidas por esta audiencia (mismo país, o muy conocidas).'],
+        provenance: 'VERIFIED',
+      });
+    },
+
     filter_repeats: async () => {
       filterRepeats(pool);
       step({
@@ -1272,13 +1477,23 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
     score_candidates: async () => {
       score(pool);
+      settleGate();
+      const W = profileStrong() ? (themesWeak() ? AUDIENCE_WEIGHTS.profileWeakThemes : AUDIENCE_WEIGHTS.profile) : AUDIENCE_WEIGHTS.noProfile;
       step({
-        title: ['Score candidates by topical fit and track record', 'Puntuar candidatos por ajuste temático y trayectoria'],
+        title: people ? ['Score candidates by fit, audience and track record', 'Puntuar candidatos por ajuste, audiencia y trayectoria'] : ['Score candidates by topical fit and track record', 'Puntuar candidatos por ajuste temático y trayectoria'],
         tool: 'score',
-        detail: [
-          `${pool.size} candidates scored: ${WEIGHTS.themeFit}×topical fit + ${WEIGHTS.momentum}×momentum + ${WEIGHTS.recency}×recency.`,
-          `${pool.size} candidatos puntuados: ${WEIGHTS.themeFit}×ajuste temático + ${WEIGHTS.momentum}×momento + ${WEIGHTS.recency}×recencia.`,
-        ],
+        detail: people
+          ? [
+              `${pool.size} candidates scored: ${W.themeFit}×topical fit + ${W.typeFit}×same kind of guest + ${W.region}×same country + ${W.known}×how widely known + ${W.momentum}×momentum + ${W.recency}×recency.`,
+              `${pool.size} candidatos puntuados: ${W.themeFit}×ajuste temático + ${W.typeFit}×mismo tipo de invitado + ${W.region}×mismo país + ${W.known}×qué tan conocido + ${W.momentum}×momento + ${W.recency}×recencia.`,
+            ]
+          : [
+              `${pool.size} candidates scored: ${WEIGHTS.themeFit}×topical fit + ${WEIGHTS.momentum}×momentum + ${WEIGHTS.recency}×recency.`,
+              `${pool.size} candidatos puntuados: ${WEIGHTS.themeFit}×ajuste temático + ${WEIGHTS.momentum}×momento + ${WEIGHTS.recency}×recencia.`,
+            ],
+        decision: people
+          ? [`Eligible: ${gateText()[gateLevel][0]}${gateLevel > 0 ? ' (stricter levels left fewer than ' + k + ' candidates in the show’s language)' : ''}.`, `Elegibles: ${gateText()[gateLevel][1]}${gateLevel > 0 ? ' (los niveles más estrictos dejaban menos de ' + k + ' candidatos en el idioma del programa)' : ''}.`]
+          : undefined,
         provenance: 'INFERRED',
       });
     },
@@ -1287,7 +1502,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       // Affinity can only reorder candidates inside the editorial band (see applyEditorialBand), so only
       // those are looked up (at most 40), plus every verified Qloo proposal, whose id is already known
       // and costs no lookup. Looking up anyone below the band would spend calls that cannot change a rank.
-      const fitBases = [...pool.values()].filter((c) => c.themeFit >= minFit).map((c) => c.base).sort((a, b) => b - a);
+      const fitBases = [...pool.values()].filter((c) => (people ? pertinent(c) && audienceOk(c) : c.themeFit >= minFit)).map((c) => c.base).sort((a, b) => b - a);
       const floor = (fitBases[Math.min(k, fitBases.length) - 1] ?? 0) * (1 - EDITORIAL_BAND);
       const top = [...pool.values()].filter((c) => c.base >= floor).sort((a, b) => b.base - a.base).slice(0, 40);
       const shortlist = [...top, ...[...pool.values()].filter((c) => c.qlooProposedRank !== null && !top.includes(c))];
@@ -1343,6 +1558,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       const before = minFit;
       const n = eligible().length;
       minFit = Math.max(0, Math.round((minFit - 0.1) * 100) / 100);
+      settleGate();
       step({
         title: ['Too few candidates fit the show’s themes', 'Pocos candidatos encajan con los temas del programa'],
         tool: 'relax_threshold',
@@ -1358,6 +1574,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       for (const [key, c] of widened) if (!pool.has(key)) pool.set(key, c);
       filterRepeats(pool);
       score(pool);
+      settleGate();
       step({
         title: ['Widen the search window', 'Ampliar la ventana de búsqueda'],
         tool: 'search_candidate_pool',
@@ -1404,7 +1621,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         let best = 0;
         let bestVal = -Infinity;
         candidates.forEach((c, i) => {
-          const redundancy = picks.length ? Math.max(...picks.map((p) => cosine(p.vector, c.vector))) : 0;
+          // Too similar to a pick already made: same themes, or (with people data) the same kind of guest.
+          const sameKind = (p: Candidate) => {
+            const a = new Set(personOf(p)?.categories ?? []);
+            const b = personOf(c)?.categories ?? [];
+            return a.size && b.length ? b.filter((x) => a.has(x)).length / new Set([...a, ...b]).size : 0;
+          };
+          const redundancy = picks.length ? Math.max(...picks.map((p) => Math.max(cosine(p.vector, c.vector), sameKind(p)))) : 0;
           // Out-of-band candidates are only picked once no band member is left.
           const val = (c.inBand === false ? -1 : 0) + 0.75 * c.score - 0.25 * redundancy * c.score;
           if (val > bestVal) {
@@ -1481,6 +1704,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     if (!done.has('infer_themes')) return { tool: 'infer_themes', why: [`${history.length} episodes read: next, what they are about.`, `Leí ${history.length} episodios: ahora, de qué tratan.`] };
     if (!done.has('profile_language'))
       return { tool: 'profile_language', why: ['Before looking for people: which languages does this show actually interview in?', 'Antes de buscar personas: ¿en qué idiomas entrevista realmente este programa?'] };
+    if (people && !done.has('profile_guests'))
+      return { tool: 'profile_guests', why: ['Titles say what a show talks about; its past guests say who it talks to. Look them up.', 'Los títulos dicen de qué habla un programa; sus invitados, con quién habla. Los reviso.'] };
     if (!signalsSettled) {
       const qlooTime = !outOfTime();
       if (qlooTime && !done.has('qloo_resolve_guests') && !done.has('qloo_find_podcast')) {
@@ -1490,7 +1715,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       }
       if (qlooTime && resolved.length < 3 && !done.has('qloo_find_podcast'))
         return { tool: 'qloo_find_podcast', why: [`Replanning: only ${resolved.length} guest identities confirmed (<3). Trying the show itself as a Qloo podcast entity.`, `Replanifico: solo ${resolved.length} identidades de invitados confirmadas (<3). Pruebo con el programa como entidad de podcast en Qloo.`] };
-      if (qlooTime && resolved.length < 3 && !done.has('qloo_find_theme_tags') && themes.length)
+      if (qlooTime && resolved.length < 3 && !done.has('qloo_find_theme_tags') && themes.length && !themesWeak())
         return {
           tool: 'qloo_find_theme_tags',
           why: podcastEntity
@@ -1518,7 +1743,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     if (qloo.mode === 'LIVE' && discoveryAttempts === 1 && rankedProposals() === 0 && !outOfTime() && (qloo.budgetLeft?.() ?? Infinity) >= 8) {
       const why = funnelDiagnosis.diagnosisText;
       const whyEs = funnelDiagnosis.diagnosisTextEs;
-      if (signalStrategy === 'guests' && !done.has('qloo_find_theme_tags') && themes.length)
+      if (signalStrategy === 'guests' && !done.has('qloo_find_theme_tags') && themes.length && !themesWeak())
         return { tool: 'qloo_find_theme_tags', why: [`Replanning the discovery — ${why} Trying the show’s themes as Qloo tags as a different signal.`, `Replanifico el descubrimiento — ${whyEs} Pruebo los temas del programa como etiquetas de Qloo, una señal distinta.`] };
       if (signalStrategy === 'guests' && !done.has('qloo_find_podcast'))
         return { tool: 'qloo_find_podcast', why: [`Replanning the discovery — ${why} Trying the show itself as the signal.`, `Replanifico el descubrimiento — ${whyEs} Pruebo con el propio programa como señal.`] };
@@ -1528,6 +1753,10 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     if (qlooUsable && useAffinity && !done.has('qloo_score_affinity') && !outOfTime()) return { tool: 'qloo_score_affinity', why: ['Add Qloo affinity for candidates whose identity can be confirmed.', 'Agrego la afinidad de Qloo para los candidatos cuya identidad se pueda confirmar.'] };
     // Cultural hooks come last: they explain, they do not rank, so they never take budget from discovery.
     if (qlooUsable && !done.has('qloo_cross_domain') && !outOfTime()) return { tool: 'qloo_cross_domain', why: ['A usable audience signal exists: look for cultural hooks across domains.', 'Hay una señal de audiencia utilizable: busco referencias culturales en otros dominios.'] };
+    // Older interviews of people this audience knows beat recent ones of people it does not: widen the
+    // window before letting the "known by this audience" rule go down a level.
+    if (people && gateLevel > 0 && windowMonths < 72 && !done.has('widen_window') && done.has('score_candidates'))
+      return { tool: 'widen_window', why: [`Fewer than ${k} candidates from the audience’s countries in ${windowMonths} months: look further back before relaxing who counts as known.`, `Menos de ${k} candidatos de los países de su audiencia en ${windowMonths} meses: busco más atrás antes de relajar quién cuenta como conocido.`] };
     if (eligible().length < k && minFit > 0) return { tool: 'relax_threshold', why: [`Only ${eligible().length} candidates pass the topical-fit bar (need ${k}).`, `Solo ${eligible().length} candidatos superan el ajuste temático mínimo (necesito ${k}).`] };
     if (eligible().length < k && windowMonths < 72 && !done.has('widen_window')) return { tool: 'widen_window', why: [`Still ${eligible().length} eligible after relaxing: widen the time window.`, `Siguen siendo ${eligible().length} elegibles después de relajar: amplío la ventana de tiempo.`] };
     if (!done.has('check_language')) return { tool: 'check_language', why: [`Habitual language(s) “${acceptedLabel()}”: check which candidates have a verified interview in them.`, `Idioma(s) habitual(es) “${acceptedLabel()}”: reviso quién tiene una entrevista verificada en ellos.`] };
@@ -1633,6 +1862,38 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     const titleLang = detectTitleLanguage(a.title);
     const basis: LanguageStatus['basis'] = declared === hit && titleLang === hit ? 'declared+title' : declared === hit ? 'declared' : 'title';
     return { status: 'confirmed', target: targetLang, evidenceLanguages: [hit], basis, evidenceEn: `Interview in “${hit}” (${basis === 'declared+title' ? 'show language and title agree' : basis === 'declared' ? 'show’s declared language' : 'from the title'})`, evidenceEs: `Entrevista en “${hit}” (${basis === 'declared+title' ? 'coinciden idioma del programa y título' : basis === 'declared' ? 'idioma declarado del programa' : 'según el título'})` };
+  };
+  // Past guests of the show by category (best documented first), to say "like X and Y, who were on the show".
+  const pastByCategory = new Map<OccupationCategory, Array<{ name: string; w: number }>>();
+  if (people)
+    for (const [key] of pastGuests) {
+      const p = people[key];
+      if (p) for (const cat of p.categories) pastByCategory.set(cat, [...(pastByCategory.get(cat) ?? []), { name: p.label, w: p.wikipedias }]);
+    }
+  const audienceOf = (c: Candidate): RecommendationAudience | null => {
+    const p = personOf(c);
+    if (!p) return null;
+    const order = guestProfile?.categories.map((x) => x.id) ?? [];
+    const shared = p.categories.filter((cat) => catShare.has(cat)).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    const similar = shared.length ? [...(pastByCategory.get(shared[0]) ?? [])].sort((a, b) => b.w - a.w).map((x) => x.name).filter((n, j, all) => all.indexOf(n) === j).slice(0, 2) : [];
+    return {
+      occupations: p.occupations,
+      categories: p.categories,
+      sharedCategories: shared,
+      countries: p.countries,
+      showCountry,
+      sameCountry: p.countries.some((cc) => audienceCountries.has(cc)),
+      matchedCountry: p.countries.find((cc) => cc === showCountry) ?? p.countries.find((cc) => audienceCountries.has(cc)) ?? null,
+      sameCountryShows: sameCountryShows(c),
+      wikipedias: p.wikipedias,
+      similarPastGuests: similar,
+      similarByCategory: Object.fromEntries(shared.map((cat) => [cat, [...(pastByCategory.get(cat) ?? [])].sort((a, b) => b.w - a.w).map((x) => x.name).filter((n, j, all) => all.indexOf(n) === j).slice(0, 2)])),
+      typeFit: profileStrong() ? (c.typeFit ?? 0) : null,
+      regionFit: c.regionFit ?? 0,
+      known: c.known ?? 0,
+      description: p.description,
+      wikidataId: p.qid,
+    };
   };
   const recommendations: Recommendation[] = picks.map((c, i) => {
     const sharedThemes = [...c.matched.entries()]
@@ -1757,6 +2018,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       language: languageStatusOf(c, crossLanguage, langs),
       history: historyStatus,
       external: c.external ?? null,
+      audience: audienceOf(c),
       assessment: {
         qlooProposedRank: c.qlooProposedRank,
         qlooAffinity: blend > 0 ? c.qlooAffinity : null,
@@ -1783,6 +2045,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     showName: target.name,
     asOf,
     qlooMode: qloo.mode,
+    guestProfile,
     trace,
     themes,
     pastGuestCount: pastGuests.size,

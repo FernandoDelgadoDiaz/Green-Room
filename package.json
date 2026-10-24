@@ -15,6 +15,7 @@
     "backtest": "tsx scripts/run-backtest.ts",
     "qloo:smoke": "tsx scripts/qloo-smoke.ts",
     "profiles:build": "tsx scripts/build-profiles.ts",
+    "people:build": "tsx scripts/build-people.ts",
     "qloo:experiment": "tsx scripts/qloo-experiment.ts",
     "live:token": "tsx scripts/live-token.ts",
     "live:diagnose": "tsx scripts/live-diagnose.ts",

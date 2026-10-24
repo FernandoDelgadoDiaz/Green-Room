@@ -1,0 +1,45 @@
+name: Build people data
+
+# Resolves every catalog guest in Wikidata (occupation, citizenship, Wikipedia reach, free photo) and
+# commits data/people.json to the branch it ran on. Runs by hand, or when the resolver changes on a
+# feature branch (the bot's own commit does not trigger it again).
+on:
+  workflow_dispatch:
+  push:
+    branches: ['feat/**']
+    paths: ['core/people.ts', 'scripts/build-people.ts', '.github/workflows/build-people.yml', 'core/datasets.ts']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog-data-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Wikidata/Commons responses from earlier runs: only new guests are looked up again.
+      - uses: actions/cache@v4
+        with:
+          path: data/raw/wd-cache
+          key: wd-cache-${{ github.run_id }}
+          restore-keys: wd-cache-
+      - run: npm run people:build
+      - name: Commit data/people.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/people.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Data: people.json from Wikidata (workflow run ${{ github.run_id }})"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push

@@ -4,6 +4,8 @@
 import catalogJson from '../data/catalog.json';
 import { ALL_DATASETS, CORE_IDS } from './datasets';
 import profilesJson from '../data/profiles.json';
+import peopleJson from '../data/people.json';
+import type { PeopleData } from './people';
 import type { PodcastDataset } from './types';
 import { runAgent } from './agent/agent';
 import { runBacktest } from './backtest';
@@ -57,6 +59,8 @@ export type ApiRequest =
   | { action: 'backtest'; showId: string; cutoff: string; horizonMonths?: number };
 
 const STATIC_PROFILES = profilesJson as unknown as Record<string, GuestProfile>;
+/** Wikidata records of every catalog guest (scripts/build-people.ts). */
+export const PEOPLE = (peopleJson as unknown as PeopleData).people;
 const runtimeProfiles = new Map<string, GuestProfile | null>();
 const WIKI_HOSTS = ['www.wikidata.org', 'en.wikipedia.org', 'es.wikipedia.org'];
 
@@ -122,10 +126,27 @@ export function makeVerifier(env: Env) {
 export async function recommendFor(target: PodcastDataset, others: PodcastDataset[], qloo: QlooAdapter, env: Env, k: number, origin: unknown, options: { deadlineMs?: number } = {}) {
   const live = qloo.mode === 'LIVE';
   const verifier = live ? makeVerifier(env) : undefined;
-  const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, verifier, deadlineMs: options.deadlineMs });
+  const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, people: PEOPLE, verifier, deadlineMs: options.deadlineMs });
   // LIVE: also run the baseline (no Qloo, no API calls) on the same data and rules, to show what Qloo added.
-  const comparison = live ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF }), result) : null;
+  const comparison = live ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF, people: PEOPLE }), result) : null;
   const profiles = await profilesFor(result.recommendations, env.PROFILE_LOOKUP !== '0');
+  // A free Commons photo from the person's Wikidata record when Wikipedia gave none.
+  for (const rec of result.recommendations) {
+    const person = PEOPLE[rec.key];
+    if (!person?.photo || profiles[rec.key]?.photo) continue;
+    profiles[rec.key] = {
+      ...(profiles[rec.key] ?? {
+        name: rec.name,
+        wikipedia: { title: person.label, url: `https://www.wikidata.org/wiki/${person.qid}` },
+        wikidataId: person.qid,
+        description: person.description,
+        extract: { en: null, es: null, esUrl: null },
+        matchEvidence: person.matchEvidence,
+        retrievedAt: (peopleJson as unknown as PeopleData).generatedAt.slice(0, 10),
+      }),
+      photo: { ...person.photo, width: 320, height: 0 },
+    };
+  }
   // "Probable" language: an identity-checked Wikipedia article exists in the show's language.
   // Indirect evidence only; it never becomes "confirmed".
   for (const rec of result.recommendations) {
@@ -252,8 +273,8 @@ export async function handleLive(req: LiveRequest, env: Env & PublicEnv, authori
       const target = DATASETS.find((d) => d.id === req.showId);
       if (!target) return { status: 404, body: { error: `Unknown show ${req.showId}` } };
       const others = DATASETS.filter((d) => d.id !== target.id);
-      const baseline = await runAgent({ target, others, qloo: new NoQlooAdapter(), k: 10, originOf: ORIGIN_OF });
-      const enriched = await runAgent({ target, others, qloo: make(), k: 10, originOf: ORIGIN_OF, verifier: makeVerifier(env) });
+      const baseline = await runAgent({ target, others, qloo: new NoQlooAdapter(), k: 10, originOf: ORIGIN_OF, people: PEOPLE });
+      const enriched = await runAgent({ target, others, qloo: make(), k: 10, originOf: ORIGIN_OF, people: PEOPLE, verifier: makeVerifier(env) });
       // Same Wikidata lookup for every name, baseline and Qloo alike (no provenance in the descriptions).
       const names = blindNames(baseline, enriched);
       const checks = await new WikidataVerifier({ fetchJson: (u) => safeJson(u, { allowHosts: WIKI_HOSTS, timeoutMs: 5000 }), maxCandidates: Math.min(names.length, 30) }).verify(names.map((n) => ({ entity: { entityId: `blind:${nameKey(n)}`, name: n } })), { targetLang: target.language });
@@ -277,7 +298,7 @@ export async function handleLive(req: LiveRequest, env: Env & PublicEnv, authori
       const k = Math.min(Math.max(req.k ?? 5, 1), 10);
       const verifier = makeVerifier(env);
       // Arms share the private Qloo cache, so repeated lookups are not paid twice.
-      const arm = (qloo: QlooAdapter, discovery: boolean, affinity: boolean) => runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, qlooDiscovery: discovery, qlooAffinity: affinity, verifier: discovery ? verifier : undefined });
+      const arm = (qloo: QlooAdapter, discovery: boolean, affinity: boolean) => runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, people: PEOPLE, qlooDiscovery: discovery, qlooAffinity: affinity, verifier: discovery ? verifier : undefined });
       const A = await arm(new NoQlooAdapter(), false, false);
       const B = await arm(make(), true, false);
       const C = await arm(make(), false, true);

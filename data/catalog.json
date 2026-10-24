@@ -22,6 +22,11 @@
   "es": {
    "url": "https://rss.applemarketingtools.com/api/v2/es/podcasts/top/25/podcasts.json",
    "updated": "2026-10-23T03:48:18Z"
+  },
+  "ar-spotify": {
+   "url": "https://podstatus.com/charts/spotify/ar/top-podcasts",
+   "updated": "2026-10-23",
+   "note": "Daily public copy of Spotify's Top Podcasts chart for Argentina (the official page returned HTTP 503 when read)."
   }
  },
  "countries": [
@@ -37,6 +42,7 @@
    "name": "The Joe Rogan Experience",
    "host": "Joe Rogan",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/2e/66/e8/2e66e849-207e-095a-d60f-6dbdb4fcafb5/mza_14425023460891140426.jpeg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Comedy",
    "language": "en",
    "origin": {
@@ -55,7 +61,8 @@
    "charts": [
     {
      "country": "us",
-     "rank": 5
+     "rank": 5,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/us/podcast/the-joe-rogan-experience/id360084272",
@@ -77,6 +84,7 @@
    "name": "The Shawn Ryan Show",
    "host": "Shawn Ryan",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts112/v4/d0/b3/2d/d0b32d7f-ab2d-5791-83b0-854f698a9184/mza_13561258173056659752.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Philosophy",
    "language": "en",
    "origin": {
@@ -95,7 +103,8 @@
    "charts": [
     {
      "country": "us",
-     "rank": 20
+     "rank": 20,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/us/podcast/the-shawn-ryan-show/id1492492083",
@@ -117,6 +126,7 @@
    "name": "Good Hang with Amy Poehler",
    "host": "Amy Poehler",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/2b/94/bb/2b94bb6e-44f1-9d57-7748-b7456072806d/mza_1064202164981856225.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Comedy",
    "language": "en",
    "origin": {
@@ -138,7 +148,8 @@
    "charts": [
     {
      "country": "us",
-     "rank": 10
+     "rank": 10,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/us/podcast/good-hang-with-amy-poehler/id1795483480",
@@ -160,6 +171,7 @@
    "name": "Lex Fridman Podcast",
    "host": "Lex Fridman",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/3e/e3/9c/3ee39c89-de08-47a6-7f3d-3849cef6d255/mza_16657851278549137484.png/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Technology",
    "language": "en",
    "origin": {
@@ -177,7 +189,8 @@
    "charts": [
     {
      "country": "us",
-     "rank": null
+     "rank": null,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/us/podcast/lex-fridman-podcast/id1434243584",
@@ -199,6 +212,7 @@
    "name": "The Megyn Kelly Show",
    "host": "Megyn Kelly",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/3e/9f/c1/3e9fc13c-8030-b57e-f29e-0f14dc8db10d/mza_602213930944272333.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "News Commentary",
    "language": "en",
    "origin": {
@@ -216,7 +230,8 @@
    "charts": [
     {
      "country": "us",
-     "rank": 18
+     "rank": 18,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/us/podcast/the-megyn-kelly-show/id1532976305",
@@ -232,6 +247,7 @@
    "name": "The Diary Of A CEO",
    "host": "Steven Bartlett",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/69/af/0d/69af0ddd-1e0f-7ae3-c84b-88f18e31ad0c/mza_14445920128472365296.png/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Business",
    "language": "en",
    "origin": {
@@ -249,7 +265,8 @@
    "charts": [
     {
      "country": "gb",
-     "rank": 13
+     "rank": 13,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/gb/podcast/the-diary-of-a-ceo-with-steven-bartlett/id1291423644",
@@ -271,6 +288,7 @@
    "name": "The Louis Theroux Podcast",
    "host": "Louis Theroux",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/1e/20/d1/1e20d177-1e41-10cf-1e2d-3b895ad3df8e/mza_10878364100163359946.jpeg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Society & Culture",
    "language": "en",
    "origin": {
@@ -288,7 +306,8 @@
    "charts": [
     {
      "country": "gb",
-     "rank": 6
+     "rank": 6,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/gb/podcast/the-louis-theroux-podcast/id1725833532",
@@ -310,6 +329,7 @@
    "name": "The High Performance Podcast",
    "host": "Jake Humphrey & Damian Hughes",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/cf/1a/5a/cf1a5a8c-688e-690b-138d-04517a560b54/mza_11984786542722281203.jpeg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Sports",
    "language": "en",
    "origin": {
@@ -327,7 +347,8 @@
    "charts": [
     {
      "country": "gb",
-     "rank": 14
+     "rank": 14,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/gb/podcast/the-high-performance-podcast/id1500444735",
@@ -349,6 +370,7 @@
    "name": "Off Menu with Ed Gamble and James Acaster",
    "host": "Ed Gamble & James Acaster",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/c4/dc/de/c4dcdec7-fbea-749e-7a03-bbe27db17137/mza_4311127974403693339.jpeg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Comedy Interviews",
    "language": "en",
    "origin": {
@@ -366,7 +388,8 @@
    "charts": [
     {
      "country": "gb",
-     "rank": 9
+     "rank": 9,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/gb/podcast/off-menu-with-ed-gamble-and-james-acaster/id1442950743",
@@ -388,6 +411,7 @@
    "name": "We Need To Talk with Paul C. Brunson",
    "host": "Paul C. Brunson",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/6f/59/ae/6f59ae2a-afec-dfa0-38c1-2b88a48c1a1a/mza_16605880432833834071.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Relationships",
    "language": "en",
    "origin": {
@@ -406,7 +430,8 @@
    "charts": [
     {
      "country": "gb",
-     "rank": 20
+     "rank": 20,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/gb/podcast/we-need-to-talk-with-paul-c-brunson/id1765126946",
@@ -428,25 +453,27 @@
    "name": "Cracks Podcast con Oso Trava",
    "host": "Oso Trava",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/10/c3/ea/10c3eaa9-a610-70c3-2d4b-fd8b957cd5f4/mza_8126512650065582333.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Business",
    "language": "es",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "mx",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
      {
-      "url": "https://podcasts.apple.com/bz/podcast/cracks-podcast-con-oso-trava/id1450858380?l=es-MX",
-      "quote": "presentado por Oso Trava, emprendedor y fundador de InstaFit, quien ha sido nombrado emprendedor del año por la revista Expansión"
+      "url": "https://www.sdpnoticias.com/deportes/quien-es-oso-trava-fundador-de-cracks-podcast/",
+      "quote": "Oswaldo Trava, mejor conocido como Oso Trava, es un emprendedor, inversionista y creador de contenido mexicano"
      }
     ],
-    "note": "Strong indications (Shark Tank México, the Expansión award, Mexican guests) but no source states the show’s or host’s country explicitly."
+    "note": "Verified 2026-10-24 from the host's nationality (SDP Noticias)."
    },
    "description": "Cracks es un podcast de entrevistas con enfoque de negocios y mentalidad que le enseñará a cualquiera que aspire a la grandeza los hábitos y trucos que usan los mejores en deportes, negocios, tecnología y medios para…",
    "charts": [
     {
      "country": "mx",
-     "rank": 11
+     "rank": 11,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/mx/podcast/cracks-podcast-con-oso-trava/id1450858380",
@@ -468,6 +495,7 @@
    "name": "CREATIVO",
    "host": "Roberto Mtz",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/21/38/30/2138307d-e6fd-c8e3-9085-31d92f4d27b7/mza_5346177115818418047.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Business",
    "language": "es",
    "origin": {
@@ -485,7 +513,8 @@
    "charts": [
     {
      "country": "mx",
-     "rank": 30
+     "rank": 30,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/mx/podcast/creativo/id1446811102",
@@ -507,6 +536,7 @@
    "name": "El Podcast de Marco Antonio Regil",
    "host": "Marco Antonio Regil",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/cd/61/66/cd616656-7471-9247-49aa-1e22f0ad4bea/mza_17070065911085234368.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Self-Improvement",
    "language": "es",
    "origin": {
@@ -524,7 +554,8 @@
    "charts": [
     {
      "country": "mx",
-     "rank": 32
+     "rank": 32,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/mx/podcast/el-podcast-de-marco-antonio-regil/id650657153",
@@ -546,6 +577,7 @@
    "name": "Martha Debayle",
    "host": "Martha Debayle",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/fa/19/df/fa19df07-ea92-ba2a-de80-d0f24f287164/mza_7095161225554850210.jpeg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Self-Improvement",
    "language": "es",
    "origin": {
@@ -564,7 +596,8 @@
    "charts": [
     {
      "country": "mx",
-     "rank": 8
+     "rank": 8,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/mx/podcast/martha-debayle/id553271510",
@@ -580,6 +613,7 @@
    "name": "Santiago Bilinkis – Futuro en Construcción",
    "host": "Santiago Bilinkis",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/2c/f1/8e/2cf18e78-44bd-24a8-3916-abc013d88df1/mza_7231275226110463195.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Technology",
    "language": "es",
    "origin": {
@@ -598,7 +632,8 @@
    "charts": [
     {
      "country": "ar",
-     "rank": 19
+     "rank": 19,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/ar/podcast/santiago-bilinkis-futuro-en-construcci%C3%B3n/id1467493626",
@@ -620,12 +655,13 @@
    "name": "Aislados El Podcast",
    "host": "Aislados",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/9c/65/37/9c6537b9-8bd1-32a8-cced-12d36526430f/mza_2382673899373874267.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Comedy",
    "language": "es",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
      {
       "url": "https://es.wikipedia.org/wiki/Lucas_Lauriente",
@@ -636,13 +672,14 @@
       "quote": "Un podcast en donde Lucas Lauriente, Lucho Mellera, Nicolas De Tracy y Nanutria van a decir muchas palabras juntas"
      }
     ],
-    "note": "One of the four hosts is an Argentine comedian; no source states where the show is produced. Comedy chat, not an interview format."
+    "note": "Verified 2026-10-24: host Lucas Lauriente is an Argentine comedian (Wikipedia quote above)."
    },
    "description": "Un podcast en donde Lucas Lauriente, Lucho Mellera, Nicolas De Tracy y Nanutria van a decir muchas palabras juntas para que a ustedes les cause",
    "charts": [
     {
      "country": "ar",
-     "rank": 7
+     "rank": 7,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/ar/podcast/aislados-el-podcast/id1535862495",
@@ -664,6 +701,7 @@
    "name": "ROCA PROJECT",
    "host": "Carlos Roca",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/73/86/e1/7386e15e-0695-54f2-537b-4b89a384c7a1/mza_5987050166075130693.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Society & Culture",
    "language": "es",
    "origin": {
@@ -686,11 +724,13 @@
    "charts": [
     {
      "country": "ar",
-     "rank": 11
+     "rank": 11,
+     "source": "apple"
     },
     {
      "country": "es",
-     "rank": 2
+     "rank": 2,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/ar/podcast/roca-project/id1738229736",
@@ -712,6 +752,7 @@
    "name": "Palabra Plena, con Gabriel Rolón",
    "host": "Gabriel Rolón",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/ea/7c/06/ea7c069e-b99f-f05e-4860-0a160af960c4/mza_9527189730086957450.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Physics",
    "language": "es",
    "origin": {
@@ -733,7 +774,8 @@
    "charts": [
     {
      "country": "ar",
-     "rank": 6
+     "rank": 6,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/ar/podcast/palabra-plena-con-gabriel-rol%C3%B3n/id1503058155",
@@ -749,6 +791,7 @@
    "name": "The Wild Project",
    "host": "Jordi Wild",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts126/v4/f9/d1/5f/f9d15fa3-7cf2-110e-647d-c7966f292cff/mza_3972999760339797846.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Society & Culture",
    "language": "es",
    "origin": {
@@ -767,11 +810,13 @@
    "charts": [
     {
      "country": "es",
-     "rank": 6
+     "rank": 6,
+     "source": "apple"
     },
     {
      "country": "ar",
-     "rank": 17
+     "rank": 17,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/es/podcast/the-wild-project/id1501968107",
@@ -793,6 +838,7 @@
    "name": "La Fórmula Del Éxito con Uri Sabat",
    "host": "Uri Sabat",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/11/95/22/11952205-cfdf-7e1e-4993-a68e9810b9b7/mza_5334932151455688011.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Society & Culture",
    "language": "es",
    "origin": {
@@ -810,7 +856,8 @@
    "charts": [
     {
      "country": "es",
-     "rank": 20
+     "rank": 20,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/es/podcast/la-f%C3%B3rmula-del-%C3%A9xito-con-uri-sabat/id1469066632",
@@ -832,6 +879,7 @@
    "name": "LO QUE TÚ DIGAS con Alex Fidalgo",
    "host": "Alex Fidalgo",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/09/b8/3e/09b83e2e-4d1e-0158-717b-71887b9470bd/mza_14275587141073344359.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Society & Culture",
    "language": "es",
    "origin": {
@@ -849,7 +897,8 @@
    "charts": [
     {
      "country": "es",
-     "rank": 24
+     "rank": 24,
+     "source": "apple"
     }
    ],
    "appleUrl": "https://podcasts.apple.com/es/podcast/lo-que-t%C3%BA-digas-con-alex-fidalgo/id1245349669",
@@ -871,6 +920,7 @@
    "name": "El Método Rebord",
    "host": "Tomás Rebord",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts115/v4/02/cb/95/02cb95d7-f3d1-8324-2daa-a7ed82ff0742/mza_101518272621264884.jpg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Sociedad y cultura",
    "language": "es",
    "origin": {
@@ -906,19 +956,24 @@
    "name": "Caja Negra",
    "host": "Julio Leiva",
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/04/38/2e/04382eb4-d8d4-2b86-b21d-38f2157d0106/mza_14970601487603893436.jpeg/600x600bb.jpg",
+   "platform": "apple",
    "genre": "Sociedad y cultura",
    "language": "es",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
+     {
+      "url": "https://www.elpais.com.uy/tvshow/personajes/julio-leiva-el-creador-de-caja-negra-el-desafio-es-ir-contra-los-propios-prejuicios",
+      "quote": "Julio Leiva, el periodista argentino que está al frente de un par de fenómenos de los medios argentinos"
+     },
      {
       "url": "https://eter.edu.ar/pasa-en-eter/julio-leiva-y-el-detras-de-escena-de-lo-que-significa-entrevistar",
       "quote": "El director de \"Filo News\" y creador del programa “Caja Negra” volvió a nuestra escuela -donde se formó como periodista-"
      }
     ],
-    "note": "Interview show by Filo.news (guests are mostly Argentine) but no source found that states the outlet’s or host’s country explicitly."
+    "note": "Verified 2026-10-24 from the host's nationality (El País, Uruguay)."
    },
    "description": "Caja Negra es un viaje. Es el lugar donde todo queda registrado. Es donde queda guardado un momento de tu vida. ¿En qué momento de tu vida hiciste el clic que te cambió para",
    "charts": [],
@@ -935,6 +990,78 @@
    },
    "status": "limited",
    "statusReason": "feed_stale"
+  },
+  {
+   "id": "novaresio-entrevistas",
+   "name": "Luis Novaresio en +Entrevistas",
+   "host": "Luis Novaresio",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/50/77/fb/5077fb0f-0ab9-4bc7-4f3c-a51953fd56b0/mza_14094424498851614282.jpg/600x600bb.jpg",
+   "platform": "apple",
+   "genre": "Sociedad y cultura",
+   "language": "es",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://es.wikipedia.org/wiki/Luis_Novaresio",
+      "quote": "Luis Esteban Novaresio (Rosario, 17 de abril de 1967) es un abogado y periodista argentino."
+     }
+    ],
+    "note": "Added 2026-10-24 for its verified origin (LA NACION long-form interviews), not from a chart."
+   },
+   "description": "Luis Novaresio te ofrece a diario una charla distendida en las formas, y rigurosa en el contenido, con diferentes personalidades nacionales en",
+   "charts": [],
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/luis-novaresio-en-entrevistas/id1642988126",
+   "feedUrl": "https://anchor.fm/s/10e1556d0/podcast/rss",
+   "appleTrackCount": 368,
+   "lastRelease": "2024-12-20T15:00:00.000Z",
+   "snapshot": {
+    "episodes": 368,
+    "withGuestNames": 358,
+    "coverage": 0.97,
+    "first": "2022-07-12T17:39:00.000Z",
+    "last": "2024-12-20T15:00:00.000Z"
+   },
+   "status": "limited",
+   "statusReason": "feed_stale"
+  },
+  {
+   "id": "noriega-conversaciones",
+   "name": "Conversaciones (Gustavo Noriega)",
+   "host": "Gustavo Noriega",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/2b/be/25/2bbe2561-9085-12a6-8d85-6d22bc1f12ad/mza_16199877935491446551.jpg/600x600bb.jpg",
+   "platform": "apple",
+   "genre": "Arte",
+   "language": "es",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://es.wikipedia.org/wiki/Gustavo_Noriega",
+      "quote": "Gustavo Noriega (19 de noviembre de 1956) es un periodista y crítico de cine argentino."
+     }
+    ],
+    "note": "Added 2026-10-24 for its verified origin, not from a chart."
+   },
+   "description": "Podcast by Gustavo",
+   "charts": [],
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/conversaciones/id1495353665",
+   "feedUrl": "https://anchor.fm/s/106ea3a24/podcast/rss",
+   "appleTrackCount": 429,
+   "lastRelease": "2026-04-27T15:55:25.000Z",
+   "snapshot": {
+    "episodes": 429,
+    "withGuestNames": 40,
+    "coverage": 0.09,
+    "first": "2019-12-11T16:05:16.000Z",
+    "last": "2026-04-27T15:55:25.000Z"
+   },
+   "status": "limited",
+   "statusReason": "few_guest_names"
   }
  ]
 }

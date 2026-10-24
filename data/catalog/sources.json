@@ -20,6 +20,11 @@
   "es": {
    "url": "https://rss.applemarketingtools.com/api/v2/es/podcasts/top/25/podcasts.json",
    "updated": "2026-10-23T03:48:18Z"
+  },
+  "ar-spotify": {
+   "url": "https://podstatus.com/charts/spotify/ar/top-podcasts",
+   "updated": "2026-10-23",
+   "note": "Daily public copy of Spotify's Top Podcasts chart for Argentina (the official page returned HTTP 503 when read)."
   }
  },
  "lookup": "https://itunes.apple.com/lookup?id=<ids>&entity=podcast",
@@ -345,16 +350,16 @@
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/10/c3/ea/10c3eaa9-a610-70c3-2d4b-fd8b957cd5f4/mza_8126512650065582333.jpg/600x600bb.jpg",
    "appleUrl": "https://podcasts.apple.com/mx/podcast/cracks-podcast-con-oso-trava/id1450858380",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "mx",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
      {
-      "url": "https://podcasts.apple.com/bz/podcast/cracks-podcast-con-oso-trava/id1450858380?l=es-MX",
-      "quote": "presentado por Oso Trava, emprendedor y fundador de InstaFit, quien ha sido nombrado emprendedor del año por la revista Expansión"
+      "url": "https://www.sdpnoticias.com/deportes/quien-es-oso-trava-fundador-de-cracks-podcast/",
+      "quote": "Oswaldo Trava, mejor conocido como Oso Trava, es un emprendedor, inversionista y creador de contenido mexicano"
      }
     ],
-    "note": "Strong indications (Shark Tank México, the Expansión award, Mexican guests) but no source states the show’s or host’s country explicitly."
+    "note": "Verified 2026-10-24 from the host's nationality (SDP Noticias)."
    }
   },
   {
@@ -495,9 +500,9 @@
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts116/v4/9c/65/37/9c6537b9-8bd1-32a8-cced-12d36526430f/mza_2382673899373874267.jpg/600x600bb.jpg",
    "appleUrl": "https://podcasts.apple.com/ar/podcast/aislados-el-podcast/id1535862495",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
      {
       "url": "https://es.wikipedia.org/wiki/Lucas_Lauriente",
@@ -508,7 +513,7 @@
       "quote": "Un podcast en donde Lucas Lauriente, Lucho Mellera, Nicolas De Tracy y Nanutria van a decir muchas palabras juntas"
      }
     ],
-    "note": "One of the four hosts is an Argentine comedian; no source states where the show is produced. Comedy chat, not an interview format."
+    "note": "Verified 2026-10-24: host Lucas Lauriente is an Argentine comedian (Wikipedia quote above)."
    }
   },
   {
@@ -722,16 +727,324 @@
    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/04/38/2e/04382eb4-d8d4-2b86-b21d-38f2157d0106/mza_14970601487603893436.jpeg/600x600bb.jpg",
    "appleUrl": "https://podcasts.apple.com/ar/podcast/caja-negra/id1488487424",
    "origin": {
-    "country": null,
-    "status": "unverified",
-    "basis": null,
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
     "evidence": [
+     {
+      "url": "https://www.elpais.com.uy/tvshow/personajes/julio-leiva-el-creador-de-caja-negra-el-desafio-es-ir-contra-los-propios-prejuicios",
+      "quote": "Julio Leiva, el periodista argentino que está al frente de un par de fenómenos de los medios argentinos"
+     },
      {
       "url": "https://eter.edu.ar/pasa-en-eter/julio-leiva-y-el-detras-de-escena-de-lo-que-significa-entrevistar",
       "quote": "El director de \"Filo News\" y creador del programa “Caja Negra” volvió a nuestra escuela -donde se formó como periodista-"
      }
     ],
-    "note": "Interview show by Filo.news (guests are mostly Argentine) but no source found that states the outlet’s or host’s country explicitly."
+    "note": "Verified 2026-10-24 from the host's nationality (El País, Uruguay)."
+   }
+  },
+  {
+   "id": "novaresio-entrevistas",
+   "country": null,
+   "chartRank": null,
+   "appleId": 1642988126,
+   "name": "Luis Novaresio en +Entrevistas",
+   "host": "Luis Novaresio",
+   "hostAliases": [
+    "Luis Novaresio",
+    "Novaresio"
+   ],
+   "brand": "+Entrevistas",
+   "feedUrl": "https://anchor.fm/s/10e1556d0/podcast/rss",
+   "genre": "Sociedad y cultura",
+   "trackCount": 368,
+   "lastRelease": "2024-12-20T15:00:00Z",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/50/77/fb/5077fb0f-0ab9-4bc7-4f3c-a51953fd56b0/mza_14094424498851614282.jpg/600x600bb.jpg",
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/luis-novaresio-en-entrevistas/id1642988126",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://es.wikipedia.org/wiki/Luis_Novaresio",
+      "quote": "Luis Esteban Novaresio (Rosario, 17 de abril de 1967) es un abogado y periodista argentino."
+     }
+    ],
+    "note": "Added 2026-10-24 for its verified origin (LA NACION long-form interviews), not from a chart."
+   }
+  },
+  {
+   "id": "noriega-conversaciones",
+   "country": null,
+   "chartRank": null,
+   "appleId": 1495353665,
+   "name": "Conversaciones (Gustavo Noriega)",
+   "host": "Gustavo Noriega",
+   "hostAliases": [
+    "Gustavo Noriega",
+    "Noriega"
+   ],
+   "brand": "Conversaciones",
+   "feedUrl": "https://anchor.fm/s/106ea3a24/podcast/rss",
+   "genre": "Arte",
+   "trackCount": 429,
+   "lastRelease": "2026-04-11T21:05:00Z",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/2b/be/25/2bbe2561-9085-12a6-8d85-6d22bc1f12ad/mza_16199877935491446551.jpg/600x600bb.jpg",
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/conversaciones/id1495353665",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://es.wikipedia.org/wiki/Gustavo_Noriega",
+      "quote": "Gustavo Noriega (19 de noviembre de 1956) es un periodista y crítico de cine argentino."
+     }
+    ],
+    "note": "Added 2026-10-24 for its verified origin, not from a chart."
+   }
+  },
+  {
+   "id": "la-formula",
+   "country": "ar",
+   "chartRank": 1,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "La Fórmula Podcast",
+   "host": "Mili Hadad",
+   "hostAliases": [
+    "Mili Hadad"
+   ],
+   "brand": "La Fórmula",
+   "feedUrl": "https://open.spotify.com/show/2TZKJJmj9WQkcTZ34T09or",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/2TZKJJmj9WQkcTZ34T09or",
+   "spotifyId": "2TZKJJmj9WQkcTZ34T09or",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#1, Podstatus copy, 2026-10-23); host nationality not yet sourced."
+   }
+  },
+  {
+   "id": "la-cruda",
+   "country": "ar",
+   "chartRank": 16,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "La Cruda",
+   "host": "Migue Granados",
+   "hostAliases": [
+    "Migue Granados",
+    "Miguel Granados"
+   ],
+   "brand": "La Cruda",
+   "feedUrl": "https://open.spotify.com/show/2G0HRZba65w6T9NDNScNK2",
+   "genre": "Comedia",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/2G0HRZba65w6T9NDNScNK2",
+   "spotifyId": "2G0HRZba65w6T9NDNScNK2",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://es.wikipedia.org/wiki/Miguel_Granados",
+      "quote": "Miguel «Migue» Granados (Rosario, 2 de septiembre de 1986) es un humorista, músico y presentador de radio y televisión argentino."
+     }
+    ]
+   }
+  },
+  {
+   "id": "el-buscador",
+   "country": "ar",
+   "chartRank": 22,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "El Buscador",
+   "host": "Julio Leiva",
+   "hostAliases": [
+    "Julio Leiva"
+   ],
+   "brand": "El Buscador",
+   "feedUrl": "https://open.spotify.com/show/44Vtu1B21sSjukrvs6L2dq",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/44Vtu1B21sSjukrvs6L2dq",
+   "spotifyId": "44Vtu1B21sSjukrvs6L2dq",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://www.elpais.com.uy/tvshow/personajes/julio-leiva-el-creador-de-caja-negra-el-desafio-es-ir-contra-los-propios-prejuicios",
+      "quote": "Julio Leiva, el periodista argentino que está al frente de un par de fenómenos de los medios argentinos"
+     }
+    ]
+   }
+  },
+  {
+   "id": "la-sesion-sofi-calvo",
+   "country": "ar",
+   "chartRank": 23,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "La Sesión de Sofi Calvo",
+   "host": "Sofi Calvo",
+   "hostAliases": [
+    "Sofi Calvo",
+    "Sofía Calvo"
+   ],
+   "brand": "La Sesión",
+   "feedUrl": "https://open.spotify.com/show/26PI3K0UtVPuope1oN9fAq",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/26PI3K0UtVPuope1oN9fAq",
+   "spotifyId": "26PI3K0UtVPuope1oN9fAq",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://x.com/sofiecalvo",
+      "quote": "Psicóloga, escritora. Tengo un podcast: La sesión - Hispa. Santa Fe, Argentina."
+     }
+    ],
+    "note": "Host's own public profile."
+   }
+  },
+  {
+   "id": "hay-amor",
+   "country": "ar",
+   "chartRank": 78,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "Hay Amor con Nacho Elizalde",
+   "host": "Nacho Elizalde",
+   "hostAliases": [
+    "Nacho Elizalde"
+   ],
+   "brand": "Hay Amor",
+   "feedUrl": "https://open.spotify.com/show/1D0BNoKIeUuPciBJ8zHqeP",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/1D0BNoKIeUuPciBJ8zHqeP",
+   "spotifyId": "1D0BNoKIeUuPciBJ8zHqeP",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#78); host nationality not yet sourced."
+   }
+  },
+  {
+   "id": "ferne-con-grego",
+   "country": "ar",
+   "chartRank": 85,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "Ferné con Grego",
+   "host": "Grego Rossello",
+   "hostAliases": [
+    "Grego Rossello",
+    "Gregorio Rossello"
+   ],
+   "brand": "Ferné con Grego",
+   "feedUrl": "https://open.spotify.com/show/3oBSdxfVxwGDsGo5xOtknZ",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/3oBSdxfVxwGDsGo5xOtknZ",
+   "spotifyId": "3oBSdxfVxwGDsGo5xOtknZ",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#85); host nationality not yet sourced."
+   }
+  },
+  {
+   "id": "sensible-yoyi-francella",
+   "country": "ar",
+   "chartRank": 31,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "Sensible x Yoyi Francella",
+   "host": "Yoyi Francella",
+   "hostAliases": [
+    "Yoyi Francella",
+    "Johanna Francella"
+   ],
+   "brand": "Sensible",
+   "feedUrl": "https://open.spotify.com/show/18yxjvfq8CM7JasTy9Rf3v",
+   "genre": "Sociedad y cultura",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/18yxjvfq8CM7JasTy9Rf3v",
+   "spotifyId": "18yxjvfq8CM7JasTy9Rf3v",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#31); host nationality not yet sourced."
+   }
+  },
+  {
+   "id": "agus-creevy",
+   "country": "ar",
+   "chartRank": 62,
+   "chartSource": "spotify",
+   "appleId": null,
+   "name": "Agus Creevy",
+   "host": "Agustín Creevy",
+   "hostAliases": [
+    "Agustín Creevy",
+    "Agus Creevy"
+   ],
+   "brand": "Agus Creevy",
+   "feedUrl": "https://open.spotify.com/show/033eZ5bDSCu40b5b5JOc8y",
+   "genre": "Deportes",
+   "trackCount": 0,
+   "lastRelease": "2026-10-01T00:00:00Z",
+   "artwork": "",
+   "appleUrl": "https://open.spotify.com/show/033eZ5bDSCu40b5b5JOc8y",
+   "spotifyId": "033eZ5bDSCu40b5b5JOc8y",
+   "spotifyMarket": "AR",
+   "origin": {
+    "country": null,
+    "status": "unverified",
+    "basis": null,
+    "evidence": [],
+    "note": "In Spotify Argentina’s chart (#62); host nationality not yet sourced."
    }
   }
  ],
