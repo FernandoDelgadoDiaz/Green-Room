@@ -44,6 +44,6 @@ Spotify and YouTube shows, which are most of Latin American podcasting. Outreach
 Fernando Delgado, from Argentina. Say one line about yourself and why podcasts.
 
 ## Practical
-- Test camera, mic and the app's URL the day before; have https://greenroom1.netlify.app/?lang=en open, with a cached show already loaded.
+- Test camera, mic and the app's URL the day before; have https://greenroom1.netlify.app/?lang=en&show=this-week-in-startups open (the five portraits load first), and https://greenroom1.netlify.app/?lang=en&show=all-in in a second tab.
 - If anything fails live, switch to the screenshots uploaded to Devpost (kept out of the repo: they show Qloo results).
 - Under 2 minutes: rehearse with a timer. Calacanis interrupts. Answer in one sentence, then go back to the demo.
