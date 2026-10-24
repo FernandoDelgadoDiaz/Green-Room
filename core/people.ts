@@ -108,6 +108,8 @@ export interface PersonRecord {
   countries: string[];
   /** Number of Wikipedia editions with an article: how widely documented the person is. */
   wikipedias: number;
+  /** Date of death (Wikidata P570, YYYY-MM-DD), or null: nobody deceased is ever recommended. */
+  died?: string | null;
   /** Wikipedia editions among the ones that matter here. */
   articles: string[];
   photo: PersonPhoto | null;
@@ -142,6 +144,10 @@ const KEPT_ARTICLES = new Set(['eswiki', 'enwiki', 'ptwiki', 'frwiki', 'itwiki',
 
 const claimIds = (e: WdEntity, p: string) =>
   (e.claims?.[p] ?? []).map((c) => c.mainsnak.datavalue?.value).map((v) => (v && typeof v === 'object' ? (v as { id?: string }).id : undefined)).filter((x): x is string => Boolean(x));
+const deathDate = (e: WdEntity): string | null => {
+  const v = e.claims?.P570?.[0]?.mainsnak.datavalue?.value as { time?: string } | undefined;
+  return v?.time ? v.time.replace(/^\+/, '').slice(0, 10) : null;
+};
 const claimStrings = (e: WdEntity, p: string) => (e.claims?.[p] ?? []).map((c) => c.mainsnak.datavalue?.value).filter((v): v is string => typeof v === 'string');
 const wikipediaCount = (e: WdEntity) => Object.keys(e.sitelinks ?? {}).filter((s) => /^[a-z_]+wiki$/.test(s) && !['commonswiki', 'specieswiki', 'metawiki', 'mediawikiwiki', 'wikidatawiki', 'sourceswiki'].includes(s)).length;
 const stripHtml = (s: string) => s.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
@@ -300,6 +306,7 @@ export async function resolvePeople(
       categories: categoriesOf(occ.map((o) => o.en)),
       countries: [...new Set(claimIds(e, 'P27').map((q) => iso.get(q)).filter((x): x is string => Boolean(x)))],
       wikipedias: wikipediaCount(e),
+      died: deathDate(e),
       articles: Object.keys(e.sitelinks ?? {}).filter((s) => KEPT_ARTICLES.has(s)),
       photo: file ? (photos.get(file.replace(/_/g, ' ')) ?? null) : null,
       match,

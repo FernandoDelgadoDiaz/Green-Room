@@ -557,6 +557,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   // "Known by this audience", from strictest (0) to not applied (3). The loosest level is used only
   // when stricter ones leave fewer than k candidates, and the trace says which one was used.
   const audienceOk = (c: Candidate, level = gateLevel) => {
+    // Never recommend someone who has died (Wikidata P570), whatever the level.
+    if (personOf(c)?.died) return false;
     if (!people || level >= 3) return true;
     const p = personOf(c);
     if (!p) return false;

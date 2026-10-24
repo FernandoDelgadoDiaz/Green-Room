@@ -1055,13 +1055,13 @@
    "lastRelease": "2026-04-27T15:55:25.000Z",
    "snapshot": {
     "episodes": 429,
-    "withGuestNames": 40,
-    "coverage": 0.09,
+    "withGuestNames": 243,
+    "coverage": 0.57,
     "first": "2019-12-11T16:05:16.000Z",
     "last": "2026-04-27T15:55:25.000Z"
    },
-   "status": "limited",
-   "statusReason": "few_guest_names"
+   "status": "analyzable",
+   "statusReason": null
   }
  ]
 }
