@@ -8,7 +8,7 @@
 | **Public** repo with an **open-source license** visible in About | **Done.** Public, MIT `LICENSE`. No secrets in history, no Qloo responses stored. |
 | English text description | Below |
 | Testing instructions | [docs/JUDGE_ACCESS.md](JUDGE_ACCESS.md) (ready to paste) |
-| Demo video | **Not required** ("Demo videos are not required. Instead … something judges can actually use"). Judges may still decide on text, images and video alone: upload the screenshots in `docs/screenshots/`. Script kept in [docs/DEMO.md](DEMO.md) if a video is added. |
+| Demo video | **Not required** ("Demo videos are not required. Instead … something judges can actually use"). Judges may still decide on text, images and video alone: upload the six screenshots taken from the live app (home, catalog, results, a guest card, "What Qloo added", the agent trace). They are kept out of the repo because they show Qloo results. Script kept in [docs/DEMO.md](DEMO.md) if a video is added. |
 | Deadline | **Oct 30, 2026, 11:45 pm EDT** (Oct 31, 00:45 in Argentina) |
 | Finalists | The top 3 present live on Nov 5 with Jason Calacanis, Cedric the Entertainer and Alex Elias, and must be available to prepare beforehand. |
 | Before judging (Nov 1) | Warm the cache for every catalog show and raise the daily budget; see JUDGE_ACCESS.md |
@@ -23,7 +23,7 @@
 **What it does.** Pick a podcast (interview shows from Apple's charts in the US, Mexico, the UK, Argentina and Spain, or any show in Apple's directory). Green Room's agent reads the show's real episode history and recommends five guests, each with:
 - **who they are**: occupation, country, free photo;
 - **why this show**: the past guests they resemble, where they were interviewed and on what;
-- **what Qloo says about their audience**: affinity to the show's audience, how similar their audience's age/gender profile is to the show's, and whether they are rising over the last 12 weeks;
+- **what Qloo says about their audience**: affinity to the show's audience, plus, when Qloo has the data for that person, how similar their audience's age/gender profile is to the show's and their 12-week trend;
 - **verified evidence**: interview links, identity and language checks;
 - **a draft invitation** written only from that evidence.
 
@@ -32,11 +32,11 @@ It also shows **who the show's audience is according to Qloo**, **new people onl
 **Why it only works with Qloo.** The show's own data says who has been booked; only Qloo says what its audience likes. The agent turns past guests (or, when titles don't name them, the show itself and its themes) into a Qloo taste signal. It then uses Qloo to:
 1. discover people with affinity to that audience, outside the show's history;
 2. score each comparable candidate's affinity to the audience;
-3. profile the show's audience and each guest's audience by age and gender (`urn:demographics`) and compare them;
-4. read each guest's 12-week popularity trend (`/v2/trending`);
+3. profile the show's audience by age and gender (`urn:demographics`), and compare each guest's profile with it when Qloo has one;
+4. read each guest's 12-week popularity trend (`/v2/trending`) when Qloo has a series for them;
 5. find cross-domain cultural hooks.
 
-Without Qloo, Green Room can still list credible people. It can't tell a producer whose audience overlaps theirs, who their audience is, or who is on the rise.
+Without Qloo, Green Room can still list credible people. It can't tell a producer whose audience overlaps theirs or who their audience is.
 
 **How the agent works.** A rule-based planner observes, decides, acts, verifies and re-plans, and every step records why it ran.
 - If guests can't carry the audience signal, it tries the show as a Qloo podcast entity, then its themes as Qloo tags.
