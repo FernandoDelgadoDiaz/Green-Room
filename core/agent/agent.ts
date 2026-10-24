@@ -103,6 +103,8 @@ export interface RecommendationAudience {
   wikipedias: number;
   /** Past guests of the show with the same kind of profile (best documented first). */
   similarPastGuests: string[];
+  /** The same, for each shared category. */
+  similarByCategory: Partial<Record<OccupationCategory, string[]>>;
   typeFit: number | null;
   regionFit: number;
   known: number;
@@ -1879,6 +1881,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       sameCountryShows: sameCountryShows(c),
       wikipedias: p.wikipedias,
       similarPastGuests: similar,
+      similarByCategory: Object.fromEntries(shared.map((cat) => [cat, [...(pastByCategory.get(cat) ?? [])].sort((a, b) => b.w - a.w).map((x) => x.name).filter((n, j, all) => all.indexOf(n) === j).slice(0, 2)])),
       typeFit: profileStrong() ? (c.typeFit ?? 0) : null,
       regionFit: c.regionFit ?? 0,
       known: c.known ?? 0,

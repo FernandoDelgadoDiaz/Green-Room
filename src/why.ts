@@ -3,7 +3,7 @@
 // alike when the evidence is alike.
 
 import type { Recommendation } from '../core/agent/agent';
-import { CATEGORY_LABELS, categoriesOf } from '../core/people';
+import { CATEGORY_LABELS, categoriesOf, type OccupationCategory } from '../core/people';
 
 type Lang = 'en' | 'es';
 
@@ -24,15 +24,19 @@ export function audienceSubtitle(rec: Recommendation, lang: Lang): string | null
   const a = rec.audience;
   if (!a) return null;
   // The occupation that makes them the right kind of guest for this show, when there is one.
-  const fitting = a.sharedCategories.length ? a.occupations.find((o) => categoriesOf([o.en]).includes(a.sharedCategories[0])) : undefined;
-  const occ = (fitting ?? a.occupations[0])?.[lang] ?? (a.categories[0] ? CATEGORY_LABELS[a.categories[0]][lang] : null);
+  // Wikidata lists the main occupation first: keep that order, taking the first one the show shares.
+  const occ = fittingOccupation(a).occ?.[lang] ?? (a.categories[0] ? CATEGORY_LABELS[a.categories[0]][lang] : null);
   const where = a.countries[0] ? countryName(a.countries[0], lang) : null;
   return [occ && cap(occ), where].filter(Boolean).join(' · ') || null;
 }
 
-function occOf(a: NonNullable<Recommendation['audience']>, lang: Lang): string | null {
-  const o = a.occupations.find((x) => categoriesOf([x.en]).includes(a.sharedCategories[0])) ?? a.occupations[0];
-  return o ? o[lang] : null;
+/** The person's main occupation that the show shares (Wikidata order), and its category. */
+function fittingOccupation(a: NonNullable<Recommendation['audience']>): { occ: { en: string; es: string } | null; cat: OccupationCategory | null } {
+  for (const o of a.occupations) {
+    const cat = categoriesOf([o.en]).find((c) => a.sharedCategories.includes(c));
+    if (cat) return { occ: o, cat };
+  }
+  return { occ: a.occupations[0] ?? null, cat: a.sharedCategories[0] ?? null };
 }
 
 /** Up to three sentences, each one only when its evidence exists. */
@@ -44,12 +48,14 @@ export function whySentences(rec: Recommendation, showName: string, lang: Lang):
   const themes = rec.sharedThemes.map((s) => (es ? s.labelEs : s.label));
 
   // 1. Same kind of guest as people the show already had.
-  if (a?.sharedCategories.length && a.similarPastGuests.length) {
-    const kind = CATEGORY_LABELS[a.sharedCategories[0]];
+  const fit = a ? fittingOccupation(a) : null;
+  const similar = fit?.cat ? (a!.similarByCategory?.[fit.cat] ?? (fit.cat === a!.sharedCategories[0] ? a!.similarPastGuests : [])) : [];
+  if (a && fit?.cat && similar.length) {
+    const kind = CATEGORY_LABELS[fit.cat];
     out.push(
       es
-        ? `${showName} ya recibió a ${kind.esPlural} como ${list(a.similarPastGuests, lang)}; ${rec.name} tiene ese mismo perfil${occOf(a, 'es') ? ` (${occOf(a, 'es')})` : ''}.`
-        : `${showName} has already hosted ${kind.enPlural} such as ${list(a.similarPastGuests, lang)}; ${rec.name} has that same profile${occOf(a, 'en') ? ` (${occOf(a, 'en')})` : ''}.`,
+        ? `${showName} ya recibió a ${kind.esPlural} como ${list(similar, lang)}; ${rec.name} tiene ese mismo perfil${fit.occ ? ` (${fit.occ.es})` : ''}.`
+        : `${showName} has already hosted ${kind.enPlural} such as ${list(similar, lang)}; ${rec.name} has that same profile${fit.occ ? ` (${fit.occ.en})` : ''}.`,
     );
   } else if (themes.length) {
     out.push(es ? `Sus entrevistas tocan ${list(themes, lang)}, temas frecuentes en ${showName}.` : `Their interviews cover ${list(themes, lang)}, frequent topics on ${showName}.`);
