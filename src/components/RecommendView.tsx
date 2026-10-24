@@ -635,7 +635,7 @@ function GuestLineup({ result, show, recs, view, setView, hasTaste, newKeys }: {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h3 className="font-display text-4xl sm:text-5xl">{t('recs.title')}</h3>
-          <p className="mt-1 text-sm text-stone-400">{view === 'taste' ? t('view.tasteLead', { n: newKeys.size }) : t('lineup.lead', { show: show.name })}</p>
+          <p className="mt-1 text-sm text-stone-400">{view === 'taste' ? `${t('view.tasteLead')} ${newKeys.size === 0 ? t('view.same') : newKeys.size === 1 ? t('view.newOne') : t('view.newMany', { n: newKeys.size })}` : t('lineup.lead', { show: show.name })}</p>
         </div>
         <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
       </div>
@@ -659,9 +659,9 @@ function GuestLineup({ result, show, recs, view, setView, hasTaste, newKeys }: {
                   <Portrait name={r.name} profile={result.profiles[r.key]} />
                   <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/70 to-transparent" />
                   <span className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-brass-400 font-display text-lg text-stage-950 shadow">{r.rank}</span>
-                  <span className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-sm font-semibold tabular-nums text-stone-100" title={t('card.scoreHelp')}>{pct(r.score)}</span>
-                  {newKeys.has(r.key) && <span className="absolute left-3 top-14 rounded-full bg-emerald-400 px-2 py-0.5 text-[11px] font-bold text-stage-950">{t('view.new')}</span>}
+                  {view === 'evidence' && <span className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-sm font-semibold tabular-nums text-stone-100" title={t('card.scoreHelp')}>{pct(r.score)}</span>}
                   <div className="absolute inset-x-0 bottom-0 p-3">
+                    {newKeys.has(r.key) && <span className="mb-1.5 inline-block rounded-full bg-emerald-400 px-2 py-0.5 text-[11px] font-bold text-stage-950">{t('view.new')}</span>}
                     <p className="text-lg font-semibold leading-tight text-white">{r.name}</p>
                     <p className="mt-0.5 line-clamp-2 text-xs text-stone-300">{audienceSubtitle(r, lang) ?? ''}</p>
                     {affinity !== null && <span className="mt-2 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">{t('lineup.qloo', { n: Math.round(affinity * 100) })}</span>}
