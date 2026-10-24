@@ -10,7 +10,7 @@ import type { ExternalCheck } from '../verify/external';
 import { buildTagQueries, compactKey, GENERIC_WORDS, showNameVariants } from '../qloo/signals';
 import { externalThemes } from '../verify/occupations';
 import { THEMES, THEME_IDS, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
-import { qlooKind, type QlooAdapter, type QlooEntity } from '../qloo/types';
+import { qlooKind, type Demographics, type QlooAdapter, type QlooEntity, type Trend } from '../qloo/types';
 import { CATEGORY_LABELS, categoriesOf, type OccupationCategory, type PersonRecord } from '../people';
 
 export interface TraceStep {
@@ -48,6 +48,7 @@ export type ToolName =
   | 'check_language'
   | 'select_shortlist'
   | 'verify_shortlist'
+  | 'qloo_audience_profile'
   | 'justify';
 
 /** Tools the loop can call; 'justify' is the terminal step after the loop. */
@@ -86,6 +87,23 @@ export interface Recommendation {
   assessment: Assessment;
   /** Who this person is (Wikidata) and how that fits who the show interviews; null without people data. */
   audience: RecommendationAudience | null;
+  /** What Qloo says about this guest's audience against the show's (LIVE only; null otherwise). */
+  qlooAudience: QlooAudience | null;
+}
+
+/**
+ * Qloo's read of a pick's audience. Inferred taste data, never listener data:
+ * - affinity: rank of the guest's affinity to the show's audience signal among the scored candidates (0–1);
+ * - demographicMatch: similarity (0–1) of the guest's and the show's age/gender affinity profiles;
+ * - trend: direction of the guest's weekly popularity over the last 12 weeks.
+ */
+export interface QlooAudience {
+  qlooEntityId: string;
+  affinity: number | null;
+  demographicMatch: number | null;
+  demographics: Demographics | null;
+  trend: Trend['direction'] | null;
+  trendPercentile: number | null;
 }
 
 export interface RecommendationAudience {
@@ -324,6 +342,8 @@ export interface AgentResult {
   qlooCalls: QlooAdapter['calls'];
   /** Who the show interviews (null without people data). */
   guestProfile: ShowGuestProfile | null;
+  /** Age/gender affinity of the show's audience signal, from Qloo (LIVE only). */
+  audienceDemographics: { demographics: Demographics; basis: 'guests' | 'podcast' | 'tags'; signals: number } | null;
 }
 
 export interface AgentInput {
@@ -513,6 +533,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   let audienceCountries = new Set(showCountry ? [showCountry] : []);
   const AUDIENCE_COUNTRY_SHARE = 0.15;
   let guestProfile: ShowGuestProfile | null = null;
+  let audienceDemographics: AgentResult['audienceDemographics'] = null;
+  const qlooAudienceOf = new Map<string, QlooAudience>();
   let themeEvidence = 1;
   const catShare = new Map<OccupationCategory, number>();
   const profileStrong = () => Boolean(guestProfile?.strong);
@@ -1652,6 +1674,74 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       });
     },
 
+    qloo_audience_profile: async () => {
+      const budget = () => qloo.budgetLeft?.() ?? Infinity;
+      // Picks need a Qloo id confirmed with context; the affinity step already has most of them.
+      for (const c of picks) {
+        if (c.qlooEntityId || budget() < 4) continue;
+        const hits = await qloo.searchPerson(c.name).catch(() => [] as QlooEntity[]);
+        const r = checkIdentity(hits, c.name, titlesByKey.get(c.key) ?? c.appearances.map((a) => a.title));
+        if (r.status === 'confirmed') (c.qlooEntityId = r.entity.entityId), (c.identity = { status: 'confirmed', evidence: r.evidence });
+      }
+      const withId = picks.filter((c) => c.qlooEntityId);
+      const showIds = signalIds().slice(0, 8);
+      const showTags = showIds.length ? [] : tagIds().slice(0, 6);
+      let demo = new Map<string, Demographics>();
+      try {
+        if (qloo.demographics && (showIds.length || showTags.length)) demo = await qloo.demographics({ entityIds: [...showIds, ...withId.map((c) => c.qlooEntityId!)], tagIds: showTags });
+      } catch (err) {
+        warn([`Qloo demographics failed: ${String(err)}`, `Falló la consulta de demografía en Qloo: ${String(err)}`]);
+      }
+      // The show's audience profile: the average of its signals' profiles.
+      const showBlocks = [...showIds, ...showTags].map((id) => demo.get(id)).filter((d): d is Demographics => Boolean(d));
+      const avg = (key: 'age' | 'gender') => {
+        const keys = [...new Set(showBlocks.flatMap((b) => Object.keys(b[key])))];
+        return Object.fromEntries(keys.map((k) => [k, showBlocks.reduce((s2, b) => s2 + (b[key][k] ?? 0), 0) / showBlocks.length]));
+      };
+      if (showBlocks.length) audienceDemographics = { demographics: { age: avg('age'), gender: avg('gender') }, basis: showIds.length ? (resolved.length ? 'guests' : 'podcast') : 'tags', signals: showBlocks.length };
+      const vec = (d: Demographics) => ({ ...Object.fromEntries(Object.entries(d.age).map(([k, v]) => [`a:${k}`, v])), ...Object.fromEntries(Object.entries(d.gender).map(([k, v]) => [`g:${k}`, v])) });
+      const similarity = (a: Demographics, b: Demographics) => {
+        const va = vec(a);
+        const vb = vec(b);
+        const keys = [...new Set([...Object.keys(va), ...Object.keys(vb)])];
+        const dot = keys.reduce((s2, k) => s2 + (va[k] ?? 0) * (vb[k] ?? 0), 0);
+        const na = Math.sqrt(keys.reduce((s2, k) => s2 + (va[k] ?? 0) ** 2, 0));
+        const nb = Math.sqrt(keys.reduce((s2, k) => s2 + (vb[k] ?? 0) ** 2, 0));
+        return na && nb ? (dot / (na * nb) + 1) / 2 : null;
+      };
+      // Popularity trend over the last 12 weeks, one call per pick while the budget allows.
+      const end = d10(asOf);
+      const start = d10(new Date(Date.parse(asOf) - 84 * 24 * 3600 * 1000).toISOString());
+      let trends = 0;
+      for (const c of withId) {
+        let trend: Trend | null = null;
+        if (qloo.trending && budget() >= 1 && !outOfTime()) {
+          trend = await qloo.trending({ entityId: c.qlooEntityId!, type: 'urn:entity:person', start, end }).catch(() => null);
+          if (trend) trends++;
+        }
+        const gd = demo.get(c.qlooEntityId!) ?? null;
+        qlooAudienceOf.set(c.key, {
+          qlooEntityId: c.qlooEntityId!,
+          affinity: c.qlooAffinity,
+          demographicMatch: gd && audienceDemographics ? similarity(gd, audienceDemographics.demographics) : null,
+          demographics: gd,
+          trend: trend?.direction ?? null,
+          trendPercentile: trend?.latestPercentile ?? null,
+        });
+      }
+      const matched = [...qlooAudienceOf.values()].filter((q) => q.demographicMatch !== null).length;
+      step({
+        title: ['Read each pick’s audience in Qloo', 'Leer en Qloo la audiencia de cada elegido'],
+        tool: 'qloo_audience',
+        detail: [
+          `${withId.length} of ${picks.length} picks confirmed in Qloo. Demographic profile of the show’s audience signal: ${audienceDemographics ? `${audienceDemographics.signals} signal(s)` : 'not available'}; guests compared with it: ${matched}; 12-week popularity trend read for ${trends}.`,
+          `${withId.length} de ${picks.length} elegidos confirmados en Qloo. Perfil demográfico de la señal de audiencia del programa: ${audienceDemographics ? `${audienceDemographics.signals} señal(es)` : 'no disponible'}; invitados comparados con él: ${matched}; tendencia de popularidad de 12 semanas leída para ${trends}.`,
+        ],
+        decision: ['Shown on each card as Qloo’s read of the guest’s audience. It explains the picks; it does not reorder them.', 'Se muestra en cada tarjeta como la lectura de Qloo sobre la audiencia del invitado. Explica las elecciones; no las reordena.'],
+        provenance: 'LIVE',
+      });
+    },
+
     verify_shortlist: async () => {
       verifyRounds++;
       // Check each pick against evidence the earlier steps could not use. Failures send the planner
@@ -1767,6 +1857,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       if (picksNeedReselect) return { tool: 'select_shortlist', why: [`Verification rejected ${rejected.size} pick(s): re-selecting without them.`, `La verificación rechazó ${rejected.size} elegido(s): vuelvo a elegir sin ellos.`] };
       return { tool: 'verify_shortlist', why: ['Check every pick before justifying it.', 'Controlo cada elegido antes de justificarlo.'] };
     }
+    if (verified && qloo.mode === 'LIVE' && qlooUsable && qloo.demographics && picks.length && !done.has('qloo_audience_profile') && !outOfTime() && (qloo.budgetLeft?.() ?? Infinity) >= 2)
+      return { tool: 'qloo_audience_profile', why: ['Picks verified: ask Qloo how each guest’s audience compares with the show’s, and who is on the rise.', 'Elegidos verificados: le pregunto a Qloo cómo se compara la audiencia de cada invitado con la del programa, y quién está en alza.'] };
     return null;
   };
 
@@ -2021,6 +2113,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       history: historyStatus,
       external: c.external ?? null,
       audience: audienceOf(c),
+      qlooAudience: qlooAudienceOf.get(c.key) ?? null,
       assessment: {
         qlooProposedRank: c.qlooProposedRank,
         qlooAffinity: blend > 0 ? c.qlooAffinity : null,
@@ -2048,6 +2141,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     asOf,
     qlooMode: qloo.mode,
     guestProfile,
+    audienceDemographics,
     trace,
     themes,
     pastGuestCount: pastGuests.size,

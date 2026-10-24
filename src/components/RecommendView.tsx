@@ -266,6 +266,7 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
       <div className="mt-4">
         <p className="text-xs uppercase tracking-widest text-brass-400">{t('card.why')}</p>
         <p className="mt-1 text-sm leading-relaxed text-stone-200">{whySentences(rec, show.name, lang).join(' ')}</p>
+        <QlooAudienceRow rec={rec} />
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -423,6 +424,44 @@ function DiscoveryPanel({ result, show, part }: { result: RecommendResult; show:
  * who can be interviewed in the show's language first) and cultural conversation hooks. The ranking
  * below is unchanged by this card; nobody is promoted.
  */
+const AGE_LABEL: Record<string, { en: string; es: string }> = {
+  '24_and_younger': { en: 'under 25', es: 'menores de 25' },
+  '25_to_29': { en: '25–29', es: '25 a 29' },
+  '30_to_34': { en: '30–34', es: '30 a 34' },
+  '35_to_44': { en: '35–44', es: '35 a 44' },
+  '45_to_54': { en: '45–54', es: '45 a 54' },
+  '55_and_older': { en: '55+', es: '55 o más' },
+};
+
+/** "Skews 25–29 and 30–34 · slightly more men": the strongest positive affinities in a Qloo profile. */
+export function demographicSummary(d: { age: Record<string, number>; gender: Record<string, number> }, lang: 'en' | 'es'): string | null {
+  const ages = Object.entries(d.age).filter(([, v]) => v > 0.05).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k]) => AGE_LABEL[k]?.[lang] ?? k.replace(/_/g, ' '));
+  const male = d.gender.male ?? 0;
+  const gender = Math.abs(male) < 0.05 ? null : male > 0 ? (lang === 'es' ? 'algo más hombres' : 'slightly more men') : lang === 'es' ? 'algo más mujeres' : 'slightly more women';
+  const parts = [ages.length ? (lang === 'es' ? `más afín entre ${ages.join(' y ')}` : `skews ${ages.join(' and ')}`) : null, gender].filter(Boolean);
+  return parts.length ? parts.join(' · ') : null;
+}
+
+function QlooAudienceRow({ rec }: { rec: Recommendation }) {
+  const { lang, t } = useI18n();
+  const q = rec.qlooAudience;
+  if (!q) return null;
+  const items = [
+    q.affinity !== null ? t('qa.affinity', { n: Math.round(q.affinity * 100) }) : null,
+    q.demographicMatch !== null ? t('qa.match', { n: Math.round(q.demographicMatch * 100) }) : null,
+    q.trend ? t(`qa.trend.${q.trend}` as Parameters<typeof t>[0]) : null,
+  ].filter(Boolean) as string[];
+  if (!items.length) return null;
+  const guest = q.demographics ? demographicSummary(q.demographics, lang) : null;
+  return (
+    <div className="mt-3 rounded-xl border border-emerald-400/25 bg-emerald-500/5 px-3 py-2 text-xs">
+      <p className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-emerald-300/80">{t('qa.title')} <Badge p="LIVE" /></p>
+      <p className="mt-1 text-stone-200">{items.join(' · ')}</p>
+      {guest && <p className="mt-0.5 text-[11px] text-stone-400">{t('qa.guestAudience', { d: guest })}</p>}
+    </div>
+  );
+}
+
 function QlooContribution({ result }: { result: RecommendResult }) {
   const { lang, t } = useI18n();
   if (result.qlooMode !== 'LIVE') return null;
@@ -435,6 +474,13 @@ function QlooContribution({ result }: { result: RecommendResult }) {
     <div className="card border border-emerald-400/30 bg-emerald-500/5 p-5 text-sm">
       <h3 className="flex items-center gap-2 font-display text-2xl">{t('qc.title')} <Badge p="LIVE" /></h3>
       <p className="mt-1 text-xs text-stone-400">{t('qc.lead')}</p>
+      {result.audienceDemographics && demographicSummary(result.audienceDemographics.demographics, lang) && (
+        <>
+          <p className="mt-4 text-xs uppercase tracking-widest text-emerald-300/80">{t('qc.audience')}</p>
+          <p className="mt-1 text-stone-200">{demographicSummary(result.audienceDemographics.demographics, lang)}</p>
+          <p className="text-[11px] text-stone-500">{t('qc.audienceNote')}</p>
+        </>
+      )}
 
       <p className="mt-4 text-xs uppercase tracking-widest text-emerald-300/80">{t('qc.people')}</p>
       {speaks.length ? (

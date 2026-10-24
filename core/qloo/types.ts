@@ -66,6 +66,23 @@ export interface QlooAdapter {
   budgetLeft?(): number;
   /** Cross-domain taste of the audience implied by the signals (artists, films, books…). */
   categoryInsights(args: { signalIds: string[]; tagIds?: string[]; type: InsightsEntityType; take: number }): Promise<QlooEntity[]>;
+  /** Age/gender affinity per entity and tag (filter.type=urn:demographics). Optional: LIVE only. */
+  demographics?(args: { entityIds?: string[]; tagIds?: string[] }): Promise<Map<string, Demographics>>;
+  /** Weekly popularity trend of one entity (/v2/trending). Optional: LIVE only. */
+  trending?(args: { entityId: string; type: InsightsEntityType; start: string; end: string }): Promise<Trend | null>;
+}
+
+/** Age and gender affinity of an entity's or tag's audience (Qloo Demographic Insights). */
+export interface Demographics {
+  age: Record<string, number>;
+  gender: Record<string, number>;
+}
+
+/** Weekly popularity series of one entity (Qloo Trending), newest point last. */
+export interface Trend {
+  points: Array<{ date: string; percentile: number | null; velocity: number | null }>;
+  direction: 'rising' | 'steady' | 'falling';
+  latestPercentile: number | null;
 }
 
 export type QlooErrorKind = 'http' | 'network' | 'timeout' | 'budget' | 'deadline' | 'config';
