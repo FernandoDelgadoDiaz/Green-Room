@@ -8,15 +8,15 @@ export interface CoverageRow {
   country: string | null;
   computedAt: string;
   signal: string;
-  /** The show itself was found as a Qloo podcast entity. */
-  showFound: boolean;
+  /** Qloo could read the audience: through the show's own entity or enough of its past guests. */
+  audienceKnown: boolean;
   guestsSearched: number;
   guestsConfirmed: number;
   /** People Qloo proposed, and how many passed every check for this show. */
   qlooProposed: number;
   qlooVerified: number;
-  /** Qloo returned an age/gender profile for the show's audience signal. */
-  audienceProfile: boolean;
+  /** Qloo returned an age/gender profile for the show's audience signal; null for runs made before it was measured. */
+  audienceProfile: boolean | null;
   picksWithAffinity: number;
   /** The top five differs from the same run without Qloo. */
   changedTopFive: boolean | null;
@@ -47,12 +47,12 @@ export function coverageOf(result: unknown, meta: { country: string | null; comp
     country: meta.country,
     computedAt: meta.computedAt,
     signal,
-    showFound: signal.includes('podcast'),
+    audienceKnown: signal !== 'tags' && signal !== 'none',
     guestsSearched: g.searched ?? 0,
     guestsConfirmed: g.confirmed ?? 0,
     qlooProposed: r.funnel?.proposed ?? 0,
     qlooVerified: (r.discoveryPositions ?? []).filter((p) => p.source === 'qloo-external' && p.eligible).length,
-    audienceProfile: Boolean(r.audienceDemographics),
+    audienceProfile: r && 'audienceDemographics' in r ? Boolean(r.audienceDemographics) : null,
     picksWithAffinity: picks.filter((p) => (p.qlooAudience?.affinity ?? p.components?.qlooAffinity?.value ?? null) !== null).length,
     changedTopFive: c && typeof c.overlap === 'number' && typeof c.k === 'number' ? c.overlap < c.k : null,
   };
@@ -61,11 +61,13 @@ export function coverageOf(result: unknown, meta: { country: string | null; comp
 export interface CountryCoverage {
   country: string | null;
   shows: number;
-  showFound: number;
+  audienceKnown: number;
   guestsSearched: number;
   guestsConfirmed: number;
   qlooVerified: number;
   audienceProfile: number;
+  /** Runs where the audience profile was measured at all. */
+  profileMeasured: number;
   changedTopFive: number;
 }
 
@@ -73,15 +75,16 @@ export interface CountryCoverage {
 export function coverageByCountry(rows: CoverageRow[]): CountryCoverage[] {
   const m = new Map<string | null, CountryCoverage>();
   for (const r of rows) {
-    const a = m.get(r.country) ?? { country: r.country, shows: 0, showFound: 0, guestsSearched: 0, guestsConfirmed: 0, qlooVerified: 0, audienceProfile: 0, changedTopFive: 0 };
+    const a = m.get(r.country) ?? { country: r.country, shows: 0, audienceKnown: 0, guestsSearched: 0, guestsConfirmed: 0, qlooVerified: 0, audienceProfile: 0, profileMeasured: 0, changedTopFive: 0 };
     a.shows++;
-    a.showFound += Number(r.showFound);
+    a.audienceKnown += Number(r.audienceKnown);
     a.guestsSearched += r.guestsSearched;
     a.guestsConfirmed += r.guestsConfirmed;
     a.qlooVerified += r.qlooVerified;
-    a.audienceProfile += Number(r.audienceProfile);
+    a.audienceProfile += Number(r.audienceProfile === true);
+    a.profileMeasured += Number(r.audienceProfile !== null);
     a.changedTopFive += Number(r.changedTopFive === true);
     m.set(r.country, a);
   }
-  return [...m.values()].sort((a, b) => b.showFound / b.shows - a.showFound / a.shows || b.qlooVerified - a.qlooVerified);
+  return [...m.values()].sort((a, b) => b.audienceKnown / b.shows - a.audienceKnown / a.shows || b.qlooVerified - a.qlooVerified);
 }

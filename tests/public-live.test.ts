@@ -275,7 +275,7 @@ describe('public endpoint: Qloo coverage per market (counts only)', () => {
     expect(r.status).toBe(200);
     const rows = (r.body as { rows: Array<Record<string, unknown>> }).rows;
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ showId: 'diary-of-a-ceo', country: 'gb', guestsSearched: expect.any(Number), showFound: false });
+    expect(rows[0]).toMatchObject({ showId: 'diary-of-a-ceo', country: 'gb', guestsSearched: expect.any(Number), audienceKnown: expect.any(Boolean) });
     expect(JSON.stringify(rows)).not.toMatch(/Some Artist|recommendations/);
   });
 

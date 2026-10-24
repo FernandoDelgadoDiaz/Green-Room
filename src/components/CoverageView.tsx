@@ -26,18 +26,18 @@ export function CoverageView() {
         <>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {countries.map((c) => {
-              const share = pctOf(c.showFound, c.shows);
+              const share = pctOf(c.audienceKnown, c.shows);
               return (
                 <div key={c.country ?? 'unknown'} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <p className="text-xs uppercase tracking-widest text-stone-500">{c.country ? countryName(c.country, lang) : t('cov.unverified')}</p>
                   <p className="mt-2 text-4xl font-semibold tabular-nums">{share === null ? '—' : `${share}%`}</p>
-                  <p className="text-xs text-stone-400">{t('cov.known', { a: c.showFound, n: c.shows })}</p>
+                  <p className="text-xs text-stone-400">{t('cov.known', { a: c.audienceKnown, n: c.shows })}</p>
                   <div className="mt-2 h-2 rounded-full bg-white/10">
                     <div className="h-2 rounded-full bg-emerald-400" style={{ width: `${share ?? 0}%` }} />
                   </div>
                   <ul className="mt-3 space-y-0.5 text-xs text-stone-300">
                     {c.guestsSearched > 0 && <li>{t('cov.guestsLine', { c: c.guestsConfirmed, n: c.guestsSearched })}</li>}
-                    <li>{t('cov.profile', { a: c.audienceProfile, n: c.shows })}</li>
+                    <li>{c.profileMeasured ? t('cov.profile', { a: c.audienceProfile, n: c.profileMeasured }) : t('cov.profileNot')}</li>
                     <li>{t('cov.verified', { a: c.qlooVerified })}</li>
                     <li>{t('cov.changed', { a: c.changedTopFive, n: c.shows })}</li>
                   </ul>
@@ -65,10 +65,10 @@ export function CoverageView() {
                     <tr key={r.showId + r.computedAt} className="border-t border-white/5 text-stone-300">
                       <td className="py-1 pr-3">{r.showName}</td>
                       <td className="py-1 pr-3">{r.country ? countryName(r.country, lang) : '—'}</td>
-                      <td className="py-1 pr-3">{r.showFound ? '✓' : '✗'}</td>
+                      <td className="py-1 pr-3">{r.audienceKnown ? '✓' : '✗'}</td>
                       <td className="py-1 pr-3 tabular-nums">{r.guestsSearched ? `${r.guestsConfirmed}/${r.guestsSearched}` : '—'}</td>
                       <td className="py-1 pr-3 tabular-nums">{r.qlooVerified}/{r.qlooProposed}</td>
-                      <td className="py-1 pr-3">{r.audienceProfile ? '✓' : '✗'}</td>
+                      <td className="py-1 pr-3">{r.audienceProfile === null ? '—' : r.audienceProfile ? '✓' : '✗'}</td>
                       <td className="py-1 pr-3 tabular-nums">{r.computedAt.slice(0, 10)}</td>
                     </tr>
                   ))}
