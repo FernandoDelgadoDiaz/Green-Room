@@ -114,3 +114,28 @@ describe('card text', () => {
     expect(whySentences(r, 'El Método Rebord', 'es', 0, { kindClaims: false }).join(' ')).not.toMatch(/Pastorutti/);
   });
 });
+
+describe('identity: a namesake does not get in on name and country alone', () => {
+  it('needs shared context, or a Wikipedia article, to trust a country-only match', async () => {
+    const { trustedRecord } = await import('../core/people');
+    expect(trustedRecord({ match: ['country'], wikipedias: 0 })).toBe(false);
+    expect(trustedRecord({ match: ['country'], wikipedias: 2 })).toBe(true);
+    expect(trustedRecord({ match: ['context'], wikipedias: 0 })).toBe(true);
+  });
+});
+
+describe('positions read right', () => {
+  it('feminine Spanish titles for women, from their own Wikipedia opening', async () => {
+    const { feminineTitle, isWoman, positionLabel, specificPosition } = await import('../core/positions');
+    expect(feminineTitle('Senador de Argentina')).toBe('Senadora de Argentina');
+    expect(feminineTitle('gobernador de la provincia de Buenos Aires')).toBe('gobernadora de la provincia de Buenos Aires');
+    expect(feminineTitle('Presidente de la Nación Argentina')).toBe('Presidenta de la Nación Argentina');
+    expect(feminineTitle('ministro de Economía')).toBe('ministra de Economía');
+    expect(isWoman({ bio: { es: 'Carolina Losada es una política y periodista argentina.' } })).toBe(true);
+    expect(isWoman({ bio: { es: 'Axel Kicillof es un economista y político argentino.' } })).toBe(false);
+    const senate = { en: 'Senator of Argentina', es: 'Senador de Argentina', since: '2021' };
+    expect(positionLabel(senate, 'es', { bio: { es: 'Carolina Losada es una política.' } })).toBe('Senadora de Argentina');
+    expect(positionLabel(senate, 'en', { bio: { es: 'Carolina Losada es una política.' } })).toBe('Senator of Argentina');
+    expect(specificPosition([{ en: 'Chief executive officer', es: 'director ejecutivo', since: '2014' }])).toBeUndefined();
+  });
+});

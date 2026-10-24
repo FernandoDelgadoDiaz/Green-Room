@@ -8,6 +8,7 @@
 
 import { clipTopic, topicPhrase } from './topic';
 import { CATEGORY_LABELS } from './people';
+import { positionLabel, specificPosition } from './positions';
 import type { Recommendation } from './agent/agent';
 
 export type Lang = 'en' | 'es';
@@ -43,8 +44,8 @@ export function draftProposal(
   const themeLine = joinAnd(citable.length ? citable : themes.slice(0, 2).map((t) => (es ? (t.labelEs ?? t.label) : t.label)));
 
   // What they do now, and who of their kind already came on the show.
-  const pos = a?.positions?.[0];
-  const position = pos ? (es ? lowerFirst(pos.es) : pos.en) : null;
+  const pos = specificPosition(a?.positions);
+  const position = pos ? (es ? lowerFirst(positionLabel(pos, 'es', a)) : pos.en) : null;
   const award = a?.awards?.[0] ? (es ? a.awards[0].es : a.awards[0].en) : null;
   const cat = opts.kindClaims === false ? null : (a?.sharedCategories.find((c) => (a.similarByCategory?.[c] ?? []).length) ?? null);
   const similar = cat ? a!.similarByCategory![cat]! : [];
@@ -83,14 +84,14 @@ export function draftProposal(
     ? es
       ? latestTopic
         ? [
-            `Escuchamos tu conversación en ${latest.showName} (${when}) sobre “${latestTopic}” y nos quedamos con ganas de seguir ese hilo.`,
+            `Escuchamos tu conversación en ${latest.showName}, en ${when}, sobre “${latestTopic}” y nos quedamos con ganas de seguir ese hilo.`,
             `Tu charla en ${latest.showName} de ${when}, sobre “${latestTopic}”, fue lo que nos llevó a escribirte.`,
             `Nos quedó resonando lo que contaste en ${latest.showName} en ${when} sobre “${latestTopic}”.`,
           ][v]
         : `Vimos tu paso por ${latest.showName} en ${when} y nos gustaría retomar esa conversación con más tiempo.`
       : latestTopic
         ? [
-            `We heard your conversation on ${latest.showName} (${when}) about “${latestTopic}” and want to pick up that thread.`,
+            `We heard your conversation on ${latest.showName} in ${when} about “${latestTopic}” and want to pick up that thread.`,
             `Your talk on ${latest.showName} in ${when}, about “${latestTopic}”, is what made us write to you.`,
             `What you said on ${latest.showName} in ${when} about “${latestTopic}” stayed with us.`,
           ][v]
@@ -102,7 +103,7 @@ export function draftProposal(
   const talkingPoints = [
     ...topics.map((t, i) => (es ? [`Retomar “${t}”, con más tiempo que la última vez`, `Ir más a fondo en “${t}”`][i] : [`Return to “${t}”, with more time than last time`, `Go deeper into “${t}”`][i])),
     ...(position ? [es ? `Lo que implica hoy ser ${position}` : `What being ${position} looks like today`] : []),
-    ...(award ? [es ? `El camino hasta ${award}` : `The road to ${award}`] : []),
+    ...(award ? [es ? `Lo que significó el reconocimiento «${award}»` : `What the “${award}” recognition meant`] : []),
     ...(citable.length ? [es ? `Cómo se cruza tu trabajo con ${themeLine}, temas frecuentes del programa` : `Where your work meets ${themeLine}, frequent topics on the show`] : []),
   ].slice(0, 4);
 

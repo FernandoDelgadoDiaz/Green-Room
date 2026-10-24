@@ -105,6 +105,14 @@ export function mainCategory(description: string | null | undefined): Occupation
   return (found.find((f) => f.cat !== 'thought') ?? found[0])?.cat ?? null;
 }
 
+/**
+ * A record is trusted as this guest when the context matched (shared words with their interview
+ * titles), or when the country matched and someone wrote a Wikipedia article about them. Name and
+ * country alone, with no article anywhere, is how a namesake gets in (a "Patricia Gutiérrez" who is a
+ * politician for a guest who wrote an illustrated biography).
+ */
+export const trustedRecord = (p: Pick<PersonRecord, 'match' | 'wikipedias'>) => p.match.includes('context') || p.wikipedias > 0;
+
 export interface PersonPhoto {
   thumbUrl: string;
   filePage: string;
@@ -183,7 +191,8 @@ const datedClaims = (e: WdEntity, p: string, yearQualifier: string, current: boo
     .sort((a, b) => (b.year ?? '').localeCompare(a.year ?? ''));
 /** The first `n` sentences of a plain-text Wikipedia intro. */
 const firstSentences = (t: string, n = 2) => {
-  const parts = t.replace(/\s+/g, ' ').trim().match(/[^.!?]+(?:[.!?](?!\d)|$)+/g) ?? [];
+  // A period after a single capital ("John W. Thompson") does not end a sentence.
+  const parts = t.replace(/\s+/g, ' ').trim().match(/(?:[^.!?]|(?<=\s[A-Z])\.)+(?:[.!?](?!\d)|$)+/g) ?? [];
   return parts.slice(0, n).join('').trim() || null;
 };
 const claimStrings = (e: WdEntity, p: string) => (e.claims?.[p] ?? []).map((c) => c.mainsnak.datavalue?.value).filter((v): v is string => typeof v === 'string');
@@ -309,6 +318,11 @@ export async function resolvePeople(
     });
     const withContext = scored.filter((s) => s.match.length > 0);
     const pick = withContext.length === 1 ? withContext[0] : withContext.filter((s) => s.both).length === 1 ? withContext.find((s) => s.both)! : null;
+    // Name and country alone, with no Wikipedia article anywhere, is not enough (see trustedRecord).
+    if (pick && !trustedRecord({ match: pick.match, wikipedias: wikipediaCount(pick.e) })) {
+      stats.noContext++;
+      continue;
+    }
     if (pick) chosen.set(g.name, pick);
     else if (withContext.length > 1) stats.ambiguous++;
     else stats.noContext++;

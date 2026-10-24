@@ -5,6 +5,7 @@
 import type { Recommendation } from '../core/agent/agent';
 import { CATEGORY_LABELS, categoriesOf, type OccupationCategory } from '../core/people';
 import { clipTopic, topicPhrase } from '../core/topic';
+import { positionLabel, specificPosition } from '../core/positions';
 
 type Lang = 'en' | 'es';
 
@@ -91,9 +92,14 @@ function fittingOccupation(a: NonNullable<Recommendation['audience']>): { occ: {
 export function whoTheyAre(rec: Recommendation, lang: Lang): { bio: string | null; position: string | null; awards: string | null } {
   const a = rec.audience;
   const es = lang === 'es';
-  const bio = a?.bio?.[lang]?.replace(/\s*\([^)]*\)/g, '').replace(/\s+([,.;])/g, '$1').replace(/\s+/g, ' ').trim() || null;
-  const pos = a?.positions?.[0];
-  const position = pos ? `${cap(pos[lang])}${pos.since ? (es ? ` (desde ${pos.since})` : ` (since ${pos.since})`) : ''}` : null;
+  const full = a?.bio?.[lang]?.replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s*\([^)]*\)/g, '').replace(/\s+([,.;])/g, '$1').replace(/\s+/g, ' ').trim() || null;
+  // Two sentences unless the second makes it long (a list of every magazine they wrote for).
+  const firstOnly = full?.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? full;
+  // A second sentence cut at an initial ("…and John W.") is dropped.
+  const bio = full && (full.length > 300 || /\s[A-Z]\.$/.test(full)) ? firstOnly : full;
+  // Only positions that name where they hold it ("Governor of Buenos Aires Province"), not a bare "Chief executive officer".
+  const pos = specificPosition(a?.positions);
+  const position = pos ? `${cap(positionLabel(pos, lang, a))}${pos.since ? (es ? ` (desde ${pos.since})` : ` (since ${pos.since})`) : ''}` : null;
   const aw = (a?.awards ?? []).slice(0, 2).map((x) => `${x[lang]}${x.year ? ` (${x.year})` : ''}`);
   return { bio, position, awards: aw.length ? aw.join(es ? ' · ' : ' · ') : null };
 }

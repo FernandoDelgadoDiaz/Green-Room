@@ -34,11 +34,18 @@ export function clipTopic(t: string, max = 80): string {
 }
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const ACCENTS: Record<string, string> = { a: '[aá]', e: '[eé]', i: '[ií]', o: '[oó]', u: '[uúü]', n: '[nñ]' };
+/** The name as a pattern that also matches it with or without accents ("Andres" ↔ "Andrés"). */
+const namePattern = (name: string) =>
+  escapeRe(name.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+    .split('')
+    .map((ch) => ACCENTS[ch.toLowerCase()] ?? ch)
+    .join('');
 
 /** Topic phrase of an appearance title, without the guest's name ("Mark Zuckerberg: Future of AI…" -> "Future of AI…"). */
 export function topicPhrase(title: string, name: string): string {
   let t = title.replace(/^#?\d+\.?\s*[–-]?\s*/, '').replace(/\(.*?\)/g, ' ');
-  t = t.replace(new RegExp(escapeRe(name), 'gi'), ' ');
+  t = t.replace(new RegExp(namePattern(name), 'gi'), ' ');
   const parts = t
     .split(/\s*(?:\||:|\s[–-]\s)\s*/)
     .map((p) => p.trim())
