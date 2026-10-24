@@ -69,7 +69,7 @@ export interface CountryCoverage {
   changedTopFive: number;
 }
 
-/** Per-country totals, strongest guest recognition first. */
+/** Per-country totals: markets where Qloo knew more of the shows first, then by people it contributed. */
 export function coverageByCountry(rows: CoverageRow[]): CountryCoverage[] {
   const m = new Map<string | null, CountryCoverage>();
   for (const r of rows) {
@@ -83,6 +83,5 @@ export function coverageByCountry(rows: CoverageRow[]): CountryCoverage[] {
     a.changedTopFive += Number(r.changedTopFive === true);
     m.set(r.country, a);
   }
-  const share = (c: CountryCoverage) => (c.guestsSearched ? c.guestsConfirmed / c.guestsSearched : -1);
-  return [...m.values()].sort((a, b) => share(b) - share(a));
+  return [...m.values()].sort((a, b) => b.showFound / b.shows - a.showFound / a.shows || b.qlooVerified - a.qlooVerified);
 }

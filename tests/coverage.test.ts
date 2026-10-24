@@ -20,12 +20,12 @@ describe('Qloo coverage: counts derived from the agent’s own diagnostics', () 
     expect(row).toMatchObject({ showFound: true, guestsConfirmed: 12, guestsSearched: 25, qlooProposed: 30, qlooVerified: 1, audienceProfile: true, picksWithAffinity: 1, changedTopFive: true });
   });
 
-  it('groups by country, best guest recognition first', () => {
+  it('groups by country, markets where Qloo knew more shows first', () => {
     const us = coverageOf(result({ signalStrategy: 'podcast', signalDiagnostics: { guests: { searched: 25, confirmed: 15 } } }), { country: 'us', computedAt: 'a' })!;
     const ar = coverageOf(result({ signalStrategy: 'tags', signalDiagnostics: { guests: { searched: 25, confirmed: 1 } }, comparison: { k: 5, overlap: 5 } }), { country: 'ar', computedAt: 'b' })!;
-    const by = coverageByCountry([ar, us, { ...us, guestsConfirmed: 5 }]);
+    const by = coverageByCountry([ar, us, { ...us, guestsConfirmed: 5, showFound: false }]);
     expect(by.map((c) => c.country)).toEqual(['us', 'ar']);
-    expect(by[0]).toMatchObject({ shows: 2, guestsConfirmed: 20, guestsSearched: 50, showFound: 2 });
+    expect(by[0]).toMatchObject({ shows: 2, guestsConfirmed: 20, guestsSearched: 50, showFound: 1 });
     expect(by[1]).toMatchObject({ showFound: 0, changedTopFive: 0 });
   });
 });
