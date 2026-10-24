@@ -129,6 +129,10 @@ export interface RecommendationAudience {
   regionFit: number;
   known: number;
   description: { en: string | null; es: string | null };
+  /** Positions held now, awards, and the opening of their Wikipedia article (absent on older results). */
+  positions?: Array<{ en: string; es: string; since: string | null }>;
+  awards?: Array<{ en: string; es: string; year: string | null }>;
+  bio?: { en: string | null; es: string | null };
   wikidataId: string;
 }
 
@@ -1994,6 +1998,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       regionFit: c.regionFit ?? 0,
       known: c.known ?? 0,
       description: p.description,
+      positions: p.positions ?? [],
+      awards: p.awards ?? [],
+      bio: p.bio ?? { en: null, es: null },
       wikidataId: p.qid,
     };
   };

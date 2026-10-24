@@ -59,19 +59,31 @@ describe('Spanish and English texts', () => {
     for (const a of r.arms) expect(a.labelEs).toBeTruthy();
   });
 
-  it('proposals are written in the requested language, quoting the episode title verbatim', async () => {
+  it('proposals are written in the requested language, citing the same interview in both', async () => {
     const r = await runAgent({ target: byId('diary-of-a-ceo'), others: others('diary-of-a-ceo'), qloo: new NoQlooAdapter() });
     const rec = r.recommendations[0];
     const show = { name: 'The Diary Of A CEO', host: 'Steven Bartlett' };
     const es = draftProposal(rec, show, r.themes, 'es');
     const en = draftProposal(rec, show, r.themes, 'en');
-    expect(es.subject).toBe('Invitación a The Diary Of A CEO');
-    expect(es.body).toMatch(/^Hola /);
+    expect(es.subject).toMatch(/^Invitación a The Diary Of A CEO/);
+    expect(es.body).toMatch(/^Hola, /);
     expect(en.body).toMatch(/^Hi /);
-    expect(es.body).toContain(rec.appearances[0].title);
-    expect(en.body).toContain(rec.appearances[0].title);
-    // Same facts in both: the cited date and show.
-    for (const p of [es, en]) expect(p.body).toContain(rec.appearances[0].published.slice(0, 10));
+    // Same facts in both: the cited show and month.
+    const d = new Date(rec.appearances[0].published);
+    for (const p of [es, en]) expect(p.body).toContain(rec.appearances[0].showName);
+    expect(en.body).toContain(String(d.getUTCFullYear()));
+    expect(es.body).toContain(String(d.getUTCFullYear()));
+  });
+
+  it('five letters in a row are not one template: no stock phrase, different openings', async () => {
+    const r = await runAgent({ target: byId('diary-of-a-ceo'), others: others('diary-of-a-ceo'), qloo: new NoQlooAdapter() });
+    const show = { name: 'The Diary Of A CEO', host: 'Steven Bartlett' };
+    for (const lang of ['es', 'en'] as const) {
+      const letters = r.recommendations.map((x) => draftProposal(x, show, r.themes, lang).body);
+      for (const l of letters) expect(l).not.toMatch(/una y otra vez|keep(s)? (coming|returning) back/);
+      const openings = letters.map((l) => l.split('\n')[2]);
+      expect(new Set(openings).size).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it('UI dictionary has both languages for every key', () => {

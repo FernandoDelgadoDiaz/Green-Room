@@ -85,6 +85,22 @@ function fittingOccupation(a: NonNullable<Recommendation['audience']>): { occ: {
 }
 
 /**
+ * "Who they are": the opening of their Wikipedia article (reader's language only), what they do now
+ * (positions held without an end date) and notable awards. Null parts when the record has none.
+ */
+export function whoTheyAre(rec: Recommendation, lang: Lang): { bio: string | null; position: string | null; awards: string | null } {
+  const a = rec.audience;
+  const es = lang === 'es';
+  const bio = a?.bio?.[lang]?.replace(/\s*\([^)]*\)/g, '').replace(/\s+([,.;])/g, '$1').replace(/\s+/g, ' ').trim() || null;
+  const pos = a?.positions?.[0];
+  const position = pos ? `${cap(pos[lang])}${pos.since ? (es ? ` (desde ${pos.since})` : ` (since ${pos.since})`) : ''}` : null;
+  const aw = (a?.awards ?? []).slice(0, 2).map((x) => `${x[lang]}${x.year ? ` (${x.year})` : ''}`);
+  return { bio, position, awards: aw.length ? aw.join(es ? ' · ' : ' · ') : null };
+}
+
+const monthsAgo = (iso: string, now = Date.now()) => (now - Date.parse(iso)) / (30.44 * 24 * 3600 * 1000);
+
+/**
  * Themes we can honestly say a guest's interviews cover: at least two different theme words in their
  * titles. One word is not enough ("autoestima" once does not make a singer a psychology guest).
  */
@@ -161,9 +177,15 @@ export function whySentences(rec: Recommendation, showName: string, lang: Lang, 
     };
     const topic = topicOf(latest);
     const when = monthYear(latest.published, lang);
+    // Our sources are 24 shows, not everything they did: an old date is said to be ours, not theirs.
+    const stale = monthsAgo(latest.published) > 12;
     const earlier = topic ? null : rec.appearances.slice(1).find((x) => topicOf(x));
     out.push(
-      topic
+      stale
+        ? es
+          ? `En los programas que analizamos, su entrevista más reciente es de ${when}, en ${latest.showName}${topic ? `: “${topic}”` : ''}.`
+          : `Across the shows we analyze, their latest interview is from ${when}, on ${latest.showName}${topic ? `: “${topic}”` : ''}.`
+        : topic
         ? es
           ? [`Su entrevista más reciente fue en ${latest.showName}, en ${when}: “${topic}”.`, `En ${when} habló en ${latest.showName} sobre “${topic}”.`, `Su última entrevista fue en ${when}, en ${latest.showName}: “${topic}”.`][v]
           : [`Most recently on ${latest.showName}, ${when}: “${topic}”.`, `Spoke on ${latest.showName} in ${when} about “${topic}”.`, `Latest interview: ${latest.showName}, ${when}: “${topic}”.`][v]
