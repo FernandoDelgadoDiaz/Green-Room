@@ -135,9 +135,11 @@ export async function recommendFor(target: PodcastDataset, others: PodcastDatase
   const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, people: PEOPLE, verifier, deadlineMs: options.deadlineMs });
   // LIVE: also run the baseline (no Qloo, no API calls) on the same data and rules, to show what Qloo added.
   const comparison = live ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF, people: PEOPLE }), result) : null;
-  const profiles = await profilesFor(result.recommendations, env.PROFILE_LOOKUP !== '0');
+  // Both lists the producer can see: evidence first, and (LIVE) the audience-taste order.
+  const shown = [...result.recommendations, ...result.tasteRecommendations.filter((t) => !result.recommendations.some((r) => r.key === t.key))];
+  const profiles = await profilesFor(shown, env.PROFILE_LOOKUP !== '0');
   // A free Commons photo from the person's Wikidata record when Wikipedia gave none.
-  for (const rec of result.recommendations) {
+  for (const rec of shown) {
     const person = PEOPLE[rec.key];
     if (!person?.photo || profiles[rec.key]?.photo) continue;
     profiles[rec.key] = {
@@ -155,7 +157,7 @@ export async function recommendFor(target: PodcastDataset, others: PodcastDatase
   }
   // "Probable" language: an identity-checked Wikipedia article exists in the show's language.
   // Indirect evidence only; it never becomes "confirmed".
-  for (const rec of result.recommendations) {
+  for (const rec of [...result.recommendations, ...result.tasteRecommendations]) {
     const p = profiles[rec.key];
     const lang = target.language as 'en' | 'es';
     if (rec.language.status === 'unknown' && p && p.extract?.[lang]) {

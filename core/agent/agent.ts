@@ -336,6 +336,8 @@ export interface AgentResult {
   signalStrategy: 'guests' | 'podcast' | 'tags' | 'podcast+tags' | 'none';
   culturalAffinities: Array<{ type: string; entities: QlooEntity[]; provenance: Provenance }>;
   recommendations: Recommendation[];
+  /** LIVE only: the same checked candidates ordered by Qloo audience affinity alone (empty otherwise). */
+  tasteRecommendations: Recommendation[];
   /** Full ranking (used by the backtest). */
   ranked: Array<{ key: string; name: string; score: number }>;
   discarded: Discarded[];
@@ -1995,7 +1997,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       wikidataId: p.qid,
     };
   };
-  const recommendations: Recommendation[] = picks.map((c, i) => {
+  const toRecommendation = (c: Candidate, i: number): Recommendation => {
     const sharedThemes = [...c.matched.entries()]
       .filter(([id]) => themeIdsInProfile.has(id))
       .map(([id, words]) => ({ id, label: THEMES[id].label, labelEs: THEMES[id].labelEs, words: [...words].slice(0, 4) }));
@@ -2129,7 +2131,43 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         availability: 'not_assessed',
       },
     };
+  };
+  const recommendations: Recommendation[] = picks.map(toRecommendation);
+
+  // Qloo's own order: the same candidates, already through every check (pertinent, known to this
+  // audience, language, not a past guest, not a segment name), ranked by the audience's taste alone.
+  // LIVE affinity only: simulated affinities never form a list.
+  const pastTitles = history.map((e) => ` ${nameKey(e.title)} `);
+  const tastePicks =
+    // Only when Qloo actually knows this audience (the show or its guests), not from topic tags alone.
+    qloo.mode === 'LIVE' && qlooUsable && !(['tags', 'none'] as string[]).includes(signalStrategy) && affinityRank.size >= k
+      ? eligible()
+          .filter((c) => c.qlooAffinity !== null && Boolean(c.qlooEntityId) && affinityRank.has(c.qlooEntityId!))
+          .filter((c) => (!languageFilter || speaksTarget(c)) && !rejected.has(c.key) && !looksLikeSegmentName(c.name))
+          .filter((c) => !(c.key.split(' ').length >= 2 && pastTitles.some((t) => t.includes(` ${c.key} `))))
+          .sort((a, b) => (b.qlooAffinity ?? 0) - (a.qlooAffinity ?? 0) || b.base - a.base)
+          .slice(0, k)
+      : [];
+  const tasteRecommendations: Recommendation[] = tastePicks.map((c, i) => {
+    const r = toRecommendation(c, i);
+    return r.qlooAudience ? r : { ...r, qlooAudience: { qlooEntityId: c.qlooEntityId!, affinity: c.qlooAffinity, demographicMatch: null, demographics: null, trend: null, trendPercentile: null } };
   });
+  if (tasteRecommendations.length) {
+    const inBoth = tasteRecommendations.filter((t) => recommendations.some((r) => r.key === t.key)).length;
+    step({
+      title: ['Rank the same candidates by the audience’s taste', 'Ordenar los mismos candidatos por el gusto de la audiencia'],
+      tool: 'qloo.insights (filter.results.entities)',
+      detail: [
+        `${eligible().filter((c) => c.qlooAffinity !== null).length} verified candidates have a Qloo affinity to this audience. Ordered by that affinity alone, the top ${tasteRecommendations.length}: ${tasteRecommendations.map((t) => t.name).join(', ')}.`,
+        `${eligible().filter((c) => c.qlooAffinity !== null).length} candidatos verificados tienen afinidad en Qloo con esta audiencia. Ordenados solo por esa afinidad, los primeros ${tasteRecommendations.length}: ${tasteRecommendations.map((t) => t.name).join(', ')}.`,
+      ],
+      decision: [
+        `${tasteRecommendations.length - inBoth} of ${tasteRecommendations.length} are not in the evidence-first list. Both lists are shown; the producer chooses.`,
+        `${tasteRecommendations.length - inBoth} de ${tasteRecommendations.length} no están en la lista por evidencia. Se muestran las dos listas; el productor elige.`,
+      ],
+      provenance: 'LIVE',
+    });
+  }
   step({
     title: ['Explain every recommendation with its evidence', 'Justificar cada recomendación con su evidencia'],
     tool: 'justify',
@@ -2164,6 +2202,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     signalStrategy,
     culturalAffinities,
     recommendations,
+    tasteRecommendations,
     ranked: ranked.map((c) => ({ key: c.key, name: c.name, score: c.score })),
     discarded,
     warnings,

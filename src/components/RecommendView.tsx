@@ -228,7 +228,7 @@ function TechnicalDetails({ rec, mode }: { rec: Recommendation; mode: RecommendR
   );
 }
 
-function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: ShowSummary; result: RecommendResult }) {
+function RecommendationCard({ rec, show, result, isNew = false }: { rec: Recommendation; show: ShowSummary; result: RecommendResult; isNew?: boolean }) {
   const { lang, t } = useI18n();
   const [open, setOpen] = useState(false);
   const [pitch, setPitch] = useState(false);
@@ -259,6 +259,7 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
             <span className="text-[10px] uppercase tracking-widest text-stone-500 underline decoration-dotted underline-offset-2">{t('card.score')}</span>
           </p>
           <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+            {isNew && <span className="rounded-full bg-emerald-400 px-2 py-0.5 font-bold text-stage-950">{t('view.new')}</span>}
             <StatusChips rec={rec} show={show} />
           </div>
         </div>
@@ -622,7 +623,11 @@ function DiscoveryDetails({ result, show }: { result: RecommendResult; show: Sho
 }
 
 /** The five picks as large portraits: the answer comes first, the analysis below. */
-function GuestLineup({ result, show }: { result: RecommendResult; show: ShowSummary }) {
+type ListView = 'evidence' | 'taste';
+/** Which list opens first when Qloo's order is available. */
+const DEFAULT_VIEW: ListView = 'taste';
+
+function GuestLineup({ result, show, recs, view, setView, hasTaste, newKeys }: { result: RecommendResult; show: ShowSummary; recs: Recommendation[]; view: ListView; setView: (v: ListView) => void; hasTaste: boolean; newKeys: Set<string> }) {
   const { lang, t } = useI18n();
   const jump = (key: string) => document.getElementById(`rec-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   return (
@@ -630,12 +635,22 @@ function GuestLineup({ result, show }: { result: RecommendResult; show: ShowSumm
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h3 className="font-display text-4xl sm:text-5xl">{t('recs.title')}</h3>
-          <p className="mt-1 text-sm text-stone-400">{t('lineup.lead', { show: show.name })}</p>
+          <p className="mt-1 text-sm text-stone-400">{view === 'taste' ? `${t('view.tasteLead')} ${newKeys.size === 0 ? t('view.same') : newKeys.size === 1 ? t('view.newOne') : t('view.newMany', { n: newKeys.size })}` : t('lineup.lead', { show: show.name })}</p>
         </div>
         <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
       </div>
+      {hasTaste && (
+        <div role="tablist" aria-label={t('view.label')} className="mt-4 inline-flex flex-wrap gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1 text-sm">
+          <button role="tab" aria-selected={view === 'evidence'} onClick={() => setView('evidence')} className={`rounded-xl px-4 py-2 font-semibold transition ${view === 'evidence' ? 'bg-brass-400 text-stage-950' : 'text-stone-300 hover:text-white'}`}>
+            {t('view.evidence')}
+          </button>
+          <button role="tab" aria-selected={view === 'taste'} onClick={() => setView('taste')} className={`flex items-center gap-2 rounded-xl px-4 py-2 font-semibold transition ${view === 'taste' ? 'bg-emerald-400 text-stage-950' : 'text-emerald-200 hover:text-white'}`}>
+            {t('view.taste')} <Badge p="LIVE" />
+          </button>
+        </div>
+      )}
       <ol className="-mx-4 mt-5 flex snap-x gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
-        {result.recommendations.map((r) => {
+        {recs.map((r) => {
           const affinity = r.qlooAudience?.affinity ?? null;
           return (
             <li key={r.key} className="w-44 shrink-0 snap-start lg:w-auto">
@@ -644,8 +659,9 @@ function GuestLineup({ result, show }: { result: RecommendResult; show: ShowSumm
                   <Portrait name={r.name} profile={result.profiles[r.key]} />
                   <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/70 to-transparent" />
                   <span className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-brass-400 font-display text-lg text-stage-950 shadow">{r.rank}</span>
-                  <span className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-sm font-semibold tabular-nums text-stone-100" title={t('card.scoreHelp')}>{pct(r.score)}</span>
+                  {view === 'evidence' && <span className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-sm font-semibold tabular-nums text-stone-100" title={t('card.scoreHelp')}>{pct(r.score)}</span>}
                   <div className="absolute inset-x-0 bottom-0 p-3">
+                    {newKeys.has(r.key) && <span className="mb-1.5 inline-block rounded-full bg-emerald-400 px-2 py-0.5 text-[11px] font-bold text-stage-950">{t('view.new')}</span>}
                     <p className="text-lg font-semibold leading-tight text-white">{r.name}</p>
                     <p className="mt-0.5 line-clamp-2 text-xs text-stone-300">{audienceSubtitle(r, lang) ?? ''}</p>
                     {affinity !== null && <span className="mt-2 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">{t('lineup.qloo', { n: Math.round(affinity * 100) })}</span>}
@@ -715,6 +731,13 @@ function AudienceChart({ result }: { result: RecommendResult }) {
 export function RecommendView({ show, result, banner }: { show: ShowSummary; result: RecommendResult; banner?: ReactNode }) {
   const { lang, t } = useI18n();
   const [visible, setVisible] = useState(0);
+  // Qloo's own order of the same checked candidates (LIVE only); the producer switches between them.
+  const taste = result.qlooMode === 'LIVE' ? (result.tasteRecommendations ?? []) : [];
+  const hasTaste = taste.length >= 3;
+  const [view, setView] = useState<ListView>(DEFAULT_VIEW);
+  const showTaste = view === 'taste' && hasTaste;
+  const recs = showTaste ? taste : result.recommendations;
+  const newKeys = showTaste ? new Set(taste.filter((x) => !result.recommendations.some((r) => r.key === x.key)).map((x) => x.key)) : new Set<string>();
   useEffect(() => {
     setVisible(0);
     const id = setInterval(() => setVisible((v) => (v >= result.trace.length ? v : v + 1)), 220);
@@ -725,7 +748,7 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
 
   return (
     <div className="space-y-8">
-    <GuestLineup result={result} show={show} />
+    <GuestLineup result={result} show={show} recs={recs} view={showTaste ? 'taste' : 'evidence'} setView={setView} hasTaste={hasTaste} newKeys={newKeys} />
     {banner}
     <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <section className="order-2 space-y-6 lg:order-1">
@@ -778,7 +801,7 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
 
       <section className="order-1 space-y-4 lg:order-2">
         {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
-        {result.recommendations.map((r) => <RecommendationCard key={r.key} rec={r} show={show} result={result} />)}
+        {recs.map((r) => <RecommendationCard key={`${showTaste ? 't' : 'e'}-${r.key}`} rec={r} show={show} result={result} isNew={newKeys.has(r.key)} />)}
         <QlooContribution result={result} />
         <AnalysisSummary result={result} show={show} />
         <DiscoveryPanel result={result} show={show} part="head" />
