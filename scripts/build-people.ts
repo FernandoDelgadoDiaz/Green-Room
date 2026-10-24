@@ -58,6 +58,8 @@ for (const d of ALL_DATASETS) {
       if (cur.appearanceTitles.length < 8) cur.appearanceTitles.push(e.title);
       if (country && !cur.showCountries.includes(country)) cur.showCountries.push(country);
       if (!cur.languages.includes(d.language)) cur.languages.push(d.language);
+      const day = e.published?.slice(0, 10);
+      if (day && (!cur.firstInterview || day < cur.firstInterview)) cur.firstInterview = day;
       guests.set(key, cur);
     }
   }

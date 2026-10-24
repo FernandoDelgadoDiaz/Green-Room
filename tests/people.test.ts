@@ -82,4 +82,18 @@ describe('people (Wikidata) resolution', () => {
     expect(categoriesOf(['association football player'])).toEqual(['sports']);
     expect(categoriesOf(['plumber'])).toEqual([]);
   });
+
+  it('never takes a namesake who died before the guest was interviewed', async () => {
+    const dead = { ...(entities.Q1 as object), id: 'Q1', claims: { ...(entities.Q1 as { claims: object }).claims, P570: [{ mainsnak: { datavalue: { value: { time: '+1990-01-01T00:00:00Z' } } } }] } };
+    const fetchDead = async (url: string) => {
+      const u = new URL(url);
+      if (u.searchParams.get('action') === 'wbgetentities' && (u.searchParams.get('ids') ?? '').includes('Q1')) {
+        const r = (await fetchJson(url)) as { entities: Record<string, unknown> };
+        return { entities: { ...r.entities, Q1: dead } };
+      }
+      return fetchJson(url);
+    };
+    const { people } = await resolvePeople([{ name: 'Sergio Massa', appearanceTitles: ['#68 - Sergio Massa'], showCountries: ['ar'], languages: ['es'], firstInterview: '2024-02-28' }], fetchDead);
+    expect(people['sergio massa']).toBeUndefined();
+  });
 });
