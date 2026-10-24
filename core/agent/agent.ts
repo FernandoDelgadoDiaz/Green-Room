@@ -11,7 +11,9 @@ import { buildTagQueries, compactKey, GENERIC_WORDS, showNameVariants } from '..
 import { externalThemes } from '../verify/occupations';
 import { THEMES, THEME_IDS, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
 import { qlooKind, type Demographics, type QlooAdapter, type QlooEntity, type Trend } from '../qloo/types';
-import { CATEGORY_LABELS, categoriesOf, type OccupationCategory, type PersonRecord } from '../people';
+import { topicPhrase } from '../topic';
+export { topicPhrase };
+import { CATEGORY_LABELS, categoriesOf, mainCategory, type OccupationCategory, type PersonRecord } from '../people';
 
 export interface TraceStep {
   id: string;
@@ -439,22 +441,6 @@ export function evidenceQuality(apps: Appearance[], external?: ExternalCheck): A
 
 function monthsBetween(a: string, b: string): number {
   return (new Date(b).getTime() - new Date(a).getTime()) / MONTH_MS;
-}
-
-/** Topic phrase of an appearance title, without the guest's name ("Mark Zuckerberg: Future of AI…" -> "Future of AI…"). */
-function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-export function topicPhrase(title: string, name: string): string {
-  let t = title.replace(/^#?\d+\.?\s*[–-]?\s*/, '').replace(/\(.*?\)/g, ' ');
-  t = t.replace(new RegExp(escapeRe(name), 'gi'), ' ');
-  const parts = t
-    .split(/\s*(?:\||:|\s[–-]\s)\s*/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 12);
-  const best = parts.sort((a, b) => b.length - a.length)[0] ?? '';
-  return best.length > 90 ? `${best.slice(0, 87).trim()}…` : best;
 }
 
 export async function runAgent(input: AgentInput): Promise<AgentResult> {
@@ -1969,18 +1955,26 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     const basis: LanguageStatus['basis'] = declared === hit && titleLang === hit ? 'declared+title' : declared === hit ? 'declared' : 'title';
     return { status: 'confirmed', target: targetLang, evidenceLanguages: [hit], basis, evidenceEn: `Interview in “${hit}” (${basis === 'declared+title' ? 'show language and title agree' : basis === 'declared' ? 'show’s declared language' : 'from the title'})`, evidenceEs: `Entrevista en “${hit}” (${basis === 'declared+title' ? 'coinciden idioma del programa y título' : basis === 'declared' ? 'idioma declarado del programa' : 'según el título'})` };
   };
-  // Past guests of the show by category (best documented first), to say "like X and Y, who were on the show".
+  // Past guests of the show by what their description leads with (best documented first), to say
+  // "like X and Y, who were on the show". Someone whose description names no known kind is never an example.
   const pastByCategory = new Map<OccupationCategory, Array<{ name: string; w: number }>>();
   if (people)
-    for (const [key] of pastGuests) {
+    for (const [key, g] of pastGuests) {
       const p = people[key];
-      if (p) for (const cat of p.categories) pastByCategory.set(cat, [...(pastByCategory.get(cat) ?? []), { name: p.label, w: p.wikipedias }]);
+      const cat = p ? mainCategory(p.description?.en) : null;
+      // The name as the show itself wrote it (Wikidata labels are stored in Spanish first).
+      if (p && cat) pastByCategory.set(cat, [...(pastByCategory.get(cat) ?? []), { name: g.name, w: p.wikipedias }]);
     }
   const audienceOf = (c: Candidate): RecommendationAudience | null => {
     const p = personOf(c);
     if (!p) return null;
     const order = guestProfile?.categories.map((x) => x.id) ?? [];
-    const shared = p.categories.filter((cat) => catShare.has(cat)).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    // Text only: what the person is mainly known for, so a businessman is never called an actor.
+    const lead = mainCategory(p.description?.en);
+    // Only what the description itself says: without one, no "same kind of guest" claim is made.
+    const shared = categoriesOf([p.description?.en ?? ''])
+      .filter((cat) => catShare.has(cat))
+      .sort((a, b) => Number(b === lead) - Number(a === lead) || order.indexOf(a) - order.indexOf(b));
     const similar = shared.length ? [...(pastByCategory.get(shared[0]) ?? [])].sort((a, b) => b.w - a.w).map((x) => x.name).filter((n, j, all) => all.indexOf(n) === j).slice(0, 2) : [];
     return {
       occupations: p.occupations,

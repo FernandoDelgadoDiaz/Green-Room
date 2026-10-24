@@ -8,6 +8,7 @@ import { useI18n } from '../i18n';
 import { Badge } from './Badge';
 import { GuestAvatar, initials } from './GuestAvatar';
 import { audienceSubtitle, citableThemes, whySentences } from '../why';
+import { cleanTopic, clipTopic } from '../../core/topic';
 
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}`);
 
@@ -91,7 +92,7 @@ function specialty(profile: GuestProfile | null | undefined, lang: 'en' | 'es'):
 function EvidencePanel({ rec, profile }: { rec: Recommendation; profile: GuestProfile | null | undefined }) {
   const { lang, t } = useI18n();
   const extract = lang === 'es' && profile?.extract.es ? { text: profile.extract.es, url: profile.extract.esUrl ?? profile.wikipedia.url, src: 'es.wikipedia.org' } : profile?.extract.en ? { text: profile.extract.en, url: profile.wikipedia.url, src: 'en.wikipedia.org' } : null;
-  const topics = [...rec.conversationTopics, ...citableThemes(rec).map((s) => (lang === 'es' ? s.labelEs : s.label))];
+  const topics = [...rec.conversationTopics.map((t) => cleanTopic(t)).filter((t): t is string => Boolean(t)).map((t) => clipTopic(t)), ...citableThemes(rec).map((s) => (lang === 'es' ? s.labelEs : s.label))];
   return (
     <div className="mt-4 space-y-4 rounded-xl bg-black/25 p-4 text-sm">
       {extract && (
@@ -265,7 +266,7 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
 
       <div className="mt-4">
         <p className="text-xs uppercase tracking-widest text-brass-400">{t('card.why')}</p>
-        <p className="mt-1 text-sm leading-relaxed text-stone-200">{whySentences(rec, show.name, lang).join(' ')}</p>
+        <p className="mt-1 text-sm leading-relaxed text-stone-200">{whySentences(rec, show.name, lang, undefined, { kindClaims: (result.cardsVersion ?? 0) >= 2 }).join(' ')}</p>
         <QlooAudienceRow rec={rec} />
       </div>
 

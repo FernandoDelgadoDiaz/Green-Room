@@ -63,11 +63,11 @@ const CATEGORY_RULES: Array<[OccupationCategory, RegExp]> = [
   ['acting', /\b(actor|actress|voice actor|stage actor|film actor|television actor)\b/],
   ['film', /\b(film director|screenwriter|film producer|television producer|television director|filmmaker|cinematographer|film critic|showrunner)\b/],
   ['comedy', /\b(comedian|humorist|stand-up|comic|impressionist)\b/],
-  ['media', /\b(television presenter|presenter|radio personality|radio presenter|broadcaster|youtuber|influencer|streamer|podcaster|internet celebrity|vlogger|blogger|model|television personality|content creator|socialite)\b/],
+  ['media', /\b(television presenter|presenter|radio personality|radio presenter|broadcaster|youtuber|influencer|streamer|podcaster|internet celebrity|vlogger|blogger|model|television personality|media personality|internet personality|content creator|socialite)\b/],
   ['journalism', /\b(journalist|reporter|columnist|editor|news anchor|correspondent|sports commentator|commentator)\b/],
   ['writing', /\b(writer|novelist|poet|author|essayist|playwright|biographer)\b/],
-  ['sports', /\b(footballer|association football|athlete|boxer|tennis|basketball|racing driver|racecar|mixed martial|martial artist|coach|cyclist|swimmer|rugby|baseball|american football|golfer|wrestler|runner|marathon|climber|mountaineer|skier|surfer|chess|sport|formula one|polo|volleyball|handball|motorcycle racer|fighter|olympic)\b/],
-  ['business', /\b(businessperson|businessman|businesswoman|entrepreneur|executive|investor|banker|chief executive|founder|manager|venture capitalist|marketer|real estate)\b/],
+  ['sports', /\b(footballer|football manager|football coach|football pundit|association football|athlete|boxer|tennis|basketball|racing driver|racecar|mixed martial|martial artist|coach|cyclist|swimmer|rugby|baseball|american football|golfer|wrestler|runner|marathon|climber|mountaineer|skier|surfer|chess|sport|formula one|polo|volleyball|handball|motorcycle racer|fighter|olympic)\b/],
+  ['business', /\b(businessperson|businessman|businesswoman|entrepreneur|executive|investor|banker|chief executive|founder|(?<!football |soccer |team )manager|venture capitalist|marketer|real estate)\b/],
   ['economics', /\b(economist|financial analyst|trader)\b/],
   ['science', /\b(scientist|physicist|biologist|neuroscientist|astronomer|astrophysicist|mathematician|chemist|geneticist|cosmologist|astronaut|researcher|anthropologist|paleontologist|archaeologist)\b/],
   ['technology', /\b(engineer|computer scientist|programmer|software|inventor|technologist|game designer|developer)\b/],
@@ -87,6 +87,22 @@ export function categoriesOf(occupationLabelsEn: string[]): OccupationCategory[]
     for (const [cat, re] of CATEGORY_RULES) if (re.test(l)) out.add(cat);
   }
   return [...out];
+}
+
+/**
+ * The single thing a description leads with ("English sports broadcaster and former footballer" →
+ * media): the earliest known kind of guest named in it. Null when it names none.
+ */
+export function mainCategory(description: string | null | undefined): OccupationCategory | null {
+  const d = (description ?? '').toLowerCase();
+  const found: Array<{ cat: OccupationCategory; at: number }> = [];
+  for (const [cat, re] of CATEGORY_RULES) {
+    const m = re.exec(d);
+    if (m) found.push({ cat, at: m.index });
+  }
+  found.sort((a, b) => a.at - b.at);
+  // "Lawyer and politician" is a politician: the broad academics/lawyers group only leads alone.
+  return (found.find((f) => f.cat !== 'thought') ?? found[0])?.cat ?? null;
 }
 
 export interface PersonPhoto {
