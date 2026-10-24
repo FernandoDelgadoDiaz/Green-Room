@@ -1,3 +1,4 @@
+import type { CoverageRow } from '../core/coverage';
 import type { AgentResult } from '../core/agent/agent';
 import type { BaselineComparison } from '../core/discovery';
 import type { PodcastHit, ResolveResult } from '../core/podcasts/open-search';
@@ -166,6 +167,7 @@ export const api = {
   publicStatus: () => post<PublicLiveStatus>('/api/discover', { action: 'status' }).then((r) => (r.ok ? r.json : { live: false, code: `http_${r.status}`, message: null })).catch(() => ({ live: false, code: 'network', message: null }) as PublicLiveStatus),
   recommendLive: (showId: string, onProgress?: (s: number) => void) => discoverRun<RecommendResult>({ action: 'recommend', showId }, onProgress),
   analyzeLive: (appleId: number, onProgress?: (s: number) => void) => discoverRun<{ analysis: FeedAnalysisSummary; result: RecommendResult | null }>({ action: 'analyze', appleId }, onProgress),
+  coverage: () => post<{ rows: CoverageRow[] }>('/api/discover', { action: 'coverage' }).then((r) => (r.ok ? r.json.rows ?? [] : [])),
   backtest: (showId: string, cutoff: string) => call<BacktestResult>({ action: 'backtest', showId, cutoff, horizonMonths: 24 }),
   liveStatus: async (token: string): Promise<LiveStatus> => {
     const r = await post<{ mode?: string }>('/api/live', { action: 'status' }, token).catch((e) => ({ ok: false, status: 0, json: { error: String(e) } as { error?: string; reason?: string } }));

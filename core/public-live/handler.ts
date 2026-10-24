@@ -7,6 +7,7 @@
 //   analyze   { appleId }        → a show found through the open search. The feed URL is NOT taken from
 //                                  the client: it is looked up in Apple's directory, fetched through the
 //                                  SSRF-safe client, parsed as RSS, and its title must match Apple's.
+//   coverage                     → how much Qloo knew about each show analyzed live (counts only).
 // Failures are reported as failures (never replaced by MOCK). The key stays in this process.
 
 import { CATALOG, DATASETS, recommendFor, type Env } from '../api';
@@ -17,11 +18,38 @@ import { analyzeFeedXml, OpenPodcastSearch, type FetchJson, type FetchText } fro
 import { compactKey } from '../qloo/signals';
 import { randomBytes } from 'node:crypto';
 import type { PodcastDataset } from '../types';
-import { cacheKeyFor, PublicGuard, publicConfig, type CasStore, type PublicConfig, type PublicEnv, type Refusal } from './guard';
+import { coverageOf, type CoverageRow } from '../coverage';
+import { cacheKeyFor, casUpdate, PublicGuard, publicConfig, type CasStore, type PublicConfig, type PublicEnv, type Refusal } from './guard';
 
 export interface PublicLiveEnv extends PublicEnv, Env {}
 
-export type PublicLiveRequest = { action: 'status' } | { action: 'recommend'; showId: string } | { action: 'analyze'; appleId: number } | { action: 'job'; jobId: string };
+export type PublicLiveRequest = { action: 'status' } | { action: 'recommend'; showId: string } | { action: 'analyze'; appleId: number } | { action: 'job'; jobId: string } | { action: 'coverage' };
+
+const COVERAGE_KEY = 'coverage/index';
+const verifiedCountry = (showId: string) => {
+  const o = CATALOG.shows.find((s) => s.id === showId)?.origin;
+  return o?.status === 'verified' ? (o.country ?? null) : null;
+};
+
+/** Records one live run's coverage counts; a failure here never affects the analysis. */
+async function recordCoverage(store: CasStore, key: string, row: CoverageRow | null) {
+  if (!row) return;
+  await casUpdate<Record<string, CoverageRow>>(store, COVERAGE_KEY, {}, (cur) => ({ ...cur, [key]: row })).catch(() => undefined);
+}
+
+/** Every live run recorded, plus catalog shows whose cached result predates the index. */
+export async function readCoverage(store: CasStore, guard: PublicGuard): Promise<CoverageRow[]> {
+  const index = ((await store.get(COVERAGE_KEY))?.data as Record<string, CoverageRow> | undefined) ?? {};
+  const rows = { ...index };
+  await Promise.all(
+    DATASETS.filter((d) => !rows[`show:${d.id}`]).map(async (d) => {
+      const hit = await guard.cached<Cached>(cacheKeyFor('show', d.id)).catch(() => null);
+      const row = hit ? coverageOf(hit.body.result, { country: verifiedCountry(d.id), computedAt: hit.at }) : null;
+      if (row) rows[`show:${d.id}`] = row;
+    }),
+  );
+  return Object.values(rows).sort((a, b) => b.computedAt.localeCompare(a.computedAt));
+}
 
 export interface PublicLiveDeps {
   /** Shared CAS store (Netlify Blobs). null → the guard cannot work → no Qloo call (fail closed). */
@@ -77,7 +105,7 @@ const FAILURE: Record<string, Bi> = {
 export async function handlePublicLive(req: unknown, env: PublicLiveEnv, deps: PublicLiveDeps): Promise<{ status: number; body: unknown }> {
   const r = req as Partial<{ action: string; showId: unknown; appleId: unknown; jobId: unknown }>;
   const action = r?.action;
-  if (action !== 'status' && action !== 'recommend' && action !== 'analyze' && action !== 'job') return { status: 400, body: { error: 'Unknown action' } };
+  if (action !== 'status' && action !== 'recommend' && action !== 'analyze' && action !== 'job' && action !== 'coverage') return { status: 400, body: { error: 'Unknown action' } };
   const now = deps.now ?? Date.now;
   const cfg = publicConfig(env);
   if (action === 'job') {
@@ -87,6 +115,10 @@ export async function handlePublicLive(req: unknown, env: PublicLiveEnv, deps: P
   }
   const enabled = publicSwitch(env);
   const guard = deps.store ? new PublicGuard(deps.store, cfg, now, env.PUBLIC_IP_SALT ?? '') : null;
+  if (action === 'coverage') {
+    if (!deps.store || !guard) return { status: 200, body: { rows: [] } };
+    return { status: 200, body: { rows: await readCoverage(deps.store, guard).catch(() => []) } };
+  }
 
   if (action === 'status') {
     let paused = false;
@@ -349,6 +381,8 @@ export async function runPublicJob(jobId: string, env: PublicLiveEnv, deps: Pick
     // PUBLIC_PARTIAL_CACHE_HOURS (labeled partial), so one bad minute at Qloo is not re-paid by every visitor.
     const ttl = partial ? cfg.partialCacheHours : cfg.cacheHours;
     if (ttl > 0) await guard.saveResult(job.cacheKey, { result, analysis: t.analysis, partial } satisfies Cached, ttl).catch(() => undefined);
+    const computedAt = new Date().toISOString();
+    await recordCoverage(store, t.kind === 'catalog' ? `show:${t.showId}` : `feed:${target.name}`, coverageOf(result, { country: t.kind === 'catalog' ? verifiedCountry(t.showId) : null, computedAt }));
     await finish(store, job, { status: 200, body: respond(withLive(result, { cached: false, computedAt: new Date().toISOString(), qlooCalls: calls, partial, errors: health.errors })) }, { qlooCalls: calls });
   } catch {
     const calls = adapter?.metrics?.networkCalls ?? 0;
