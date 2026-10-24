@@ -42,6 +42,8 @@ describe('dates and the kind of guest', () => {
     expect(mainCategory('English sports broadcaster and former footballer')).toBe('media');
     expect(mainCategory('Lebanese-American media personality and former actress')).toBe('media');
     expect(mainCategory('American legal clerk and environmental activist')).toBeNull();
+    expect(mainCategory('Argentine lawyer and politician')).toBe('politics');
+    expect(mainCategory('Argentine historian')).toBe('thought');
   });
 });
 

@@ -95,12 +95,14 @@ export function categoriesOf(occupationLabelsEn: string[]): OccupationCategory[]
  */
 export function mainCategory(description: string | null | undefined): OccupationCategory | null {
   const d = (description ?? '').toLowerCase();
-  let best: { cat: OccupationCategory; at: number } | null = null;
+  const found: Array<{ cat: OccupationCategory; at: number }> = [];
   for (const [cat, re] of CATEGORY_RULES) {
     const m = re.exec(d);
-    if (m && (!best || m.index < best.at)) best = { cat, at: m.index };
+    if (m) found.push({ cat, at: m.index });
   }
-  return best?.cat ?? null;
+  found.sort((a, b) => a.at - b.at);
+  // "Lawyer and politician" is a politician: the broad academics/lawyers group only leads alone.
+  return (found.find((f) => f.cat !== 'thought') ?? found[0])?.cat ?? null;
 }
 
 export interface PersonPhoto {
