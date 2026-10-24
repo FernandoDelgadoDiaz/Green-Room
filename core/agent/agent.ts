@@ -342,8 +342,8 @@ export interface AgentResult {
   recommendations: Recommendation[];
   /** LIVE only: the same checked candidates ordered by Qloo audience affinity alone (empty otherwise). */
   tasteRecommendations: Recommendation[];
-  /** Full ranking (used by the backtest). */
-  ranked: Array<{ key: string; name: string; score: number }>;
+  /** Full ranking (used by the backtest). base: score from evidence alone; qlooAffinity: LIVE affinity rank (0–1) or null. */
+  ranked: Array<{ key: string; name: string; score: number; base?: number; qlooAffinity?: number | null }>;
   discarded: Discarded[];
   warnings: string[];
   warningsEs: string[];
@@ -2210,7 +2210,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     culturalAffinities,
     recommendations,
     tasteRecommendations,
-    ranked: ranked.map((c) => ({ key: c.key, name: c.name, score: c.score })),
+    ranked: ranked.map((c) => ({ key: c.key, name: c.name, score: c.score, base: c.base, qlooAffinity: c.qlooAffinity })),
     discarded,
     warnings,
     warningsEs,

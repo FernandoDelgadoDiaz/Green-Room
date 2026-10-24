@@ -87,6 +87,15 @@ describe('editorial band: affinity reorders comparable candidates only', () => {
     expect(cmp.affinityPromoted.map((x) => x.name)).toEqual(['Ann Lee']);
     expect(cmp.displaced).toEqual(['Bob Ray']);
     expect(cmp.newRelations).toEqual([]);
+    // Person by person, measured alike: Ann entered on affinity, Bob left with a lower affinity.
+    const ann = cmp.rows!.find((x) => x.name === 'Ann Lee')!;
+    const bob = cmp.rows!.find((x) => x.name === 'Bob Ray')!;
+    expect(ann).toMatchObject({ status: 'entered', enteredBy: 'affinity', withQlooRank: 1, withoutQlooRank: 2 });
+    expect(bob).toMatchObject({ status: 'left', enteredBy: null, withQlooRank: null, withoutQlooRank: 1 });
+    expect(ann.affinity!).toBeGreaterThan(bob.affinity!);
+    expect(bob.editorial!).toBeGreaterThan(ann.editorial!);
+    expect(cmp.means!.withQloo).toEqual({ affinity: ann.affinity, affinityKnown: 1, editorial: ann.editorial });
+    expect(cmp.means!.withoutQloo).toEqual({ affinity: bob.affinity, affinityKnown: 1, editorial: bob.editorial });
     const r = await run(far);
     expect(r.recommendations[0].name).toBe('Bob Ray');
     expect(r.trace.find((s) => s.tool?.startsWith('qloo.insights (filter'))!.decision).toMatch(/within 15%/);

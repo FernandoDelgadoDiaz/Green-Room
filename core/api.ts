@@ -134,9 +134,11 @@ export async function recommendFor(target: PodcastDataset, others: PodcastDatase
   const verifier = live ? makeVerifier(env) : undefined;
   const result = await runAgent({ target, others, qloo, k, originOf: ORIGIN_OF, people: PEOPLE, verifier, deadlineMs: options.deadlineMs });
   // LIVE: also run the baseline (no Qloo, no API calls) on the same data and rules, to show what Qloo added.
-  const comparison = live ? compareWithBaseline(await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF, people: PEOPLE }), result) : null;
-  // Both lists the producer can see: evidence first, and (LIVE) the audience-taste order.
-  const shown = [...result.recommendations, ...result.tasteRecommendations.filter((t) => !result.recommendations.some((r) => r.key === t.key))];
+  const baseline = live ? await runAgent({ target, others, qloo: new NoQlooAdapter(), k, originOf: ORIGIN_OF, people: PEOPLE }) : null;
+  const comparison = baseline ? compareWithBaseline(baseline, result) : null;
+  const baselineRecommendations = baseline?.recommendations ?? [];
+  // Every list the producer can switch to: with Qloo, Qloo's taste order and (LIVE) without Qloo.
+  const shown = [...result.recommendations, ...result.tasteRecommendations, ...baselineRecommendations].filter((r, i, all) => all.findIndex((x) => x.key === r.key) === i);
   const profiles = await profilesFor(shown, env.PROFILE_LOOKUP !== '0');
   // A free Commons photo from the person's Wikidata record when Wikipedia gave none.
   for (const rec of shown) {
@@ -157,7 +159,7 @@ export async function recommendFor(target: PodcastDataset, others: PodcastDatase
   }
   // "Probable" language: an identity-checked Wikipedia article exists in the show's language.
   // Indirect evidence only; it never becomes "confirmed".
-  for (const rec of [...result.recommendations, ...result.tasteRecommendations]) {
+  for (const rec of [...result.recommendations, ...result.tasteRecommendations, ...baselineRecommendations]) {
     const p = profiles[rec.key];
     const lang = target.language as 'en' | 'es';
     if (rec.language.status === 'unknown' && p && p.extract?.[lang]) {
@@ -171,7 +173,7 @@ export async function recommendFor(target: PodcastDataset, others: PodcastDatase
     }
   }
   // Cost of the external verification (Wikidata/Wikipedia calls), to size the per-run cap with data.
-  return { ...result, ranked: undefined, profiles, comparison, origin, cardsVersion: CARDS_VERSION, externalVerification: verifier ? { calls: verifier.calls.length, cap: verifier.maxCandidates } : null };
+  return { ...result, ranked: undefined, profiles, comparison, baselineRecommendations, origin, cardsVersion: CARDS_VERSION, externalVerification: verifier ? { calls: verifier.calls.length, cap: verifier.maxCandidates } : null };
 }
 
 async function runAction(req: ApiRequest, env: Env, qlooFor: () => QlooAdapter): Promise<{ status: number; body: unknown }> {
