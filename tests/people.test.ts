@@ -8,7 +8,18 @@ const entities: Record<string, unknown> = {
     id: 'Q1',
     labels: { es: { value: 'Sergio Massa' }, en: { value: 'Sergio Massa' } },
     descriptions: { es: { value: 'político argentino' }, en: { value: 'Argentine politician' } },
-    claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q5' } } } }], P106: [{ mainsnak: { datavalue: { value: { id: 'Q82955' } } } }], P27: [{ mainsnak: { datavalue: { value: { id: 'Q414' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Sergio Massa 2023.jpg' } } }] },
+    claims: {
+      P31: [{ mainsnak: { datavalue: { value: { id: 'Q5' } } } }],
+      P106: [{ mainsnak: { datavalue: { value: { id: 'Q82955' } } } }],
+      P27: [{ mainsnak: { datavalue: { value: { id: 'Q414' } } } }],
+      P18: [{ mainsnak: { datavalue: { value: 'Sergio Massa 2023.jpg' } } }],
+      // A position held now, one that ended, and an award.
+      P39: [
+        { mainsnak: { datavalue: { value: { id: 'Q900' } } }, qualifiers: { P580: [{ datavalue: { value: { time: '+2022-08-03T00:00:00Z' } } }] } },
+        { mainsnak: { datavalue: { value: { id: 'Q901' } } }, qualifiers: { P580: [{ datavalue: { value: { time: '+2008-07-23T00:00:00Z' } } }], P582: [{ datavalue: { value: { time: '+2009-07-07T00:00:00Z' } } }] } },
+      ],
+      P166: [{ mainsnak: { datavalue: { value: { id: 'Q902' } } }, qualifiers: { P585: [{ datavalue: { value: { time: '+2015-01-01T00:00:00Z' } } }] } }],
+    },
     sitelinks: { eswiki: { title: 'Sergio Massa' }, enwiki: { title: 'Sergio Massa' }, frwiki: { title: 'Sergio Massa' }, commonswiki: { title: 'x' } },
   },
   Q2: {
@@ -29,6 +40,9 @@ const entities: Record<string, unknown> = {
 const labels: Record<string, unknown> = {
   Q82955: { id: 'Q82955', labels: { en: { value: 'politician' }, es: { value: 'político' } } },
   Q937857: { id: 'Q937857', labels: { en: { value: 'association football player' }, es: { value: 'futbolista' } } },
+  Q900: { id: 'Q900', labels: { en: { value: 'Minister of Economy of Argentina' }, es: { value: 'ministro de Economía de la Argentina' } } },
+  Q901: { id: 'Q901', labels: { en: { value: 'Chief of the Cabinet of Ministers' }, es: { value: 'jefe de Gabinete de Ministros' } } },
+  Q902: { id: 'Q902', labels: { en: { value: 'Test Award' }, es: { value: 'Premio de Prueba' } } },
 };
 const countries: Record<string, unknown> = {
   Q414: { id: 'Q414', claims: { P297: [{ mainsnak: { datavalue: { value: 'AR' } } }] } },
@@ -41,6 +55,10 @@ const fetchJson = async (url: string) => {
   const action = u.searchParams.get('action');
   if (u.hostname === 'commons.wikimedia.org') {
     return { query: { pages: [{ title: 'File:Sergio Massa 2023.jpg', imageinfo: [{ thumburl: 'https://upload.wikimedia.org/m.jpg', descriptionurl: 'https://commons.wikimedia.org/wiki/File:Sergio_Massa_2023.jpg', extmetadata: { LicenseShortName: { value: 'CC BY 2.0' }, Artist: { value: '<a>Casa Rosada</a>' } } }] }] } };
+  }
+  if (u.hostname.endsWith('wikipedia.org')) {
+    const es = u.hostname.startsWith('es.');
+    return { query: { pages: [{ title: 'Sergio Massa', extract: es ? 'Sergio Tomás Massa (Tigre, 28 de abril de 1972) es un abogado y político argentino. Fue ministro de Economía. Otra frase más.' : 'Sergio Tomás Massa is an Argentine lawyer and politician. He served as Minister of Economy. More.' }] } };
   }
   if (action === 'wbsearchentities') {
     const q = u.searchParams.get('search');
@@ -95,5 +113,16 @@ describe('people (Wikidata) resolution', () => {
     };
     const { people } = await resolvePeople([{ name: 'Sergio Massa', appearanceTitles: ['#68 - Sergio Massa'], showCountries: ['ar'], languages: ['es'], firstInterview: '2024-02-28' }], fetchDead);
     expect(people['sergio massa']).toBeUndefined();
+  });
+});
+
+describe('what a guest is now: positions, awards and a short bio', () => {
+  it('keeps current positions (not ended ones), awards with their year, and two sentences of Wikipedia', async () => {
+    const { people } = await resolvePeople([{ name: 'Sergio Massa', appearanceTitles: ['#68 - Sergio Massa'], showCountries: ['ar'], languages: ['es'] }], fetchJson);
+    const p = people['sergio massa'];
+    expect(p.positions).toEqual([{ en: 'Minister of Economy of Argentina', es: 'ministro de Economía de la Argentina', since: '2022' }]);
+    expect(p.awards).toEqual([{ en: 'Test Award', es: 'Premio de Prueba', year: '2015' }]);
+    expect(p.bio?.es).toBe('Sergio Tomás Massa (Tigre, 28 de abril de 1972) es un abogado y político argentino. Fue ministro de Economía.');
+    expect(p.bio?.en).toBe('Sergio Tomás Massa is an Argentine lawyer and politician. He served as Minister of Economy.');
   });
 });
