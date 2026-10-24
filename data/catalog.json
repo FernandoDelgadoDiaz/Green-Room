@@ -939,6 +939,76 @@
    },
    "status": "limited",
    "statusReason": "feed_stale"
+  },
+  {
+   "id": "novaresio-entrevistas",
+   "name": "Luis Novaresio en +Entrevistas",
+   "host": "Luis Novaresio",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts122/v4/50/77/fb/5077fb0f-0ab9-4bc7-4f3c-a51953fd56b0/mza_14094424498851614282.jpg/600x600bb.jpg",
+   "genre": "Sociedad y cultura",
+   "language": "es",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://es.wikipedia.org/wiki/Luis_Novaresio",
+      "quote": "Luis Esteban Novaresio (Rosario, 17 de abril de 1967) es un abogado y periodista argentino."
+     }
+    ],
+    "note": "Added 2026-10-24 for its verified origin (LA NACION long-form interviews), not from a chart."
+   },
+   "description": "Luis Novaresio te ofrece a diario una charla distendida en las formas, y rigurosa en el contenido, con diferentes personalidades nacionales en",
+   "charts": [],
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/luis-novaresio-en-entrevistas/id1642988126",
+   "feedUrl": "https://anchor.fm/s/10e1556d0/podcast/rss",
+   "appleTrackCount": 368,
+   "lastRelease": "2024-12-20T15:00:00.000Z",
+   "snapshot": {
+    "episodes": 368,
+    "withGuestNames": 358,
+    "coverage": 0.97,
+    "first": "2022-07-12T17:39:00.000Z",
+    "last": "2024-12-20T15:00:00.000Z"
+   },
+   "status": "limited",
+   "statusReason": "feed_stale"
+  },
+  {
+   "id": "noriega-conversaciones",
+   "name": "Conversaciones (Gustavo Noriega)",
+   "host": "Gustavo Noriega",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts125/v4/2b/be/25/2bbe2561-9085-12a6-8d85-6d22bc1f12ad/mza_16199877935491446551.jpg/600x600bb.jpg",
+   "genre": "Arte",
+   "language": "es",
+   "origin": {
+    "country": "ar",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://es.wikipedia.org/wiki/Gustavo_Noriega",
+      "quote": "Gustavo Noriega (19 de noviembre de 1956) es un periodista y crítico de cine argentino."
+     }
+    ],
+    "note": "Added 2026-10-24 for its verified origin, not from a chart."
+   },
+   "description": "Podcast by Gustavo",
+   "charts": [],
+   "appleUrl": "https://podcasts.apple.com/ar/podcast/conversaciones/id1495353665",
+   "feedUrl": "https://anchor.fm/s/106ea3a24/podcast/rss",
+   "appleTrackCount": 429,
+   "lastRelease": "2026-04-27T15:55:25.000Z",
+   "snapshot": {
+    "episodes": 429,
+    "withGuestNames": 40,
+    "coverage": 0.09,
+    "first": "2019-12-11T16:05:16.000Z",
+    "last": "2026-04-27T15:55:25.000Z"
+   },
+   "status": "limited",
+   "statusReason": "few_guest_names"
   }
  ]
 }

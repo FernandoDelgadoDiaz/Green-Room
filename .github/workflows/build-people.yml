@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   push:
     branches: ['feat/**']
-    paths: ['core/people.ts', 'scripts/build-people.ts', '.github/workflows/build-people.yml']
+    paths: ['core/people.ts', 'scripts/build-people.ts', '.github/workflows/build-people.yml', 'core/datasets.ts']
 
 permissions:
   contents: write
@@ -23,6 +23,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Wikidata/Commons responses from earlier runs: only new guests are looked up again.
+      - uses: actions/cache@v4
+        with:
+          path: data/raw/wd-cache
+          key: wd-cache-${{ github.run_id }}
+          restore-keys: wd-cache-
       - run: npm run people:build
       - name: Commit data/people.json
         run: |
