@@ -114,6 +114,17 @@ export function parseEntity(raw: unknown): QlooEntity | null {
 /** /search returns results: Entity[]; /v2/insights returns results.entities: Entity[]. */
 const numOrNull = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
 
+/** Structure of a response without its values (keys, types, array lengths): a safe diagnostic note. */
+export function shapeOf(v: unknown, depth = 0): string {
+  if (v === null) return 'null';
+  if (Array.isArray(v)) return `[${v.length}${v.length && depth < 4 ? ` × ${shapeOf(v[0], depth + 1)}` : ''}]`;
+  if (typeof v === 'object') {
+    if (depth >= 4) return '{…}';
+    return `{${Object.entries(v as Record<string, unknown>).slice(0, 12).map(([k, x]) => `${k}:${shapeOf(x, depth + 1)}`).join(',')}}`;
+  }
+  return typeof v;
+}
+
 /** results.demographics[] → id → {age, gender}. Unknown shapes give an empty map, never an error. */
 export function parseDemographics(body: unknown): Map<string, Demographics> {
   const out = new Map<string, Demographics>();
@@ -426,7 +437,15 @@ export class LiveQlooAdapter implements QlooAdapter {
       'signal.interests.entities': entityIds.join(','),
       'signal.interests.tags': tagIds.join(','),
     });
-    return parseDemographics(body);
+    const m = parseDemographics(body);
+    if (!m.size) this.noteShape(body);
+    return m;
+  }
+
+  /** A 200 whose shape the parser did not recognize: record its structure (never its values). */
+  private noteShape(body: unknown) {
+    const last = this.calls[this.calls.length - 1];
+    if (last && body !== null) last.note = `unrecognized shape: ${shapeOf(body).slice(0, 400)}`;
   }
 
   /** Weekly popularity trend of one entity (/v2/trending); null when Qloo has no series for it. */
@@ -437,7 +456,9 @@ export class LiveQlooAdapter implements QlooAdapter {
       'filter.start_date': start,
       'filter.end_date': end,
     });
-    return parseTrend(body, entityId);
+    const t = parseTrend(body, entityId);
+    if (!t) this.noteShape(body);
+    return t;
   }
 
   categoryInsights({ signalIds, tagIds = [], type, take }: { signalIds: string[]; tagIds?: string[]; type: InsightsEntityType; take: number }) {

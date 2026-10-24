@@ -1686,19 +1686,31 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       const withId = picks.filter((c) => c.qlooEntityId);
       const showIds = signalIds().slice(0, 8);
       const showTags = showIds.length ? [] : tagIds().slice(0, 6);
-      let demo = new Map<string, Demographics>();
-      try {
-        if (qloo.demographics && (showIds.length || showTags.length)) demo = await qloo.demographics({ entityIds: [...showIds, ...withId.map((c) => c.qlooEntityId!)], tagIds: showTags });
-      } catch (err) {
-        warn([`Qloo demographics failed: ${String(err)}`, `Falló la consulta de demografía en Qloo: ${String(err)}`]);
+      // Qloo answers one profile for all the signals in a call, so the show's signals go in one call
+      // and each pick in its own. A single profile is read whatever id it is keyed by.
+      const profile = async (entityIds: string[], tagIds: string[] = []): Promise<Demographics | null> => {
+        if (!qloo.demographics || (!entityIds.length && !tagIds.length) || budget() < 1) return null;
+        try {
+          const m = await qloo.demographics({ entityIds, tagIds });
+          const own = entityIds.length === 1 ? m.get(entityIds[0]) : undefined;
+          return own ?? (m.size === 1 ? [...m.values()][0] : null);
+        } catch (err) {
+          warn([`Qloo demographics failed: ${String(err)}`, `Falló la consulta de demografía en Qloo: ${String(err)}`]);
+          return null;
+        }
+      };
+      const demo = new Map<string, Demographics>();
+      const showProfile = await profile(showIds, showTags);
+      for (const c of withId) {
+        const d = await profile([c.qlooEntityId!]);
+        if (d) demo.set(c.qlooEntityId!, d);
       }
-      // The show's audience profile: the average of its signals' profiles.
-      const showBlocks = [...showIds, ...showTags].map((id) => demo.get(id)).filter((d): d is Demographics => Boolean(d));
+      const showBlocks = showProfile ? [showProfile] : [];
       const avg = (key: 'age' | 'gender') => {
         const keys = [...new Set(showBlocks.flatMap((b) => Object.keys(b[key])))];
         return Object.fromEntries(keys.map((k) => [k, showBlocks.reduce((s2, b) => s2 + (b[key][k] ?? 0), 0) / showBlocks.length]));
       };
-      if (showBlocks.length) audienceDemographics = { demographics: { age: avg('age'), gender: avg('gender') }, basis: showIds.length ? (resolved.length ? 'guests' : 'podcast') : 'tags', signals: showBlocks.length };
+      if (showBlocks.length) audienceDemographics = { demographics: { age: avg('age'), gender: avg('gender') }, basis: showIds.length ? (resolved.length ? 'guests' : 'podcast') : 'tags', signals: showIds.length + showTags.length };
       const vec = (d: Demographics) => ({ ...Object.fromEntries(Object.entries(d.age).map(([k, v]) => [`a:${k}`, v])), ...Object.fromEntries(Object.entries(d.gender).map(([k, v]) => [`g:${k}`, v])) });
       const similarity = (a: Demographics, b: Demographics) => {
         const va = vec(a);

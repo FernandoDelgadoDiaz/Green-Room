@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { runAgent } from '../core/agent/agent';
 import { DATASETS, ORIGIN_OF, PEOPLE } from '../core/api';
 import { nameKey } from '../core/names';
-import { parseDemographics, parseTrend } from '../core/qloo/client';
+import { parseDemographics, parseTrend, shapeOf } from '../core/qloo/client';
 import type { Demographics, QlooAdapter, QlooCall, QlooEntity } from '../core/qloo/types';
 import { demographicSummary } from '../src/components/RecommendView';
 
@@ -35,6 +35,10 @@ describe('Qloo demographics and trending: tolerant parsing', () => {
     expect(parseTrend(null, 'x')).toBeNull();
     expect(parseDemographics({ nope: 1 }).size).toBe(0);
   });
+
+  it('describes an unrecognized response by its structure only, never its values', () => {
+    expect(shapeOf({ success: true, results: { items: [{ name: 'Secret', pct: 0.4 }] } })).toBe('{success:boolean,results:{items:[1 × {name:string,pct:number}]}}');
+  });
 });
 
 describe('agent: Qloo reads each pick’s audience after verification (LIVE)', () => {
@@ -58,7 +62,8 @@ describe('agent: Qloo reads each pick’s audience after verification (LIVE)', (
       categoryInsights: async () => [],
       ...(withAudience
         ? {
-            demographics: async ({ entityIds = [] }) => (c('demographics'), new Map(entityIds.map((id, i) => [id, profile(i % 2 ? 1 : 0.8)]))),
+            // Like the real API: one profile per call, whatever the number of signals.
+            demographics: async ({ entityIds = [] }) => (c('demographics'), new Map([[entityIds[0], profile(entityIds.length > 1 ? 1 : 0.8)]])),
             trending: async () => (c('trending'), { points: [], direction: 'rising' as const, latestPercentile: 0.7 }),
           }
         : {}),
@@ -69,7 +74,8 @@ describe('agent: Qloo reads each pick’s audience after verification (LIVE)', (
   it('adds affinity, profile match and trend to every pick confirmed in Qloo, and the show’s audience profile', async () => {
     const { q, used } = adapter(true);
     const r = await runAgent({ target: doac, others, qloo: q, originOf: ORIGIN_OF, people: PEOPLE });
-    expect(used.demographics).toBe(1);
+    // One call for the show's signals, one per pick confirmed in Qloo.
+    expect(used.demographics).toBe(1 + r.recommendations.filter((x) => x.qlooAudience).length);
     expect(r.audienceDemographics).not.toBeNull();
     const withQloo = r.recommendations.filter((x) => x.qlooAudience);
     expect(withQloo.length).toBeGreaterThan(0);
