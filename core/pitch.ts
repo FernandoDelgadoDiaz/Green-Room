@@ -123,7 +123,7 @@ export function draftProposal(
     `— ${show.host}`,
   ];
   return {
-    subject: es ? `Invitación a ${show.name}${position ? ` · ${position}` : ''}` : `Invitation to ${show.name}${position ? ` · ${position}` : ''}`,
+    subject: es ? `Invitación a ${show.name}` : `Invitation to ${show.name}`,
     body: lines.filter((l, i, arr) => !(l === '' && arr[i - 1] === '')).join('\n'),
     talkingPoints,
     basedOn: [
