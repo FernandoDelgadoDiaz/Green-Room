@@ -522,7 +522,7 @@ function QlooContribution({ result }: { result: RecommendResult }) {
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-stone-300">{t('qc.none', { n: f.proposed, d: f.externalDocumented + f.identityVerified })}</p>
+        <p className="mt-2 text-stone-300">{f.proposed ? t('qc.none', { n: f.proposed, d: f.externalDocumented + f.identityVerified }) : t('qc.noneZero')}</p>
       )}
       {others.length > 0 && (
         <details className="mt-2 text-[11px] text-stone-400">

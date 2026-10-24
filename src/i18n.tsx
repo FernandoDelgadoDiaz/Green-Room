@@ -154,6 +154,7 @@ const STRINGS = {
     es: 'La cobertura de Qloo sobre podcasts en español todavía es escasa. Green Room lo dice en vez de adivinar.',
   },
   'qc.weak.hooks': { en: 'Generic tastes for this show’s topics (weak signal)', es: 'Gustos genéricos para los temas del programa (señal débil)' },
+  'qc.noneZero': { en: 'Qloo proposed no new people for this audience.', es: 'Qloo no propuso personas nuevas para esta audiencia.' },
   'qc.hooks': { en: 'Conversation hooks from Qloo', es: 'Ideas para la conversación, según Qloo' },
   'qc.hooksNote': {
     en: 'Tastes Qloo associates with this show’s signals. Inferred, not data about its listeners.',
