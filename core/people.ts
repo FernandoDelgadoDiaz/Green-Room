@@ -105,6 +105,14 @@ export function mainCategory(description: string | null | undefined): Occupation
   return (found.find((f) => f.cat !== 'thought') ?? found[0])?.cat ?? null;
 }
 
+/**
+ * A record is trusted as this guest when the context matched (shared words with their interview
+ * titles), or when the country matched and someone wrote a Wikipedia article about them. Name and
+ * country alone, with no article anywhere, is how a namesake gets in (a "Patricia Gutiérrez" who is a
+ * politician for a guest who wrote an illustrated biography).
+ */
+export const trustedRecord = (p: Pick<PersonRecord, 'match' | 'wikipedias'>) => p.match.includes('context') || p.wikipedias > 0;
+
 export interface PersonPhoto {
   thumbUrl: string;
   filePage: string;
@@ -132,6 +140,12 @@ export interface PersonRecord {
   /** Why this Wikidata item is this guest: 'country' and/or 'context' (shared words). */
   match: string[];
   matchEvidence: string[];
+  /** Positions held now (Wikidata P39 without an end date), newest first, with the start year. */
+  positions?: Array<{ en: string; es: string; since: string | null }>;
+  /** Notable awards (Wikidata P166), most recent first. */
+  awards?: Array<{ en: string; es: string; year: string | null }>;
+  /** The first two sentences of their Wikipedia article in each language, when one exists. */
+  bio?: { en: string | null; es: string | null };
 }
 
 export interface PeopleData {
@@ -151,7 +165,7 @@ interface WdEntity {
   labels?: Record<string, { value: string }>;
   aliases?: Record<string, Array<{ value: string }>>;
   sitelinks?: Record<string, { title: string }>;
-  claims?: Record<string, Array<{ mainsnak: { datavalue?: { value: unknown } } }>>;
+  claims?: Record<string, Array<{ mainsnak: { datavalue?: { value: unknown } }; rank?: string; qualifiers?: Record<string, Array<{ datavalue?: { value: unknown } }>> }>>;
 }
 
 const WD = 'https://www.wikidata.org/w/api.php';
@@ -163,6 +177,23 @@ const claimIds = (e: WdEntity, p: string) =>
 const deathDate = (e: WdEntity): string | null => {
   const v = e.claims?.P570?.[0]?.mainsnak.datavalue?.value as { time?: string } | undefined;
   return v?.time ? v.time.replace(/^\+/, '').slice(0, 10) : null;
+};
+const qualifierYear = (q: Array<{ datavalue?: { value: unknown } }> | undefined) => {
+  const t = (q?.[0]?.datavalue?.value as { time?: string } | undefined)?.time;
+  return t ? t.replace(/^\+/, '').slice(0, 4) : null;
+};
+/** Items of a property with the year of a qualifier (P580 start, P585 point in time), skipping deprecated and ended ones. */
+const datedClaims = (e: WdEntity, p: string, yearQualifier: string, current: boolean) =>
+  (e.claims?.[p] ?? [])
+    .filter((c) => c.rank !== 'deprecated' && !(current && c.qualifiers?.P582))
+    .map((c) => ({ id: (c.mainsnak.datavalue?.value as { id?: string } | undefined)?.id, year: qualifierYear(c.qualifiers?.[yearQualifier]) }))
+    .filter((x): x is { id: string; year: string | null } => Boolean(x.id))
+    .sort((a, b) => (b.year ?? '').localeCompare(a.year ?? ''));
+/** The first `n` sentences of a plain-text Wikipedia intro. */
+const firstSentences = (t: string, n = 2) => {
+  // A period after a single capital ("John W. Thompson") does not end a sentence.
+  const parts = t.replace(/\s+/g, ' ').trim().match(/(?:[^.!?]|(?<=\s[A-Z])\.)+(?:[.!?](?!\d)|$)+/g) ?? [];
+  return parts.slice(0, n).join('').trim() || null;
 };
 const claimStrings = (e: WdEntity, p: string) => (e.claims?.[p] ?? []).map((c) => c.mainsnak.datavalue?.value).filter((v): v is string => typeof v === 'string');
 const wikipediaCount = (e: WdEntity) => Object.keys(e.sitelinks ?? {}).filter((s) => /^[a-z_]+wiki$/.test(s) && !['commonswiki', 'specieswiki', 'metawiki', 'mediawikiwiki', 'wikidatawiki', 'sourceswiki'].includes(s)).length;
@@ -287,6 +318,11 @@ export async function resolvePeople(
     });
     const withContext = scored.filter((s) => s.match.length > 0);
     const pick = withContext.length === 1 ? withContext[0] : withContext.filter((s) => s.both).length === 1 ? withContext.find((s) => s.both)! : null;
+    // Name and country alone, with no Wikipedia article anywhere, is not enough (see trustedRecord).
+    if (pick && !trustedRecord({ match: pick.match, wikipedias: wikipediaCount(pick.e) })) {
+      stats.noContext++;
+      continue;
+    }
     if (pick) chosen.set(g.name, pick);
     else if (withContext.length > 1) stats.ambiguous++;
     else stats.noContext++;
@@ -316,6 +352,34 @@ export async function resolvePeople(
     }
   }
 
+  // 6. What they are now and what they achieved: current positions (P39), awards (P166), and the
+  //    opening of their Wikipedia article, so a card can say "Governor of Buenos Aires" and why they matter.
+  const picked = [...chosen.values()].map((c) => c.e);
+  const extraIds = [...new Set(picked.flatMap((e) => [...datedClaims(e, 'P39', 'P580', true), ...datedClaims(e, 'P166', 'P585', false)].map((x) => x.id)))];
+  const extraLabels = new Map<string, { en: string; es: string }>();
+  for (const batch of chunk(extraIds, 50)) {
+    const res = (await fetchJson(`${WD}?action=wbgetentities&format=json&props=labels&languages=en|es&ids=${batch.join('|')}`).catch(() => null)) as { entities?: Record<string, WdEntity> } | null;
+    for (const [id, e] of Object.entries(res?.entities ?? {})) {
+      const en = e.labels?.en?.value ?? e.labels?.es?.value;
+      if (en) extraLabels.set(id, { en, es: e.labels?.es?.value ?? en });
+    }
+  }
+  const intros = new Map<string, string>(); // `${lang}:${title}` -> first sentences
+  for (const lang of ['es', 'en'] as const) {
+    const titles = [...new Set(picked.map((e) => e.sitelinks?.[`${lang}wiki`]?.title).filter((t): t is string => Boolean(t)))];
+    for (const batch of chunk(titles, 20)) {
+      const url = `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&prop=extracts&exintro=1&explaintext=1&exlimit=20&redirects=1&titles=${batch.map(encodeURIComponent).join('|')}`;
+      const res = (await fetchJson(url).catch(() => null)) as { query?: { pages?: Array<{ title: string; extract?: string }>; normalized?: Array<{ from: string; to: string }>; redirects?: Array<{ from: string; to: string }> } } | null;
+      const back = new Map<string, string>();
+      for (const n of [...(res?.query?.normalized ?? []), ...(res?.query?.redirects ?? [])]) back.set(n.to, back.get(n.from) ?? n.from);
+      for (const pg of res?.query?.pages ?? []) {
+        const text = pg.extract ? firstSentences(pg.extract) : null;
+        if (text) intros.set(`${lang}:${back.get(pg.title) ?? pg.title}`, text);
+      }
+    }
+  }
+  const labelled = <T extends { id: string }>(xs: T[]) => xs.map((x) => ({ ...x, l: extraLabels.get(x.id) })).filter((x) => x.l);
+
   const people: Record<string, PersonRecord> = {};
   for (const [name, { e, match, evidence }] of chosen) {
     const occ = claimIds(e, 'P106').map((q) => occLabels.get(q)).filter((x): x is { en: string; es: string } => Boolean(x));
@@ -333,6 +397,9 @@ export async function resolvePeople(
       photo: file ? (photos.get(file.replace(/_/g, ' ')) ?? null) : null,
       match,
       matchEvidence: evidence,
+      positions: labelled(datedClaims(e, 'P39', 'P580', true)).slice(0, 2).map((x) => ({ en: x.l!.en, es: x.l!.es, since: x.year })),
+      awards: labelled(datedClaims(e, 'P166', 'P585', false)).slice(0, 3).map((x) => ({ en: x.l!.en, es: x.l!.es, year: x.year })),
+      bio: { en: intros.get(`en:${e.sitelinks?.enwiki?.title}`) ?? null, es: intros.get(`es:${e.sitelinks?.eswiki?.title}`) ?? null },
     };
     stats.resolved++;
   }

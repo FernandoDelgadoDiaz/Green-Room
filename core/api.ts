@@ -5,7 +5,7 @@ import catalogJson from '../data/catalog.json';
 import { ALL_DATASETS, CORE_IDS } from './datasets';
 import profilesJson from '../data/profiles.json';
 import peopleJson from '../data/people.json';
-import type { PeopleData } from './people';
+import { trustedRecord, type PeopleData } from './people';
 import type { PodcastDataset } from './types';
 import { runAgent } from './agent/agent';
 import { runBacktest } from './backtest';
@@ -60,7 +60,7 @@ export type ApiRequest =
 
 const STATIC_PROFILES = profilesJson as unknown as Record<string, GuestProfile>;
 /** Wikidata records of every catalog guest (scripts/build-people.ts). */
-export const PEOPLE = (peopleJson as unknown as PeopleData).people;
+export const PEOPLE = Object.fromEntries(Object.entries((peopleJson as unknown as PeopleData).people).filter(([, p]) => trustedRecord(p)));
 const runtimeProfiles = new Map<string, GuestProfile | null>();
 const WIKI_HOSTS = ['www.wikidata.org', 'en.wikipedia.org', 'es.wikipedia.org'];
 

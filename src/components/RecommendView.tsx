@@ -7,7 +7,7 @@ import type { RecommendResult, ShowSummary } from '../api';
 import { useI18n } from '../i18n';
 import { Badge } from './Badge';
 import { GuestAvatar, initials } from './GuestAvatar';
-import { audienceSubtitle, citableThemes, whySentences } from '../why';
+import { audienceSubtitle, citableThemes, whoTheyAre, whySentences } from '../why';
 import { cleanTopic, clipTopic } from '../../core/topic';
 
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}`);
@@ -47,7 +47,7 @@ function Bar({ value, tone }: { value: number | null; tone: string }) {
 
 function ProposalModal({ rec, show, result, onClose }: { rec: Recommendation; show: ShowSummary; result: RecommendResult; onClose: () => void }) {
   const { lang, t } = useI18n();
-  const proposal = draftProposal(rec, show, result.themes, lang);
+  const proposal = draftProposal(rec, show, result.themes, lang, { kindClaims: (result.cardsVersion ?? 0) >= 2 });
   const [copied, setCopied] = useState(false);
   // Portal: ancestors use backdrop-filter, which would otherwise trap a fixed-position overlay.
   return createPortal(
@@ -228,6 +228,25 @@ function TechnicalDetails({ rec, mode }: { rec: Recommendation; mode: RecommendR
   );
 }
 
+/** Short bio, what they do now, and awards: the person behind the name. */
+function WhoTheyAre({ rec }: { rec: Recommendation }) {
+  const { lang, t } = useI18n();
+  const w = whoTheyAre(rec, lang);
+  if (!w.bio && !w.position && !w.awards) return null;
+  return (
+    <div className="mt-4">
+      <p className="text-xs uppercase tracking-widest text-brass-400">{t('card.who')}</p>
+      {w.bio && <p className="mt-1 text-sm leading-relaxed text-stone-200">{w.bio}</p>}
+      {(w.position || w.awards) && (
+        <ul className="mt-2 space-y-0.5 text-[13px] text-stone-300">
+          {w.position && <li><span className="text-stone-500">{t('card.position')}:</span> {w.position}</li>}
+          {w.awards && <li><span className="text-stone-500">{t('card.awards')}:</span> {w.awards}</li>}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function RecommendationCard({ rec, show, result, isNew = false }: { rec: Recommendation; show: ShowSummary; result: RecommendResult; isNew?: boolean }) {
   const { lang, t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -264,6 +283,8 @@ function RecommendationCard({ rec, show, result, isNew = false }: { rec: Recomme
           </div>
         </div>
       </div>
+
+      <WhoTheyAre rec={rec} />
 
       <div className="mt-4">
         <p className="text-xs uppercase tracking-widest text-brass-400">{t('card.why')}</p>
