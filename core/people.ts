@@ -165,6 +165,8 @@ export interface GuestToResolve {
   showCountries: string[];
   /** Languages of those shows; the first is searched first. */
   languages: string[];
+  /** Date of their earliest interview (YYYY-MM-DD): nobody who died before it can be this guest. */
+  firstInterview?: string;
 }
 
 export interface ResolveStats {
@@ -246,7 +248,11 @@ export async function resolvePeople(
   // 4. Choose the person for each guest, with context.
   const chosen = new Map<string, { e: WdEntity; match: string[]; evidence: string[] }>();
   for (const g of guests) {
-    const cands = (idsByGuest.get(g.name) ?? []).filter((id) => humans.has(id)).map((id) => entities.get(id)!);
+    // A namesake who died before the guest's first interview cannot be the guest.
+    const cands = (idsByGuest.get(g.name) ?? [])
+      .filter((id) => humans.has(id))
+      .map((id) => entities.get(id)!)
+      .filter((e) => !(g.firstInterview && deathDate(e) && deathDate(e)! < g.firstInterview));
     if (!cands.length) {
       stats.notFound++;
       continue;

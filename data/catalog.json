@@ -1064,6 +1064,42 @@
    "statusReason": null
   },
   {
+   "id": "this-week-in-startups",
+   "name": "This Week in Startups",
+   "host": "Jason Calacanis",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/4f/42/0e/4f420e73-86a3-f96a-152c-c4387697d74d/mza_2451050393234505388.jpg/600x600bb.jpg",
+   "platform": "apple",
+   "genre": "Technology",
+   "language": "en",
+   "origin": {
+    "country": "us",
+    "status": "verified",
+    "basis": "host",
+    "evidence": [
+     {
+      "url": "https://en.wikipedia.org/wiki/Jason_Calacanis",
+      "quote": "Jason McCabe Calacanis (born November 28, 1970) is an American podcaster, Internet entrepreneur, angel investor, and author. … the host of This Week in Startups podcast."
+     }
+    ],
+    "note": "Added 2026-10-24 for its verified origin, not from a chart."
+   },
+   "description": "Jason Calacanis covers startups, tech, markets, media, and all the hottest topics in business and technology. He also interviews the world's greatest founders, operators, investors, and",
+   "charts": [],
+   "appleUrl": "https://podcasts.apple.com/us/podcast/this-week-in-startups/id315114957",
+   "feedUrl": "https://feeds.megaphone.fm/LTANT7633840743",
+   "appleTrackCount": 1493,
+   "lastRelease": "2026-10-24T01:52:00.000Z",
+   "snapshot": {
+    "episodes": 499,
+    "withGuestNames": 133,
+    "coverage": 0.27,
+    "first": "2024-01-27T03:04:44.000Z",
+    "last": "2026-10-24T01:52:00.000Z"
+   },
+   "status": "limited",
+   "statusReason": "few_guest_names"
+  },
+  {
    "id": "all-in",
    "name": "All-In with Chamath, Jason, Sacks & Friedberg",
    "host": "Chamath Palihapitiya, Jason Calacanis, David Sacks, David Friedberg",

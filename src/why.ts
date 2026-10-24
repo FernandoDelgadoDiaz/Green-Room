@@ -15,6 +15,9 @@ export function countryName(code: string, lang: Lang): string {
   }
 }
 
+/** Country name inside an English sentence: "from the United States", "from the United Kingdom". */
+const inSentence = (code: string, lang: Lang) => (lang === 'en' && /^(us|gb|nl|ae|ph|cz|do)$/i.test(code) ? `the ${countryName(code, lang)}` : countryName(code, lang));
+
 const list = (xs: string[], lang: Lang) => new Intl.ListFormat(lang, { type: 'conjunction' }).format(xs);
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const clip = (s: string, n = 70) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
@@ -26,7 +29,10 @@ export function audienceSubtitle(rec: Recommendation, lang: Lang): string | null
   // The occupation that makes them the right kind of guest for this show, when there is one.
   // Wikidata lists the main occupation first: keep that order, taking the first one the show shares.
   const occ = fittingOccupation(a).occ?.[lang] ?? (a.categories[0] ? CATEGORY_LABELS[a.categories[0]][lang] : null);
-  const where = a.countries[0] ? countryName(a.countries[0], lang) : null;
+  // Dual citizens show the country that ties them to this audience (Musk: United States, not South Africa).
+  const tie = a.sameCountry ? (a.matchedCountry ?? a.showCountry) : null;
+  const code = tie && a.countries.includes(tie) ? tie : a.countries[0];
+  const where = code ? countryName(code, lang) : null;
   return [occ && cap(occ), where].filter(Boolean).join(' · ') || null;
 }
 
@@ -63,10 +69,10 @@ export function whySentences(rec: Recommendation, showName: string, lang: Lang):
 
   // 2. Known by this audience: same country (and where they were interviewed), or widely known.
   if (a?.sameCountry && a.matchedCountry && a.matchedCountry !== a.showCountry) {
-    const country = countryName(a.matchedCountry, lang);
+    const country = inSentence(a.matchedCountry, lang);
     out.push(es ? `Es una figura de ${country}, de donde viene buena parte de los invitados de ${showName}.` : `A public figure from ${country}, where many of ${showName}’s guests come from.`);
   } else if (a?.sameCountry && a.showCountry) {
-    const country = countryName(a.showCountry, lang);
+    const country = inSentence(a.showCountry, lang);
     out.push(
       a.sameCountryShows.length
         ? es
