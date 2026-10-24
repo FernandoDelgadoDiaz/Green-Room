@@ -30,7 +30,7 @@ What the rules say (qloo.devpost.com/rules, read 2026-10-23):
 >    - new people that only Qloo's taste graph surfaced, each verified (identity, theme, not a past guest, language);
 >    - Qloo's cultural conversation hooks (music, films, books).
 > 3. **Read the five recommended guests below.** They are people this show's audience knows (same country and the same kind of guest the show already interviews), with a verifiable interview track record. Each card shows:
->    - Qloo's read of the guest's audience: affinity to the show's audience, profile match, 12-week trend;
+>    - Qloo's read of the guest's audience: affinity to the show's audience (profile match and 12-week trend appear only when Qloo has them for that person);
 >    - the evidence, with links;
 >    - a draft invitation.
 > 4. **Open "What the agent did"** to see every step of the agent loop, why it ran and how it re-planned. Open the discovery panel to see every person Qloo proposed and why each one was kept or set aside.

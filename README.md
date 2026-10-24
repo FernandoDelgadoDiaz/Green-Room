@@ -16,11 +16,11 @@ Qloo is not a garnish here: the agent cannot describe a show's audience, find pe
 | `GET /v2/tags` (semantic search) | Map the show's themes to Qloo tags when guests can't carry the signal (re-planning) | Agent trace |
 | `GET /v2/insights` `filter.type=urn:entity:person` | People this audience has affinity for, outside the show's history (discovery) | "What Qloo added" |
 | `GET /v2/insights` `filter.type=urn:entity:person` + `filter.results.entities` | Affinity of each comparable candidate to the show's audience signal | Ranking (inside an editorial band) and each card |
-| `GET /v2/insights` `filter.type=urn:demographics` | Age/gender affinity of the show's audience signals and of each recommended guest | "Who this show's audience is" and each card's profile match |
-| `GET /v2/trending` (`urn:entity:person`) | Each recommended guest's weekly popularity over the last 12 weeks | Each card: rising / steady / cooling |
+| `GET /v2/insights` `filter.type=urn:demographics` | Age/gender affinity of the show's audience signal and, when Qloo has it, of each recommended guest | "Who this show's audience is" (works on live shows); each card's profile match only when Qloo returns a profile for that person |
+| `GET /v2/trending` (`urn:entity:person`) | Each recommended guest's weekly popularity over the last 12 weeks | Each card: rising / steady / cooling, only when Qloo returns a series (it returned none for the people in our live tests) |
 | `GET /v2/insights` `filter.type=urn:entity:artist`, `urn:entity:movie`, `urn:entity:book` | Cultural hooks of the audience across domains | "What Qloo added": conversation hooks |
 
-**Division of labour.** Verified public evidence (RSS interview history, Wikidata identity, country) decides *who can credibly be booked*; Qloo decides *whose audience matches yours, who your audience is, and who is on the rise*, and finds people your sources never had. Qloo values are labeled `LIVE`, inferred taste data, never presented as listener data. Qloo responses are cached privately on the server and never committed to this public repository (developer guide).
+**Division of labour.** Verified public evidence (RSS interview history, Wikidata identity, country) decides *who can credibly be booked*; Qloo decides *whose audience matches yours, and who your audience is*, and finds people your sources never had. Qloo values are labeled `LIVE`, inferred taste data, never presented as listener data. Qloo responses are cached privately on the server and never committed to this public repository (developer guide).
 
 ## What it does
 
@@ -33,7 +33,7 @@ Qloo is not a garnish here: the agent cannot describe a show's audience, find pe
    See [docs/AGENT_AUDIT.md](docs/AGENT_AUDIT.md).
 3. **Five recommendations: people this audience knows.** Each show is profiled by who it interviews (its past guests' occupations and citizenship, from Wikidata), not only by its titles. Candidates must be documented people from the audience's countries and the same kind of guest, unless too few exist. Each card has:
    - who they are (occupation · country, free photo) and a "why" built from their own evidence: similar past guests, where they were interviewed and on what;
-   - Qloo's read of their audience: affinity to the show's audience, demographic profile match, 12-week trend;
+   - Qloo's read of their audience: affinity to the show's audience; demographic profile match and 12-week trend when Qloo has them for that person;
    - verified appearances with links, identity and language checks;
    - a draft interview proposal built only from that evidence.
 4. **Backtest**: hide everything after a cutoff date, recommend with earlier data only, then count how many recommended people the host really booked later. The page also shows a random baseline, a leakage audit and limitations.
