@@ -1701,7 +1701,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       }
       if (qlooTime && resolved.length < 3 && !done.has('qloo_find_podcast'))
         return { tool: 'qloo_find_podcast', why: [`Replanning: only ${resolved.length} guest identities confirmed (<3). Trying the show itself as a Qloo podcast entity.`, `Replanifico: solo ${resolved.length} identidades de invitados confirmadas (<3). Pruebo con el programa como entidad de podcast en Qloo.`] };
-      if (qlooTime && resolved.length < 3 && !done.has('qloo_find_theme_tags') && themes.length)
+      if (qlooTime && resolved.length < 3 && !done.has('qloo_find_theme_tags') && themes.length && !themesWeak())
         return {
           tool: 'qloo_find_theme_tags',
           why: podcastEntity
@@ -1729,7 +1729,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     if (qloo.mode === 'LIVE' && discoveryAttempts === 1 && rankedProposals() === 0 && !outOfTime() && (qloo.budgetLeft?.() ?? Infinity) >= 8) {
       const why = funnelDiagnosis.diagnosisText;
       const whyEs = funnelDiagnosis.diagnosisTextEs;
-      if (signalStrategy === 'guests' && !done.has('qloo_find_theme_tags') && themes.length)
+      if (signalStrategy === 'guests' && !done.has('qloo_find_theme_tags') && themes.length && !themesWeak())
         return { tool: 'qloo_find_theme_tags', why: [`Replanning the discovery — ${why} Trying the show’s themes as Qloo tags as a different signal.`, `Replanifico el descubrimiento — ${whyEs} Pruebo los temas del programa como etiquetas de Qloo, una señal distinta.`] };
       if (signalStrategy === 'guests' && !done.has('qloo_find_podcast'))
         return { tool: 'qloo_find_podcast', why: [`Replanning the discovery — ${why} Trying the show itself as the signal.`, `Replanifico el descubrimiento — ${whyEs} Pruebo con el propio programa como señal.`] };
