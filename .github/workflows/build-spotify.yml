@@ -55,5 +55,6 @@ jobs:
           git add data/catalog.json data/podcasts core/datasets.ts data/people.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "Data: new shows, catalog and people (workflow run ${{ github.run_id }})"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
+          # Data files are regenerated from scratch: on a conflict with a concurrent data run, keep this one.
+          git pull --rebase -X theirs origin "${GITHUB_REF_NAME}"
           git push
