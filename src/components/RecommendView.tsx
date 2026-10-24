@@ -236,7 +236,7 @@ function RecommendationCard({ rec, show, result }: { rec: Recommendation; show: 
   // Flag simulated values only when one is actually present on this card.
   const isMock = rec.components.qlooAffinity.provenance === 'MOCK' && rec.components.qlooAffinity.value !== null;
   return (
-    <article className="card rise p-5">
+    <article id={`rec-${rec.key}`} className="card rise scroll-mt-6 p-5">
       <div className="flex items-start gap-4">
         <div className="relative">
           <GuestAvatar name={rec.name} profile={profile} />
@@ -474,13 +474,6 @@ function QlooContribution({ result }: { result: RecommendResult }) {
     <div className="card border border-emerald-400/30 bg-emerald-500/5 p-5 text-sm">
       <h3 className="flex items-center gap-2 font-display text-2xl">{t('qc.title')} <Badge p="LIVE" /></h3>
       <p className="mt-1 text-xs text-stone-400">{t('qc.lead')}</p>
-      {result.audienceDemographics && demographicSummary(result.audienceDemographics.demographics, lang) && (
-        <>
-          <p className="mt-4 text-xs uppercase tracking-widest text-emerald-300/80">{t('qc.audience')}</p>
-          <p className="mt-1 text-stone-200">{demographicSummary(result.audienceDemographics.demographics, lang)}</p>
-          <p className="text-[11px] text-stone-500">{t('qc.audienceNote')}</p>
-        </>
-      )}
 
       <p className="mt-4 text-xs uppercase tracking-widest text-emerald-300/80">{t('qc.people')}</p>
       {speaks.length ? (
@@ -491,8 +484,14 @@ function QlooContribution({ result }: { result: RecommendResult }) {
                 {p.name}
                 {p.inTopK && <span className="ml-2 text-xs font-normal text-emerald-300">{t('disc.newInTop')}</span>}
               </p>
-              <p className="text-[11px] text-stone-500">{t('disc.newRow', { q: p.qlooRank, f: Math.round(p.themeFit * 100), p: p.finalRank ?? '—' })}</p>
-              {!p.inTopK && <p className="text-[11px] text-stone-400">{lang === 'es' ? p.reasonEs : p.reason}</p>}
+              <p className="text-[11px] text-stone-400">{t('qc.suggested', { q: p.qlooRank })}</p>
+              {!p.inTopK && (
+                <details className="text-[11px] text-stone-500">
+                  <summary className="cursor-pointer">{t('qc.whyNot')}</summary>
+                  <p className="mt-1">{t('disc.newRow', { q: p.qlooRank, f: Math.round(p.themeFit * 100), p: p.finalRank ?? '—' })}</p>
+                  <p>{lang === 'es' ? p.reasonEs : p.reason}</p>
+                </details>
+              )}
             </li>
           ))}
         </ul>
@@ -582,6 +581,97 @@ function DiscoveryDetails({ result, show }: { result: RecommendResult; show: Sho
   );
 }
 
+/** The five picks as large portraits: the answer comes first, the analysis below. */
+function GuestLineup({ result, show }: { result: RecommendResult; show: ShowSummary }) {
+  const { lang, t } = useI18n();
+  const jump = (key: string) => document.getElementById(`rec-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  return (
+    <section>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h3 className="font-display text-4xl sm:text-5xl">{t('recs.title')}</h3>
+          <p className="mt-1 text-sm text-stone-400">{t('lineup.lead', { show: show.name })}</p>
+        </div>
+        <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
+      </div>
+      <ol className="-mx-4 mt-5 flex snap-x gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
+        {result.recommendations.map((r) => {
+          const affinity = r.qlooAudience?.affinity ?? null;
+          return (
+            <li key={r.key} className="w-44 shrink-0 snap-start lg:w-auto">
+              <button onClick={() => jump(r.key)} className="group block w-full text-left" aria-label={`${r.name} · ${t('lineup.jump')}`}>
+                <div className="relative overflow-hidden rounded-2xl ring-1 ring-white/10 transition group-hover:ring-brass-400/60">
+                  <Portrait name={r.name} profile={result.profiles[r.key]} />
+                  <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/70 to-transparent" />
+                  <span className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-brass-400 font-display text-lg text-stage-950 shadow">{r.rank}</span>
+                  <span className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-sm font-semibold tabular-nums text-stone-100" title={t('card.scoreHelp')}>{pct(r.score)}</span>
+                  <div className="absolute inset-x-0 bottom-0 p-3">
+                    <p className="text-lg font-semibold leading-tight text-white">{r.name}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-stone-300">{audienceSubtitle(r, lang) ?? ''}</p>
+                    {affinity !== null && <span className="mt-2 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">{t('lineup.qloo', { n: Math.round(affinity * 100) })}</span>}
+                  </div>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
+/** A tall photo when a free-licensed one exists, otherwise a large monogram. */
+function Portrait({ name, profile }: { name: string; profile: GuestProfile | null | undefined }) {
+  const [failed, setFailed] = useState(false);
+  const photo = profile?.photo;
+  if (photo && !failed) {
+    return <img src={photo.thumbUrl} alt={name} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="aspect-[4/5] w-full object-cover object-top" />;
+  }
+  return (
+    <div className="flex aspect-[4/5] w-full items-start justify-center bg-gradient-to-br from-white/10 to-black pt-8">
+      <GuestAvatar name={name} profile={null} />
+    </div>
+  );
+}
+
+/** Qloo's age and gender affinity for the show's audience signal, as diverging bars. */
+function AudienceChart({ result }: { result: RecommendResult }) {
+  const { lang, t } = useI18n();
+  const d = result.audienceDemographics?.demographics;
+  if (!d) return null;
+  const rows: Array<{ label: string; v: number; gap?: boolean }> = [
+    ...Object.keys(AGE_LABEL).filter((k) => d.age[k] !== undefined).map((k) => ({ label: AGE_LABEL[k][lang], v: d.age[k] })),
+    ...(d.gender.male !== undefined ? [{ label: t('aud.men'), v: d.gender.male, gap: true }] : []),
+    ...(d.gender.female !== undefined ? [{ label: t('aud.women'), v: d.gender.female }] : []),
+  ];
+  if (!rows.length) return null;
+  const max = Math.max(0.25, ...rows.map((r) => Math.abs(r.v)));
+  const summary = demographicSummary(d, lang);
+  return (
+    <div className="card border border-emerald-400/30 bg-emerald-500/5 p-5">
+      <h3 className="flex flex-wrap items-center gap-2 font-display text-2xl">
+        {t('aud.title')} <span className="text-base text-emerald-300/80">{t('aud.by')}</span> <Badge p="LIVE" />
+      </h3>
+      {summary && <p className="mt-1 text-lg text-stone-100">{summary}</p>}
+      <div className="mt-4 space-y-1.5">
+        {rows.map((r) => (
+          <div key={r.label} className={`grid grid-cols-[5.5rem_1fr] items-center gap-3 text-xs ${r.gap ? 'pt-3' : ''}`}>
+            <span className="text-stone-300">{r.label}</span>
+            <div className="relative h-4">
+              <div className="absolute inset-y-0 left-1/2 w-px bg-white/25" />
+              <div
+                className={`absolute inset-y-0.5 rounded-sm ${r.v >= 0 ? 'bg-emerald-400' : 'bg-stone-600'}`}
+                style={r.v >= 0 ? { left: '50%', width: `${(r.v / max) * 50}%` } : { right: '50%', width: `${(-r.v / max) * 50}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[11px] text-stone-500">{t('aud.legend')} {t('qc.audienceNote')}</p>
+    </div>
+  );
+}
+
 export function RecommendView({ show, result }: { show: ShowSummary; result: RecommendResult }) {
   const { lang, t } = useI18n();
   const [visible, setVisible] = useState(0);
@@ -594,8 +684,11 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
   const warnings = lang === 'es' ? result.warningsEs : result.warnings;
 
   return (
+    <div className="space-y-8">
+    <GuestLineup result={result} show={show} />
     <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <section className="order-2 space-y-6 lg:order-1">
+        <AudienceChart result={result} />
         <details className="card group p-5">
           <summary className="cursor-pointer list-none">
             <span className="mr-1 inline-block transition group-open:rotate-90">›</span>
@@ -641,6 +734,8 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
       </section>
 
       <section className="order-1 space-y-4 lg:order-2">
+        {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
+        {result.recommendations.map((r) => <RecommendationCard key={r.key} rec={r} show={show} result={result} />)}
         <QlooContribution result={result} />
         <AnalysisSummary result={result} show={show} />
         <DiscoveryPanel result={result} show={show} part="head" />
@@ -650,13 +745,6 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
             <ul className="mt-2 list-disc space-y-1 pl-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
           </details>
         )}
-        {/* The heading sits right above the five cards, so the Qloo card is not read as one of them. */}
-        <div className="flex flex-wrap items-end justify-between gap-2 pt-4">
-          <h3 className="font-display text-3xl">{t('recs.title')}</h3>
-          <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
-        </div>
-        {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
-        {result.recommendations.map((r) => <RecommendationCard key={r.key} rec={r} show={show} result={result} />)}
         <DiscoveryPanel result={result} show={show} part="details" />
         {result.discarded.length > 0 && (
           <details className="card p-4 text-sm text-stone-300">
@@ -672,6 +760,7 @@ export function RecommendView({ show, result }: { show: ShowSummary; result: Rec
           </details>
         )}
       </section>
+    </div>
     </div>
   );
 }
