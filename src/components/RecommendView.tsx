@@ -49,6 +49,13 @@ function ProposalModal({ rec, show, result, onClose }: { rec: Recommendation; sh
   const { lang, t } = useI18n();
   const proposal = draftProposal(rec, show, result.themes, lang, { kindClaims: (result.cardsVersion ?? 0) >= 2 });
   const [copied, setCopied] = useState(false);
+  // The draft is a starting point: the producer edits it here, then copies it or opens it in mail or WhatsApp.
+  // Nothing is sent from the app; the person picks the recipient and sends it themselves.
+  const [subject, setSubject] = useState(proposal.subject);
+  const [body, setBody] = useState(proposal.body);
+  const edited = subject !== proposal.subject || body !== proposal.body;
+  const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const whatsapp = `https://wa.me/?text=${encodeURIComponent(body)}`;
   // Portal: ancestors use backdrop-filter, which would otherwise trap a fixed-position overlay.
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
@@ -58,25 +65,34 @@ function ProposalModal({ rec, show, result, onClose }: { rec: Recommendation; sh
             <GuestAvatar name={rec.name} profile={result.profiles[rec.key]} size="sm" />
             <div>
               <p className="text-xs uppercase tracking-widest text-brass-400">{t('proposal.kicker')}</p>
-              <h3 className="font-display text-2xl sm:text-3xl">{proposal.subject}</h3>
+              <h3 className="font-display text-2xl sm:text-3xl">{t('proposal.title', { name: rec.name })}</h3>
             </div>
           </div>
           <button className="btn-ghost" onClick={onClose}>{t('common.close')}</button>
         </div>
-        <pre className="mt-4 whitespace-pre-wrap rounded-xl bg-black/30 p-4 font-sans text-sm leading-relaxed text-stone-200">{proposal.body}</pre>
+        <label className="mt-4 block text-xs uppercase tracking-widest text-stone-500" htmlFor="proposal-subject">{t('proposal.subject')}</label>
+        <input id="proposal-subject" value={subject} onChange={(e) => (setSubject(e.target.value), setCopied(false))} className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-stone-100 focus:border-brass-400 focus:outline-none" />
+        <label className="mt-3 block text-xs uppercase tracking-widest text-stone-500" htmlFor="proposal-body">{t('proposal.body')}</label>
+        <textarea id="proposal-body" value={body} onChange={(e) => (setBody(e.target.value), setCopied(false))} rows={Math.min(22, body.split('\n').length + 2)} className="mt-1 w-full resize-y rounded-xl border border-white/10 bg-black/30 p-4 font-sans text-sm leading-relaxed text-stone-200 focus:border-brass-400 focus:outline-none" />
+        <p className="mt-1 text-[11px] text-stone-500">{t('proposal.editHint')}{edited && <> · <button className="text-brass-300 hover:underline" onClick={() => (setSubject(proposal.subject), setBody(proposal.body), setCopied(false))}>{t('proposal.reset')}</button></>}</p>
         <div className="mt-4 text-xs text-stone-400">
           <p className="font-semibold text-stone-300">{t('proposal.basedOn')}</p>
           <ul className="mt-1 list-disc pl-5">{proposal.basedOn.map((b) => <li key={b}>{b}</li>)}</ul>
         </div>
-        <button
-          className="btn-primary mt-4"
-          onClick={() => {
-            navigator.clipboard?.writeText(`${proposal.subject}\n\n${proposal.body}`);
-            setCopied(true);
-          }}
-        >
-          {copied ? t('proposal.copied') : t('proposal.copy')}
-        </button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            className="btn-primary"
+            onClick={() => {
+              navigator.clipboard?.writeText(`${subject}\n\n${body}`);
+              setCopied(true);
+            }}
+          >
+            {copied ? t('proposal.copied') : t('proposal.copy')}
+          </button>
+          <a className="btn-ghost" href={mailto}>{t('proposal.mail')}</a>
+          <a className="btn-ghost" href={whatsapp} target="_blank" rel="noreferrer">{t('proposal.whatsapp')}</a>
+        </div>
+        <p className="mt-2 text-[11px] text-stone-500">{t('proposal.sendNote')}</p>
       </div>
     </div>,
     document.body,
