@@ -4,7 +4,7 @@ import { DATASETS, ORIGIN_OF, PEOPLE } from '../core/api';
 import { nameKey } from '../core/names';
 import { parseDemographics, parseTrend, shapeOf } from '../core/qloo/client';
 import type { Demographics, QlooAdapter, QlooCall, QlooEntity } from '../core/qloo/types';
-import { demographicSummary } from '../src/components/RecommendView';
+import { demographicSummary, recognizableHooks, weakQlooCoverage } from '../src/components/RecommendView';
 
 // The documented Demographic Insights response (docs.qloo.com/reference/demographics-use-case).
 const DEMO_DOC = {
@@ -91,5 +91,25 @@ describe('agent: Qloo reads each pick’s audience after verification (LIVE)', (
     const b = await runAgent({ target: doac, others, qloo: adapter(false).q, originOf: ORIGIN_OF, people: PEOPLE });
     expect(a.recommendations.map((x) => x.name)).toEqual(b.recommendations.map((x) => x.name));
     expect(b.recommendations.every((x) => x.qlooAudience === null)).toBe(true);
+  });
+});
+
+describe('UI: honest about weak Qloo coverage', () => {
+  const ent = (name: string, popularity?: number) => ({ entityId: name, name, types: [], popularity }) as QlooEntity;
+  it('drops obscure hooks and domains left with fewer than two', () => {
+    const hooks = recognizableHooks({
+      culturalAffinities: [
+        { type: 'urn:entity:book', entities: [ent('Princesses Wear Pants', 0.4), ent('Glaring Through Oblivion', 0.26), ent('Live Wire', 0.92)] },
+        { type: 'urn:entity:artist', entities: [ent('Andrés Calamaro', 0.99), ent('Rata Blanca', 0.98), ent('No data')] },
+      ],
+    } as never);
+    expect(hooks.map((c) => c.type)).toEqual(['urn:entity:artist']);
+    expect(hooks[0].entities.map((e) => e.name)).toEqual(['Andrés Calamaro', 'Rata Blanca', 'No data']);
+  });
+  it('flags LIVE results whose only signal is topic tags', () => {
+    expect(weakQlooCoverage({ qlooMode: 'LIVE', signalStrategy: 'tags' })).toBe(true);
+    expect(weakQlooCoverage({ qlooMode: 'LIVE', signalStrategy: 'none' })).toBe(true);
+    expect(weakQlooCoverage({ qlooMode: 'LIVE', signalStrategy: 'podcast+tags' })).toBe(false);
+    expect(weakQlooCoverage({ qlooMode: 'MOCK', signalStrategy: 'tags' })).toBe(false);
   });
 });

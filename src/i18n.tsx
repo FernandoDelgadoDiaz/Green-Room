@@ -144,6 +144,17 @@ const STRINGS = {
     es: 'Qloo propuso {n} personas y {d} pasaron la verificación de identidad, pero ninguna pasó todos los controles para este programa (tema, repetición, idioma).',
   },
   'qc.otherLang': { en: '{n} more without a confirmed language for this show', es: '{n} más sin idioma confirmado para este programa' },
+  'qc.weak.title': { en: 'Qloo doesn’t know this show’s audience yet', es: 'Qloo todavía no conoce a la audiencia de este programa' },
+  'qc.weak.body': {
+    en: 'Qloo has no entry for this show and confirmed {c} of its {n} most recent guests, so the only signal left is generic topic tags. The five picks come from the show’s real interview history and public records, not from Qloo.',
+    es: 'Qloo no tiene registrado este programa y confirmó {c} de sus {n} invitados más recientes, así que solo quedan etiquetas temáticas genéricas como señal. Los cinco elegidos salen del historial real de entrevistas y de registros públicos, no de Qloo.',
+  },
+  'qc.weak.note': {
+    en: 'Qloo’s coverage of Spanish-language podcasts is still thin. Green Room says so instead of guessing.',
+    es: 'La cobertura de Qloo sobre podcasts en español todavía es escasa. Green Room lo dice en vez de adivinar.',
+  },
+  'qc.weak.hooks': { en: 'Generic tastes for this show’s topics (weak signal)', es: 'Gustos genéricos para los temas del programa (señal débil)' },
+  'qc.noneZero': { en: 'Qloo proposed no new people for this audience.', es: 'Qloo no propuso personas nuevas para esta audiencia.' },
   'qc.hooks': { en: 'Conversation hooks from Qloo', es: 'Ideas para la conversación, según Qloo' },
   'qc.hooksNote': {
     en: 'Tastes Qloo associates with this show’s signals. Inferred, not data about its listeners.',

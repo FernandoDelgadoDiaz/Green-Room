@@ -462,18 +462,44 @@ function QlooAudienceRow({ rec }: { rec: Recommendation }) {
   );
 }
 
+/** Qloo found neither the show nor enough past guests: the audience signal is only generic topic tags. */
+export function weakQlooCoverage(result: Pick<RecommendResult, 'qlooMode' | 'signalStrategy'>): boolean {
+  return result.qlooMode === 'LIVE' && (result.signalStrategy === 'tags' || result.signalStrategy === 'none');
+}
+
+/** Cross-domain hooks people would recognize: drops obscure titles (Qloo popularity below 0.75) and thin domains. */
+export function recognizableHooks(result: Pick<RecommendResult, 'culturalAffinities'>, minPopularity = 0.75) {
+  return result.culturalAffinities
+    .map((c) => ({ ...c, entities: c.entities.filter((e) => (e.popularity ?? 1) >= minPopularity) }))
+    .filter((c) => c.entities.length >= 2);
+}
+
+function QlooCoverageNotice({ result }: { result: RecommendResult }) {
+  const { t } = useI18n();
+  const g = result.signalDiagnostics.guests;
+  return (
+    <div className="mt-3 rounded-xl border border-brass-400/40 bg-brass-400/10 px-4 py-3">
+      <p className="font-semibold text-brass-200">{t('qc.weak.title')}</p>
+      <p className="mt-1 text-stone-300">{t('qc.weak.body', { c: g.confirmed, n: g.searched })}</p>
+      <p className="mt-1 text-[11px] text-stone-400">{t('qc.weak.note')}</p>
+    </div>
+  );
+}
+
 function QlooContribution({ result }: { result: RecommendResult }) {
   const { lang, t } = useI18n();
   if (result.qlooMode !== 'LIVE') return null;
   const fresh = result.discoveryPositions.filter((p) => p.source === 'qloo-external' && p.eligible).sort((a, b) => a.qlooRank - b.qlooRank);
   const speaks = fresh.filter((p) => p.languageConfirmed);
   const others = fresh.filter((p) => !p.languageConfirmed);
-  const hooks = result.culturalAffinities.filter((c) => c.entities.length);
+  const hooks = recognizableHooks(result);
+  const weak = weakQlooCoverage(result);
   const f = result.funnel;
   return (
     <div className="card border border-emerald-400/30 bg-emerald-500/5 p-5 text-sm">
       <h3 className="flex items-center gap-2 font-display text-2xl">{t('qc.title')} <Badge p="LIVE" /></h3>
       <p className="mt-1 text-xs text-stone-400">{t('qc.lead')}</p>
+      {weak && <QlooCoverageNotice result={result} />}
 
       <p className="mt-4 text-xs uppercase tracking-widest text-emerald-300/80">{t('qc.people')}</p>
       {speaks.length ? (
@@ -496,7 +522,7 @@ function QlooContribution({ result }: { result: RecommendResult }) {
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-stone-300">{t('qc.none', { n: f.proposed, d: f.externalDocumented + f.identityVerified })}</p>
+        <p className="mt-2 text-stone-300">{f.proposed ? t('qc.none', { n: f.proposed, d: f.externalDocumented + f.identityVerified }) : t('qc.noneZero')}</p>
       )}
       {others.length > 0 && (
         <details className="mt-2 text-[11px] text-stone-400">
@@ -505,7 +531,7 @@ function QlooContribution({ result }: { result: RecommendResult }) {
         </details>
       )}
 
-      {hooks.length > 0 && (
+      {hooks.length > 0 && !weak && (
         <>
           <p className="mt-4 text-xs uppercase tracking-widest text-emerald-300/80">{t('qc.hooks')}</p>
           <div className="mt-2 space-y-1">
@@ -518,6 +544,19 @@ function QlooContribution({ result }: { result: RecommendResult }) {
           </div>
           <p className="mt-1 text-[11px] text-stone-500">{t('qc.hooksNote')}</p>
         </>
+      )}
+      {hooks.length > 0 && weak && (
+        <details className="mt-4 text-[11px] text-stone-400">
+          <summary className="cursor-pointer">{t('qc.weak.hooks')}</summary>
+          <div className="mt-1 space-y-0.5">
+            {hooks.map((c) => (
+              <p key={c.type}>
+                <span className="text-stone-500">{t(`qc.type.${c.type.replace('urn:entity:', '')}` as Parameters<typeof t>[0])}: </span>
+                {c.entities.slice(0, 3).map((e) => e.name).join(' · ')}
+              </p>
+            ))}
+          </div>
+        </details>
       )}
     </div>
   );
@@ -716,11 +755,12 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
           </div>
         </div>
 
+        {!weakQlooCoverage(result) && (
         <div className="card p-5">
           <h3 className="flex items-center gap-2 font-display text-2xl">{t('affinities.title')} <Badge p={result.qlooMode === 'LIVE' ? 'LIVE' : 'MOCK'} /></h3>
-          {result.culturalAffinities.some((c) => c.entities.length) ? (
+          {recognizableHooks(result).length ? (
             <div className="mt-3 space-y-3">
-              {result.culturalAffinities.map((c) => (
+              {recognizableHooks(result).map((c) => (
                 <div key={c.type}>
                   <p className="text-xs uppercase tracking-widest text-stone-500">{c.type.replace('urn:entity:', '')}</p>
                   <div className="mt-1 flex flex-wrap gap-2">{c.entities.map((e) => <span key={e.entityId} className="rounded-full bg-brass-400/10 px-3 py-1 text-xs text-brass-300">{e.name}</span>)}</div>
@@ -732,6 +772,7 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
           )}
           {result.qlooMode === 'LIVE' && <p className="mt-3 text-[11px] text-stone-500">{t('pl.audience')}</p>}
         </div>
+        )}
       </section>
 
       <section className="order-1 space-y-4 lg:order-2">
