@@ -20,7 +20,7 @@ What the rules say (qloo.devpost.com/rules, read 2026-10-23):
 
 ## Testing instructions (paste into Devpost)
 
-> **No login needed.** Open https://greenroom1.netlify.app.
+> **No login needed.** Open https://greenroom1.netlify.app, or go straight to a live example: https://greenroom1.netlify.app/?show=all-in (also "All-In →" and "This Week in Startups →" on the home page).
 >
 > 1. **Pick a podcast.** Choose a country, then a podcast, and press **Analyze**. Or search any podcast by name; shows listed in Apple Podcasts can be analyzed.
 >    - The 20 catalog shows open instantly from a cached Qloo analysis made for judging (the banner says when it was computed).
