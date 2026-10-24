@@ -26,9 +26,13 @@ What the rules say (qloo.devpost.com/rules, read 2026-10-23):
 >    - The 20 catalog shows open instantly from a cached Qloo analysis made for judging (the banner says when it was computed).
 >    - A podcast analyzed for the first time runs live against Qloo in the background and usually takes 20–90 seconds.
 > 2. **Read "What Qloo added"** at the top of the results:
+>    - who this show's audience is, according to Qloo (age and gender affinity);
 >    - new people that only Qloo's taste graph surfaced, each verified (identity, theme, not a past guest, language);
 >    - Qloo's cultural conversation hooks (music, films, books).
-> 3. **Read the five recommended guests below.** They are ranked on verifiable evidence: real interviews on comparable shows. Each card links its sources and drafts an invitation.
+> 3. **Read the five recommended guests below.** They are people this show's audience knows (same country and the same kind of guest the show already interviews), with a verifiable interview track record. Each card shows:
+>    - Qloo's read of the guest's audience: affinity to the show's audience, profile match, 12-week trend;
+>    - the evidence, with links;
+>    - a draft invitation.
 > 4. **Open "What the agent did"** to see every step of the agent loop, why it ran and how it re-planned. Open the discovery panel to see every person Qloo proposed and why each one was kept or set aside.
 >
-> Language switch (ES/EN) is at the top right. If Qloo is ever unavailable, the app says so and offers a retry; it never silently replaces live results with simulated ones. A clearly labeled demo without Qloo exists only if you choose it.
+> The app opens in English (add `?lang=es` for Spanish); the switch is at the top right. If Qloo is ever unavailable, the app says so and offers a retry; it never silently replaces live results with simulated ones. A clearly labeled demo without Qloo exists only if you choose it.

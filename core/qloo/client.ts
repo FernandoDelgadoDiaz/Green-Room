@@ -1,7 +1,7 @@
 // LIVE adapter for the Qloo hackathon API. Server-side only: the key comes from QLOO_API_KEY and is
 // sent in the X-Api-Key header (developer guide). Never import this file from browser code.
 
-import { QlooError, type InsightsEntityType, type QlooAdapter, type QlooCall, type QlooEntity } from './types';
+import { QlooError, type Demographics, type InsightsEntityType, type QlooAdapter, type QlooCall, type QlooEntity, type Trend } from './types';
 
 export const QLOO_HACKATHON_BASE_URL = 'https://hackathon.api.qloo.com';
 
@@ -39,7 +39,7 @@ export interface LiveQlooOptions {
   fetchImpl?: FetchLike;
   limits?: Partial<QlooLimits>;
   /** Shared, private, server-side response cache (allowed by the developer guide). */
-  cache?: Map<string, { at: number; entities: QlooEntity[]; status: number }>;
+  cache?: Map<string, { at: number; entities: QlooEntity[]; status: number; raw?: unknown }>;
   cacheTtlMs?: number;
   /** Lets several adapters (e.g. the two arms of a backtest) draw from one call and time budget. */
   sharedBudget?: { networkCalls: number; startedAt: number };
@@ -112,6 +112,68 @@ export function parseEntity(raw: unknown): QlooEntity | null {
 }
 
 /** /search returns results: Entity[]; /v2/insights returns results.entities: Entity[]. */
+const numOrNull = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
+
+/** results.demographics[] → id → {age, gender}. Unknown shapes give an empty map, never an error. */
+export function parseDemographics(body: unknown): Map<string, Demographics> {
+  const out = new Map<string, Demographics>();
+  const list = (body as { results?: { demographics?: unknown } } | null)?.results?.demographics;
+  if (!Array.isArray(list)) return out;
+  for (const d of list as Array<{ entity_id?: string; query?: { age?: Record<string, unknown>; gender?: Record<string, unknown> } }>) {
+    if (!d?.entity_id || !d.query) continue;
+    const pick = (o: Record<string, unknown> = {}) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, numOrNull(v)]).filter((e): e is [string, number] => e[1] !== null));
+    const age = pick(d.query.age);
+    const gender = pick(d.query.gender);
+    if (Object.keys(age).length || Object.keys(gender).length) out.set(d.entity_id, { age, gender });
+  }
+  return out;
+}
+
+/**
+ * The trending response is read defensively: the weekly points are the first array of objects
+ * carrying a date and a percentile, rank or velocity (Get Trending Data). Unknown shapes → null.
+ */
+export function parseTrend(body: unknown, entityId: string): Trend | null {
+  type Row = Record<string, unknown>;
+  const isPoint = (r: unknown): r is Row => Boolean(r) && typeof r === 'object' && Object.keys(r as Row).some((k) => /date|week/i.test(k)) && Object.keys(r as Row).some((k) => /percentile|velocity|rank/i.test(k));
+  const find = (v: unknown, depth = 0): Row[] | null => {
+    if (depth > 6 || !v || typeof v !== 'object') return null;
+    if (Array.isArray(v)) {
+      if (v.length && v.every(isPoint)) return v as Row[];
+      // A list of per-entity objects: prefer the one for this entity.
+      const own = v.find((x) => x && typeof x === 'object' && Object.values(x as Row).includes(entityId));
+      for (const x of own ? [own, ...v] : v) {
+        const f = find(x, depth + 1);
+        if (f) return f;
+      }
+      return null;
+    }
+    for (const x of Object.values(v as Row)) {
+      const f = find(x, depth + 1);
+      if (f) return f;
+    }
+    return null;
+  };
+  const rows = find(body);
+  if (!rows?.length) return null;
+  const field = (r: Row, re: RegExp) => numOrNull(Object.entries(r).find(([k]) => re.test(k))?.[1]);
+  const points = rows
+    .map((r) => ({ date: String(Object.entries(r).find(([k]) => /date|week/i.test(k))?.[1] ?? ''), percentile: field(r, /percentile/i), velocity: field(r, /velocity/i) }))
+    .filter((p) => p.date)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (!points.length) return null;
+  const withPct = points.filter((p) => p.percentile !== null);
+  const first = withPct[0]?.percentile ?? null;
+  const last = withPct[withPct.length - 1]?.percentile ?? null;
+  const recentVelocity = points.slice(-4).map((p) => p.velocity).filter((v): v is number => v !== null);
+  const v = recentVelocity.length ? recentVelocity.reduce((a, b) => a + b, 0) / recentVelocity.length : null;
+  const change = first !== null && last !== null ? last - first : null;
+  // Percentiles are 0–1 or 0–100 depending on the field; a change of 5 % of the scale counts.
+  const scale = last !== null && last > 1 ? 100 : 1;
+  const direction: Trend['direction'] = change !== null ? (change > 0.05 * scale ? 'rising' : change < -0.05 * scale ? 'falling' : 'steady') : v !== null ? (v > 0 ? 'rising' : v < 0 ? 'falling' : 'steady') : 'steady';
+  return { points, direction, latestPercentile: last === null ? null : scale === 100 ? last / 100 : last };
+}
+
 export function parseEntities(body: unknown): QlooEntity[] {
   if (!body || typeof body !== 'object') return [];
   const results = (body as Record<string, unknown>).results;
@@ -226,6 +288,15 @@ export class LiveQlooAdapter implements QlooAdapter {
   }
 
   private async get(path: string, params: Record<string, string>): Promise<QlooEntity[]> {
+    return (await this.request(path, params, false)).entities;
+  }
+
+  /** Same pacing, budget, retries and cache as get(), returning the parsed JSON body (null on 404). */
+  private async getJson(path: string, params: Record<string, string>): Promise<unknown> {
+    return (await this.request(path, params, true)).raw ?? null;
+  }
+
+  private async request(path: string, params: Record<string, string>, keepRaw: boolean): Promise<{ entities: QlooEntity[]; raw?: unknown }> {
     const started = Date.now();
     const url = buildUrl(this.baseUrl, path, params);
     const ttl = this.opts.cacheTtlMs ?? 3600_000;
@@ -233,7 +304,7 @@ export class LiveQlooAdapter implements QlooAdapter {
     if (hit && Date.now() - hit.at < ttl) {
       this.metrics.cacheHits++;
       this.calls.push({ endpoint: path, params, status: hit.status, ms: 0, resultCount: hit.entities.length, note: 'cache' });
-      return hit.entities;
+      return { entities: hit.entities, raw: hit.raw };
     }
     try {
       return await this.slot(async () => {
@@ -261,25 +332,26 @@ export class LiveQlooAdapter implements QlooAdapter {
           if (res.status === 404) {
             this.calls.push({ endpoint: path, params, status: 404, ms: Date.now() - started, resultCount: 0, note: 'no results' });
             this.opts.cache?.set(url, { at: Date.now(), entities: [], status: 404 });
-            return [];
+            return { entities: [] };
           }
           if (!res.ok) {
             this.fail(`http_${res.status}`);
             this.calls.push({ endpoint: path, params, status: res.status, ms: Date.now() - started, resultCount: 0 });
             throw new QlooError(`Qloo ${path} returned HTTP ${res.status}`, res.status, 'http');
           }
-          const entities = parseEntities(await res.json());
+          const body = await res.json();
+          const entities = keepRaw ? [] : parseEntities(body);
           // The API silently ignores invalid params and answers 200 with no entities (developer guide).
           this.calls.push({
             endpoint: path,
             params,
             status: res.status,
             ms: Date.now() - started,
-            resultCount: entities.length,
-            note: entities.length === 0 ? 'empty 200: check params against the Entity Type Parameter Guide' : undefined,
+            resultCount: keepRaw ? 1 : entities.length,
+            note: !keepRaw && entities.length === 0 ? 'empty 200: check params against the Entity Type Parameter Guide' : undefined,
           });
-          this.opts.cache?.set(url, { at: Date.now(), entities, status: res.status });
-          return entities;
+          this.opts.cache?.set(url, { at: Date.now(), entities, status: res.status, ...(keepRaw ? { raw: body } : {}) });
+          return { entities, ...(keepRaw ? { raw: body } : {}) };
         }
       });
     } catch (err) {
@@ -342,6 +414,30 @@ export class LiveQlooAdapter implements QlooAdapter {
       if (last) last.note = `affinity values: ${withAffinity}${last.note ? `; ${last.note}` : ''}`;
     }
     return out;
+  }
+
+  /**
+   * Demographic affinity (age, gender) for each entity and tag given (filter.type=urn:demographics).
+   * Positive values: stronger-than-average alignment for that group (Qloo, Demographic Insights).
+   */
+  async demographics({ entityIds = [], tagIds = [] }: { entityIds?: string[]; tagIds?: string[] }): Promise<Map<string, Demographics>> {
+    const body = await this.getJson('/v2/insights', {
+      'filter.type': 'urn:demographics',
+      'signal.interests.entities': entityIds.join(','),
+      'signal.interests.tags': tagIds.join(','),
+    });
+    return parseDemographics(body);
+  }
+
+  /** Weekly popularity trend of one entity (/v2/trending); null when Qloo has no series for it. */
+  async trending({ entityId, type, start, end }: { entityId: string; type: InsightsEntityType; start: string; end: string }): Promise<Trend | null> {
+    const body = await this.getJson('/v2/trending', {
+      'filter.type': type,
+      'signal.interests.entities': entityId,
+      'filter.start_date': start,
+      'filter.end_date': end,
+    });
+    return parseTrend(body, entityId);
   }
 
   categoryInsights({ signalIds, tagIds = [], type, take }: { signalIds: string[]; tagIds?: string[]; type: InsightsEntityType; take: number }) {

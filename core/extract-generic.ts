@@ -65,10 +65,14 @@ export function extractGenericGuests(title: string, hostAliases: string[], showN
   const found = new Map<string, string>();
   const take = (names: string[]) => names.forEach((n) => found.has(nameKey(n)) || found.set(nameKey(n), n));
 
-  const lead = /^([^:|–—()]{3,60}?)\s+(?:on|discusses|talks|reveals|explains|returns|habla|cuenta|revela|explica)\b/i.exec(t);
-  if (lead) take(namesInSlot(lead[1], hostKeys));
+  // "Name sobre …" puts the guest first and the topic after: names in the topic are not guests
+  // ("Horacio Tarcus sobre sus charlas con Ricardo Piglia" → Tarcus only).
+  const lead = /^(?:(?:con|with)\s+)?([^:|–—()"“]{3,60}?)\s+(?:on|discusses|talks|reveals|explains|returns|habla|cuenta|revela|explica|sobre)\b/i.exec(t);
+  const leadNames = lead ? namesInSlot(lead[1], hostKeys) : [];
+  take(leadNames);
+  const topicFollows = leadNames.length > 0 && /\bsobre\b/i.test(t.slice(lead!.index + lead![0].length - 6));
   const tailWith = /\b(?:with|con|feat\.?|ft\.?|w\/)\s+([^|:()–—]{3,80})$/i.exec(t);
-  if (tailWith) take(namesInSlot(tailWith[1], hostKeys));
+  if (tailWith && !topicFollows) take(namesInSlot(tailWith[1], hostKeys));
   for (const m of t.matchAll(/\(([^)]{3,60})\)/g)) take(namesInSlot(m[1], hostKeys));
   const segs = t
     .replace(/\([^)]*\)/g, ' ')
@@ -76,10 +80,13 @@ export function extractGenericGuests(title: string, hostAliases: string[], showN
     .map((x) => x.trim())
     .filter(Boolean);
   if (segs.length) {
-    const leadNames = namesInSlot(segs[0], hostKeys);
-    take(leadNames);
+    const firstNames = namesInSlot(segs[0], hostKeys);
+    take(firstNames);
     // Shows put the name either first or last; a name-like last segment after a lead name is a topic.
-    if (segs.length > 1 && !leadNames.length && !found.size) take(namesInSlot(segs[segs.length - 1], hostKeys));
+    // A quoted last segment after "X sobre …" is a work's title (a book, a film), not a guest.
+    const last = segs[segs.length - 1];
+    const quotedTopic = Boolean(lead) && new RegExp(`["“«]\\s*${esc(last)}`).test(t);
+    if (segs.length > 1 && !firstNames.length && !found.size && !quotedTopic) take(namesInSlot(last, hostKeys));
   }
   return [...found.values()].map((name) => ({ name, method: 'title-pattern' as const, confidence: 'low' as const }));
 }

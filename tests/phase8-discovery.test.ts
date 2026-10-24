@@ -16,7 +16,10 @@ import type { PodcastDataset } from '../core/types';
 import { fixtureFetch } from './fixtures/wikidata/fetch';
 
 const show = (id: string) => DATASETS.find((d) => d.id === id)!;
-const othersOf = (id: string) => DATASETS.filter((d) => d.id !== id);
+// The DOAC fixtures (Wikidata answers, expected reasons) were recorded against the catalog of
+// Phase 8; shows added later change the cutoff, so they are left out of this corpus.
+const ADDED_AFTER_FIXTURES = new Set(['all-in', 'this-week-in-startups']);
+const othersOf = (id: string) => DATASETS.filter((d) => d.id !== id && !ADDED_AFTER_FIXTURES.has(d.id));
 
 /** A LIVE-shaped adapter whose answers are scripted; records what reached personInsights. */
 function scripted(o: Partial<Pick<QlooAdapter, 'searchPerson' | 'searchPodcast' | 'findTags'>> & { people?: QlooEntity[] } = {}) {

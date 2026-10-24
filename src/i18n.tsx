@@ -124,6 +124,15 @@ const STRINGS = {
     es: 'A partir de {n} títulos de episodios. Describe de qué habla el programa, no qué le gusta a su audiencia.',
   },
   'affinities.title': { en: 'Cultural affinities inferred by Qloo', es: 'Afinidades culturales inferidas por Qloo' },
+  'qc.audience': { en: 'Who this show’s audience is, according to Qloo', es: 'Cómo es la audiencia del programa, según Qloo' },
+  'qc.audienceNote': { en: 'Age and gender affinity of the show’s taste signals in Qloo. Inferred taste data, not a survey of its listeners.', es: 'Afinidad por edad y género de las señales de gusto del programa en Qloo. Es un dato inferido de gustos, no una encuesta a sus oyentes.' },
+  'qa.title': { en: 'Qloo on this guest’s audience', es: 'Qloo sobre la audiencia de este invitado' },
+  'qa.affinity': { en: 'Audience affinity {n}/100 among the candidates', es: 'Afinidad con tu audiencia {n}/100 entre los candidatos' },
+  'qa.match': { en: 'Audience profile {n}% like yours', es: 'Perfil de audiencia {n}% parecido al tuyo' },
+  'qa.trend.rising': { en: 'Rising on Qloo (12 weeks)', es: 'En alza en Qloo (12 semanas)' },
+  'qa.trend.steady': { en: 'Steady on Qloo (12 weeks)', es: 'Estable en Qloo (12 semanas)' },
+  'qa.trend.falling': { en: 'Cooling on Qloo (12 weeks)', es: 'En baja en Qloo (12 semanas)' },
+  'qa.guestAudience': { en: 'Their audience: {d}', es: 'Su audiencia: {d}' },
   'qc.title': { en: 'What Qloo added', es: 'Lo que aportó Qloo' },
   'qc.lead': {
     en: 'Found through Qloo’s taste graph and checked by the agent. The five picks below are ranked on evidence, so Qloo never pushes anyone in.',
@@ -382,14 +391,18 @@ export function translate(lang: Lang, key: StringKey, params: Record<string, str
   return s;
 }
 
+/** ?lang=en|es first, then the visitor's saved choice, then Spanish only for Spanish-language browsers. */
 function initialLang(): Lang {
   try {
+    const q = new URLSearchParams(window.location.search).get('lang');
+    if (q === 'en' || q === 'es') return q;
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'en' || saved === 'es') return saved;
   } catch {
-    // storage unavailable: fall back to the default
+    // storage unavailable: fall back to the browser language
   }
-  return 'es';
+  const langs = typeof navigator !== 'undefined' ? (navigator.languages?.length ? navigator.languages : [navigator.language]) : [];
+  return langs.some((l) => /^es\b/i.test(l ?? '')) ? 'es' : 'en';
 }
 
 const Ctx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'es', setLang: () => {} });

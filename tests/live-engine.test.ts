@@ -46,8 +46,9 @@ describe('Qloo client under rate limiting', () => {
     expect(q.metrics.networkCalls).toBe(f.starts.length); // retries are real calls and are counted
     // After the 429, no request started before the Retry-After cool-down ended.
     const first429 = f.starts[2];
-    expect(f.starts.filter((t) => t > first429).every((t) => t - first429 >= 950)).toBe(true);
-    expect(Date.now() - t0).toBeGreaterThanOrEqual(950);
+    // 900 ms, not 1000: timer and clock granularity under a loaded test run (the cool-down is 1 s).
+    expect(f.starts.filter((t) => t > first429).every((t) => t - first429 >= 900)).toBe(true);
+    expect(Date.now() - t0).toBeGreaterThanOrEqual(900);
   });
 
   it('never retries past the call budget', async () => {

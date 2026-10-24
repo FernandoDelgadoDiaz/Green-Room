@@ -1,14 +1,14 @@
-name: Build catalog from Spotify
+name: Build catalog data
 
-# Catalog shows that live on Spotify with no public RSS (sources.json entries with a spotifyId):
-# reads their episode lists through the official Spotify Web API (client credentials, repository
-# secrets SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET), rebuilds the catalog and the people data, and
-# commits the result to the branch it ran on. Without the secrets it stops without changing anything.
+# New catalog shows: snapshots the RSS feed of shows with no dataset yet (scripts/fetch-rss.ts) and,
+# when the repository secrets SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET exist, the episode lists of
+# Spotify-only shows (scripts/fetch-spotify.ts). Then rebuilds the catalog and the people data and
+# commits the result to the branch it ran on.
 on:
   workflow_dispatch:
   push:
     branches: ['feat/**']
-    paths: ['data/catalog/sources.json', 'data/catalog/spotify-requested-at', 'scripts/fetch-spotify.ts', '.github/workflows/build-spotify.yml']
+    paths: ['data/catalog/sources.json', 'data/catalog/spotify-requested-at', 'scripts/fetch-spotify.ts', 'scripts/fetch-rss.ts', '.github/workflows/build-spotify.yml']
 
 permissions:
   contents: write
@@ -25,42 +25,35 @@ jobs:
       SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
       SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
     steps:
-      - name: Check credentials
+      - name: Check Spotify credentials
         id: creds
         run: |
           if [ -z "$SPOTIFY_CLIENT_ID" ] || [ -z "$SPOTIFY_CLIENT_SECRET" ]; then
-            echo "Spotify secrets are not set: nothing to do."; echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "Spotify secrets are not set: Spotify shows are skipped."; echo "ok=false" >> "$GITHUB_OUTPUT"
           else echo "ok=true" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/checkout@v4
-        if: steps.creds.outputs.ok == 'true'
       - uses: actions/setup-node@v4
-        if: steps.creds.outputs.ok == 'true'
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-        if: steps.creds.outputs.ok == 'true'
       - uses: actions/cache@v4
-        if: steps.creds.outputs.ok == 'true'
         with:
           path: data/raw/wd-cache
           key: wd-cache-${{ github.run_id }}
           restore-keys: wd-cache-
+      - run: npx tsx scripts/fetch-rss.ts
       - run: npx tsx scripts/fetch-spotify.ts
         if: steps.creds.outputs.ok == 'true'
       - run: npm run catalog:build
-        if: steps.creds.outputs.ok == 'true'
       - run: npm run people:build
-        if: steps.creds.outputs.ok == 'true'
       - run: npx tsc -p tsconfig.json --noEmit
-        if: steps.creds.outputs.ok == 'true'
       - name: Commit catalog and people data
-        if: steps.creds.outputs.ok == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/catalog.json data/podcasts core/datasets.ts data/people.json
           git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "Data: Spotify shows, catalog and people (workflow run ${{ github.run_id }})"
+          git commit -m "Data: new shows, catalog and people (workflow run ${{ github.run_id }})"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push

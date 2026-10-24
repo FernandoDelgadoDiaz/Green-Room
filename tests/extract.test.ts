@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { extractGenericGuests } from '../core/extract-generic';
 import { extractCreativoGuests, extractDoacGuests, extractLexGuests, doacExclusion, isCreativoRerun } from '../core/extract';
 import { nameKey, sameName } from '../core/names';
 
@@ -64,5 +65,15 @@ describe('name matching', () => {
   });
   it('does not merge different people', () => {
     expect(sameName('Eric Weinstein', 'Bret Weinstein')).toBe(false);
+  });
+});
+
+describe('generic extraction: "Name sobre/about topic"', () => {
+  const g = (t: string) => extractGenericGuests(t, ['Gustavo Noriega'], 'Conversaciones').map((x) => x.name);
+  it('takes the speaker before "sobre", never names inside the topic', () => {
+    expect(g('Horacio Tarcus sobre sus charlas con Ricardo Piglia')).toEqual(['Horacio Tarcus']);
+    expect(g('Cayetana Vidal Buzzi y Silvina Reusmann sobre "Morfi Porteño"')).toEqual(['Cayetana Vidal Buzzi', 'Silvina Reusmann']);
+    expect(g('Con Esther Wolf y Paula Labeur sobre "Tenemos Química".')).toEqual(['Esther Wolf', 'Paula Labeur']);
+    expect(g('Christian Ferrer sobre "Malvinas Memories"')).not.toContain('Malvinas Memories');
   });
 });
