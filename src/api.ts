@@ -1,5 +1,5 @@
 import type { CoverageRow } from '../core/coverage';
-import type { AgentResult } from '../core/agent/agent';
+import type { AgentResult, Recommendation } from '../core/agent/agent';
 import type { BaselineComparison } from '../core/discovery';
 import type { PodcastHit, ResolveResult } from '../core/podcasts/open-search';
 
@@ -34,6 +34,8 @@ export type RecommendResult = AgentResult & {
   profiles: Record<string, GuestProfile | null>;
   /** LIVE only: the same analysis without Qloo, to show what Qloo added. */
   comparison: BaselineComparison | null;
+  /** LIVE only: the five picks of that same analysis without Qloo (absent on older results). */
+  baselineRecommendations?: Recommendation[];
   origin: CatalogShow['origin'] | null;
   /** Version of the evidence behind the card text (core/api.ts CARDS_VERSION); absent on older results. */
   cardsVersion?: number;

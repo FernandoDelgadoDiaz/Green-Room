@@ -644,30 +644,45 @@ function DiscoveryDetails({ result, show }: { result: RecommendResult; show: Sho
 }
 
 /** The five picks as large portraits: the answer comes first, the analysis below. */
-type ListView = 'evidence' | 'taste';
+type ListView = 'none' | 'evidence' | 'taste';
 /** Which list opens first when Qloo's order is available. */
 const DEFAULT_VIEW: ListView = 'taste';
 
-function GuestLineup({ result, show, recs, view, setView, hasTaste, newKeys }: { result: RecommendResult; show: ShowSummary; recs: Recommendation[]; view: ListView; setView: (v: ListView) => void; hasTaste: boolean; newKeys: Set<string> }) {
+function GuestLineup({ result, show, recs, view, setView, views, newKeys, leftKeys }: { result: RecommendResult; show: ShowSummary; recs: Recommendation[]; view: ListView; setView: (v: ListView) => void; views: ListView[]; newKeys: Set<string>; leftKeys: Set<string> }) {
   const { lang, t } = useI18n();
   const jump = (key: string) => document.getElementById(`rec-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const vsBaseline = views.includes('none');
+  const changed = (n: number) => (n === 0 ? t(vsBaseline ? 'view.sameBase' : 'view.same') : n === 1 ? t(vsBaseline ? 'view.newOneBase' : 'view.newOne') : t(vsBaseline ? 'view.newManyBase' : 'view.newMany', { n }));
+  const lead =
+    view === 'none'
+      ? `${t('view.noneLead')} ${leftKeys.size ? t(leftKeys.size === 1 ? 'view.leftOne' : 'view.leftMany', { n: leftKeys.size }) : ''}`
+      : view === 'taste'
+        ? `${t('view.tasteLead')} ${changed(newKeys.size)}`
+        : vsBaseline
+          ? `${t('lineup.lead', { show: show.name })} ${changed(newKeys.size)}`
+          : t('lineup.lead', { show: show.name });
+  const tab = (v: ListView) => {
+    const on = view === v;
+    const tone = v === 'none' ? (on ? 'bg-stone-200 text-stage-950' : 'text-stone-400 hover:text-white') : v === 'evidence' ? (on ? 'bg-brass-400 text-stage-950' : 'text-stone-300 hover:text-white') : on ? 'bg-emerald-400 text-stage-950' : 'text-emerald-200 hover:text-white';
+    return (
+      <button key={v} role="tab" aria-selected={on} onClick={() => setView(v)} className={`flex items-center gap-2 rounded-xl px-4 py-2 font-semibold transition ${tone}`}>
+        {t(v === 'none' ? 'view.none' : v === 'evidence' ? (vsBaseline ? 'view.withQloo' : 'view.evidence') : 'view.taste')}
+        {v === 'taste' && <Badge p="LIVE" />}
+      </button>
+    );
+  };
   return (
     <section>
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h3 className="font-display text-4xl sm:text-5xl">{t('recs.title')}</h3>
-          <p className="mt-1 text-sm text-stone-400">{view === 'taste' ? `${t('view.tasteLead')} ${newKeys.size === 0 ? t('view.same') : newKeys.size === 1 ? t('view.newOne') : t('view.newMany', { n: newKeys.size })}` : t('lineup.lead', { show: show.name })}</p>
+          <p className="mt-1 text-sm text-stone-400">{lead.trim()}</p>
         </div>
         <span className="text-xs text-stone-500">{t('recs.meta', { n: result.pastGuestCount, date: result.asOf.slice(0, 10) })}</span>
       </div>
-      {hasTaste && (
+      {views.length > 1 && (
         <div role="tablist" aria-label={t('view.label')} className="mt-4 inline-flex flex-wrap gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1 text-sm">
-          <button role="tab" aria-selected={view === 'evidence'} onClick={() => setView('evidence')} className={`rounded-xl px-4 py-2 font-semibold transition ${view === 'evidence' ? 'bg-brass-400 text-stage-950' : 'text-stone-300 hover:text-white'}`}>
-            {t('view.evidence')}
-          </button>
-          <button role="tab" aria-selected={view === 'taste'} onClick={() => setView('taste')} className={`flex items-center gap-2 rounded-xl px-4 py-2 font-semibold transition ${view === 'taste' ? 'bg-emerald-400 text-stage-950' : 'text-emerald-200 hover:text-white'}`}>
-            {t('view.taste')} <Badge p="LIVE" />
-          </button>
+          {views.map(tab)}
         </div>
       )}
       <ol className="-mx-4 mt-5 flex snap-x gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
@@ -683,6 +698,7 @@ function GuestLineup({ result, show, recs, view, setView, hasTaste, newKeys }: {
                   {view === 'evidence' && <span className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-sm font-semibold tabular-nums text-stone-100" title={t('card.scoreHelp')}>{pct(r.score)}</span>}
                   <div className="absolute inset-x-0 bottom-0 p-3">
                     {newKeys.has(r.key) && <span className="mb-1.5 inline-block rounded-full bg-emerald-400 px-2 py-0.5 text-[11px] font-bold text-stage-950">{t('view.new')}</span>}
+                    {leftKeys.has(r.key) && <span className="mb-1.5 inline-block rounded-full bg-stone-300 px-2 py-0.5 text-[11px] font-bold text-stage-950">{t('view.left')}</span>}
                     <p className="text-lg font-semibold leading-tight text-white">{r.name}</p>
                     <p className="mt-0.5 line-clamp-2 text-xs text-stone-300">{audienceSubtitle(r, lang) ?? ''}</p>
                     {affinity !== null && <span className="mt-2 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">{t('lineup.qloo', { n: Math.round(affinity * 100) })}</span>}
@@ -749,16 +765,96 @@ function AudienceChart({ result }: { result: RecommendResult }) {
   );
 }
 
+/**
+ * What Qloo changed in this search: the same analysis with and without Qloo, person by person, and
+ * the two lists measured alike (Qloo audience affinity, and fit from evidence alone). Only facts of
+ * this run; whether a guest is editorially better is the producer's call.
+ */
+function QlooValue({ result, view, setView, hasTaste }: { result: RecommendResult; view: ListView; setView: (v: ListView) => void; hasTaste: boolean }) {
+  const { t } = useI18n();
+  const c = result.comparison;
+  if (!c?.rows || !c.means) return null;
+  const entered = c.rows.filter((r) => r.status === 'entered');
+  const left = c.rows.filter((r) => r.status === 'left');
+  const kept = c.rows.filter((r) => r.status === 'kept');
+  const { withQloo: w, withoutQloo: b } = c.means;
+  const aff = (r: { affinity: number | null }) => (r.affinity === null ? t('qv.noValue') : t('qv.affinity', { n: pct(r.affinity) }));
+  // Averaged, and claimed, only when Qloo has a value for most of both lists.
+  const enough = w.affinityKnown >= 3 && b.affinityKnown >= 3;
+  const rose = enough && w.affinity !== null && b.affinity !== null && w.affinity > b.affinity;
+  const metric = (label: string, before: number | null, after: number | null, note?: string) => (
+    <div className="rounded-xl bg-white/5 p-3">
+      <p className="text-[11px] uppercase tracking-widest text-stone-500">{label}</p>
+      <p className="mt-1 flex items-baseline gap-2 tabular-nums">
+        <span className="text-xl text-stone-400">{pct(before)}</span>
+        <span className="text-stone-500">→</span>
+        <span className="text-3xl font-semibold text-white">{pct(after)}</span>
+        <span className="text-xs text-stone-500">/100</span>
+      </p>
+      {note && <p className="mt-0.5 text-[11px] text-stone-500">{note}</p>}
+    </div>
+  );
+  return (
+    <section className="card border border-emerald-400/30 bg-emerald-500/[0.04] p-5">
+      <h3 className="flex flex-wrap items-center gap-2 font-display text-2xl sm:text-3xl">
+        {t('qv.title')} <Badge p="LIVE" />
+      </h3>
+      <p className="mt-1 text-lg text-stone-100">
+        {entered.length === 0 ? t('qv.same', { k: c.k }) : t(entered.length === 1 ? 'qv.changedOne' : 'qv.changedMany', { n: entered.length, k: c.k })}{' '}
+        {entered.length > 0 && rose && t('qv.closer')}
+      </p>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        {metric(t('qv.mAffinity'), enough ? b.affinity : null, enough ? w.affinity : null, t(enough ? 'qv.known' : 'qv.fewKnown', { a: b.affinityKnown, b: w.affinityKnown, k: c.k }))}
+        {metric(t('qv.mEvidence'), b.editorial, w.editorial, t('qv.evidenceNote'))}
+      </div>
+      {entered.length > 0 && (
+        <ul className="mt-4 space-y-2 text-sm">
+          {entered.map((r) => (
+            <li key={r.key} className="flex flex-wrap items-baseline gap-x-2">
+              <span className="rounded-full bg-emerald-400 px-2 py-0.5 text-[11px] font-bold text-stage-950">{t('qv.in')}</span>
+              <span className="font-semibold text-white">{r.name}</span>
+              <span className="text-stone-300">
+                {r.enteredBy === 'qloo-found' ? t('qv.found') : t(r.affinity === null ? 'qv.roseNeutral' : 'qv.rose')} · {aff(r)}
+              </span>
+            </li>
+          ))}
+          {left.map((r) => (
+            <li key={r.key} className="flex flex-wrap items-baseline gap-x-2">
+              <span className="rounded-full bg-stone-300 px-2 py-0.5 text-[11px] font-bold text-stage-950">{t('qv.out')}</span>
+              <span className="font-semibold text-stone-200">{r.name}</span>
+              <span className="text-stone-400">{r.affinity !== null && entered.some((e) => e.affinity !== null && e.affinity > r.affinity!) ? t('qv.outWhy') : t('qv.outPlain', { k: c.k })} · {aff(r)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {kept.length > 0 && <p className="mt-3 text-sm text-stone-400">{t('qv.kept', { names: kept.map((r) => r.name).join(', ') })}</p>}
+      <div className="mt-4 flex flex-wrap gap-2 text-sm">
+        {view !== 'none' && <button onClick={() => setView('none')} className="rounded-xl border border-white/15 px-3 py-1.5 text-stone-200 hover:border-white/40">{t('qv.seeWithout')}</button>}
+        {view !== 'evidence' && <button onClick={() => setView('evidence')} className="rounded-xl border border-brass-400/40 px-3 py-1.5 text-brass-200 hover:border-brass-400">{t('qv.seeWith')}</button>}
+        {hasTaste && view !== 'taste' && <button onClick={() => setView('taste')} className="rounded-xl border border-emerald-400/40 px-3 py-1.5 text-emerald-200 hover:border-emerald-400">{t('qv.seeTaste')}</button>}
+      </div>
+      <p className="mt-3 text-[11px] text-stone-500">{t('qv.footer')}</p>
+    </section>
+  );
+}
+
 export function RecommendView({ show, result, banner }: { show: ShowSummary; result: RecommendResult; banner?: ReactNode }) {
   const { lang, t } = useI18n();
   const [visible, setVisible] = useState(0);
   // Qloo's own order of the same checked candidates (LIVE only); the producer switches between them.
   const taste = result.qlooMode === 'LIVE' ? (result.tasteRecommendations ?? []) : [];
   const hasTaste = taste.length >= 3;
-  const [view, setView] = useState<ListView>(DEFAULT_VIEW);
-  const showTaste = view === 'taste' && hasTaste;
-  const recs = showTaste ? taste : result.recommendations;
-  const newKeys = showTaste ? new Set(taste.filter((x) => !result.recommendations.some((r) => r.key === x.key)).map((x) => x.key)) : new Set<string>();
+  // The same analysis without Qloo (LIVE, results computed after this view existed).
+  const baseline = result.qlooMode === 'LIVE' && result.comparison?.rows ? (result.baselineRecommendations ?? []) : [];
+  const hasBaseline = baseline.length > 0;
+  const views: ListView[] = [...(hasBaseline ? (['none'] as const) : []), 'evidence', ...(hasTaste ? (['taste'] as const) : [])];
+  const [chosen, setView] = useState<ListView>(DEFAULT_VIEW);
+  const view: ListView = views.includes(chosen) ? chosen : 'evidence';
+  const recs = view === 'taste' ? taste : view === 'none' ? baseline : result.recommendations;
+  // "New with Qloo" is measured against the list without Qloo when it exists, else against the evidence list.
+  const reference = hasBaseline ? baseline : result.recommendations;
+  const newKeys = view === 'none' ? new Set<string>() : new Set(recs.filter((x) => !reference.some((r) => r.key === x.key)).map((x) => x.key));
+  const leftKeys = view === 'none' ? new Set(baseline.filter((x) => !result.recommendations.some((r) => r.key === x.key)).map((x) => x.key)) : new Set<string>();
   useEffect(() => {
     setVisible(0);
     const id = setInterval(() => setVisible((v) => (v >= result.trace.length ? v : v + 1)), 220);
@@ -769,7 +865,8 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
 
   return (
     <div className="space-y-8">
-    <GuestLineup result={result} show={show} recs={recs} view={showTaste ? 'taste' : 'evidence'} setView={setView} hasTaste={hasTaste} newKeys={newKeys} />
+    <GuestLineup result={result} show={show} recs={recs} view={view} setView={setView} views={views} newKeys={newKeys} leftKeys={leftKeys} />
+    {hasBaseline && <QlooValue result={result} view={view} setView={setView} hasTaste={hasTaste} />}
     {banner}
     <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <section className="order-2 space-y-6 lg:order-1">
@@ -822,7 +919,7 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
 
       <section className="order-1 space-y-4 lg:order-2">
         {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
-        {recs.map((r) => <RecommendationCard key={`${showTaste ? 't' : 'e'}-${r.key}`} rec={r} show={show} result={result} isNew={newKeys.has(r.key)} />)}
+        {recs.map((r) => <RecommendationCard key={`${view}-${r.key}`} rec={r} show={show} result={result} isNew={newKeys.has(r.key)} />)}
         <QlooContribution result={result} />
         <AnalysisSummary result={result} show={show} />
         <DiscoveryPanel result={result} show={show} part="head" />

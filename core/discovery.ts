@@ -27,7 +27,34 @@ export interface BaselineComparison {
   pending: number;
   verdict: string;
   verdictEs: string;
+  /** Person by person: who stayed, who entered with Qloo (and how), who left. Absent on older results. */
+  rows?: ComparisonRow[];
+  /** Means over each top-k: Qloo audience affinity (people with a value only) and evidence-only fit. */
+  means?: { withQloo: ListMeans; withoutQloo: ListMeans };
 }
+
+export interface ComparisonRow {
+  key: string;
+  name: string;
+  status: 'kept' | 'entered' | 'left';
+  /** entered only: Qloo proposed them and they passed the checks, or they were already candidates and rose on affinity. */
+  enteredBy: 'qloo-found' | 'affinity' | null;
+  withQlooRank: number | null;
+  withoutQlooRank: number | null;
+  /** Qloo affinity rank to this audience among scored candidates (0–1); null when Qloo has no value. */
+  affinity: number | null;
+  /** Score from evidence alone (themes, momentum, recency), same rules, no Qloo (0–1). */
+  editorial: number | null;
+}
+
+export interface ListMeans {
+  affinity: number | null;
+  /** People in the list with a Qloo affinity value. */
+  affinityKnown: number;
+  editorial: number | null;
+}
+
+const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 
 export function compareWithBaseline(baseline: AgentResult, enriched: AgentResult): BaselineComparison {
   const k = enriched.recommendations.length;
@@ -43,6 +70,35 @@ export function compareWithBaseline(baseline: AgentResult, enriched: AgentResult
   const affinityPromoted = enriched.recommendations.filter((r) => r.assessment.qlooProposedRank === null && !bSet.has(r.key)).map((r) => ({ name: r.name, baselineRank: bRank.get(r.key) ?? null }));
   const eSet = new Set(eTop);
   const displaced = baseline.recommendations.filter((r) => !eSet.has(r.key)).map((r) => r.name);
+  // Affinity and evidence-only fit both come from the enriched run, so the two lists are measured alike.
+  const eInfo = new Map(enriched.ranked.map((r) => [r.key, r]));
+  const bInfo = new Map(baseline.ranked.map((r) => [r.key, r]));
+  const affinityOf = (key: string) => eInfo.get(key)?.qlooAffinity ?? null;
+  const editorialOf = (key: string) => eInfo.get(key)?.base ?? bInfo.get(key)?.base ?? bInfo.get(key)?.score ?? null;
+  const row = (key: string, name: string): ComparisonRow => {
+    const inE = eTop.indexOf(key);
+    const inB = bTop.indexOf(key);
+    const status = inE >= 0 && inB >= 0 ? 'kept' : inE >= 0 ? 'entered' : 'left';
+    const rec = enriched.recommendations[inE];
+    return {
+      key,
+      name,
+      status,
+      enteredBy: status === 'entered' ? (rec?.assessment.qlooProposedRank !== null && rec?.assessment.qlooProposedRank !== undefined ? 'qloo-found' : 'affinity') : null,
+      withQlooRank: inE >= 0 ? inE + 1 : null,
+      withoutQlooRank: inB >= 0 ? inB + 1 : (bRank.get(key) ?? null),
+      affinity: affinityOf(key),
+      editorial: editorialOf(key),
+    };
+  };
+  const rows = [
+    ...enriched.recommendations.map((r) => row(r.key, r.name)),
+    ...baseline.recommendations.filter((r) => !eSet.has(r.key)).map((r) => row(r.key, r.name)),
+  ];
+  const meansOf = (keys: string[]): ListMeans => {
+    const aff = keys.map(affinityOf).filter((x): x is number => x !== null);
+    return { affinity: mean(aff), affinityKnown: aff.length, editorial: mean(keys.map(editorialOf).filter((x): x is number => x !== null)) };
+  };
   const f = enriched.funnel;
   const verdict =
     f.proposed === 0
@@ -72,6 +128,8 @@ export function compareWithBaseline(baseline: AgentResult, enriched: AgentResult
     pending: enriched.discoveries.length,
     verdict,
     verdictEs,
+    rows,
+    means: { withQloo: meansOf(eTop), withoutQloo: meansOf(bTop) },
   };
 }
 
