@@ -7,7 +7,7 @@ import type { RecommendResult, ShowSummary } from '../api';
 import { useI18n } from '../i18n';
 import { Badge } from './Badge';
 import { GuestAvatar, initials } from './GuestAvatar';
-import { audienceSubtitle, whySentences } from '../why';
+import { audienceSubtitle, citableThemes, whySentences } from '../why';
 
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}`);
 
@@ -91,7 +91,7 @@ function specialty(profile: GuestProfile | null | undefined, lang: 'en' | 'es'):
 function EvidencePanel({ rec, profile }: { rec: Recommendation; profile: GuestProfile | null | undefined }) {
   const { lang, t } = useI18n();
   const extract = lang === 'es' && profile?.extract.es ? { text: profile.extract.es, url: profile.extract.esUrl ?? profile.wikipedia.url, src: 'es.wikipedia.org' } : profile?.extract.en ? { text: profile.extract.en, url: profile.wikipedia.url, src: 'en.wikipedia.org' } : null;
-  const topics = [...rec.conversationTopics, ...rec.sharedThemes.map((s) => (lang === 'es' ? s.labelEs : s.label))];
+  const topics = [...rec.conversationTopics, ...citableThemes(rec).map((s) => (lang === 'es' ? s.labelEs : s.label))];
   return (
     <div className="mt-4 space-y-4 rounded-xl bg-black/25 p-4 text-sm">
       {extract && (
