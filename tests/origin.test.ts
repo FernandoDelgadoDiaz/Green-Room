@@ -43,8 +43,8 @@ describe('country of origin', () => {
   });
 
   it('catalog.json carries the same origin as the curated sources', () => {
-    // Spotify shows join the catalog once their episodes have been read (scripts/fetch-spotify.ts).
-    const listed = sources.shows.filter((s: { id: string; spotifyId?: string }) => !s.spotifyId || existsSync(`data/podcasts/${s.id}.json`));
+    // New shows join the catalog once their episodes have been read (fetch-rss.ts / fetch-spotify.ts).
+    const listed = sources.shows.filter((s: { id: string; notAnalyzable?: string }) => s.notAnalyzable || existsSync(`data/podcasts/${s.id}.json`));
     for (const s of listed) expect(byId(s.id).origin).toEqual(s.origin);
     expect(catalog.originRule).toMatch(/never prove origin/);
   });

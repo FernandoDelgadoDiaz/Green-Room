@@ -1062,6 +1062,42 @@
    },
    "status": "analyzable",
    "statusReason": null
+  },
+  {
+   "id": "all-in",
+   "name": "All-In with Chamath, Jason, Sacks & Friedberg",
+   "host": "Chamath Palihapitiya, Jason Calacanis, David Sacks, David Friedberg",
+   "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts124/v4/c7/d2/92/c7d292ea-44b3-47ff-2f5e-74fa5b23db6c/mza_7005270671777648882.png/600x600bb.jpg",
+   "platform": "apple",
+   "genre": "Technology",
+   "language": "en",
+   "origin": {
+    "country": "us",
+    "status": "verified",
+    "basis": "production",
+    "evidence": [
+     {
+      "url": "https://en.wikipedia.org/wiki/All-In_Podcast",
+      "quote": "All-In is an American business and technology podcast hosted by four venture capitalists"
+     }
+    ],
+    "note": "Added 2026-10-24 for its verified origin, not from a chart."
+   },
+   "description": "Industry veterans, degenerate gamblers & besties Chamath Palihapitiya, Jason Calacanis, David Sacks & David Friedberg cover all things economic, tech, political, social &",
+   "charts": [],
+   "appleUrl": "https://podcasts.apple.com/us/podcast/all-in-with-chamath-jason-sacks-friedberg/id1502871393",
+   "feedUrl": "https://rss.libsyn.com/shows/254861/destinations/1928300.xml",
+   "appleTrackCount": 440,
+   "lastRelease": "2026-10-23T23:08:00.000Z",
+   "snapshot": {
+    "episodes": 440,
+    "withGuestNames": 112,
+    "coverage": 0.25,
+    "first": "2020-03-15T02:04:09.000Z",
+    "last": "2026-10-23T23:08:00.000Z"
+   },
+   "status": "limited",
+   "statusReason": "few_guest_names"
   }
  ]
 }

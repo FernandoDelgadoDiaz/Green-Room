@@ -62,9 +62,11 @@ function spotifyFeed(path: string): ParsedFeed {
 
 const out: unknown[] = [];
 for (const s of src.shows) {
-  // A Spotify show enters the catalog only once its episodes have been read (fetch-spotify.ts).
-  if (s.spotifyId && !existsSync(`data/raw/catalog/${s.id}.spotify.json`) && !existsSync(`data/podcasts/${s.id}.json`)) {
-    console.log(`${s.id.padEnd(22)} skipped: no Spotify snapshot yet`);
+  // A new show enters the catalog only once its episodes have been read: an RSS snapshot
+  // (scripts/fetch-rss.ts) or a Spotify one (scripts/fetch-spotify.ts). Shows explicitly marked
+  // not analyzable are still listed, with the reason.
+  if (!s.existing && !s.notAnalyzable && !existsSync(`data/raw/catalog/${s.id}.xml`) && !existsSync(`data/raw/catalog/${s.id}.spotify.json`) && !existsSync(`data/podcasts/${s.id}.json`)) {
+    console.log(`${s.id.padEnd(22)} skipped: no snapshot yet`);
     continue;
   }
   let ds: PodcastDataset | null = null;

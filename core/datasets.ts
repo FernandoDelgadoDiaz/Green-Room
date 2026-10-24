@@ -22,9 +22,10 @@ import d18 from '../data/podcasts/metodo-rebord.json';
 import d19 from '../data/podcasts/caja-negra.json';
 import d20 from '../data/podcasts/novaresio-entrevistas.json';
 import d21 from '../data/podcasts/noriega-conversaciones.json';
+import d22 from '../data/podcasts/all-in.json';
 
 /** Every analyzable show in the catalog (official RSS snapshots). */
-export const ALL_DATASETS: PodcastDataset[] = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20, d21] as PodcastDataset[];
+export const ALL_DATASETS: PodcastDataset[] = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20, d21, d22] as PodcastDataset[];
 
 /** The original three shows, kept as a fixed corpus for regression tests. */
 export const CORE_IDS = ['lex-fridman', 'diary-of-a-ceo', 'creativo'];
