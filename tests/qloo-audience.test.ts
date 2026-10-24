@@ -86,6 +86,25 @@ describe('agent: Qloo reads each pick’s audience after verification (LIVE)', (
     expect(r.trace.some((s) => s.tool === 'qloo_audience')).toBe(true);
   });
 
+  it('Qloo’s own order: the same checked candidates ranked by audience affinity alone, never a past guest', async () => {
+    const r = await runAgent({ target: doac, others, qloo: adapter(true).q, originOf: ORIGIN_OF, people: PEOPLE });
+    const t = r.tasteRecommendations;
+    expect(t.length).toBe(5);
+    const aff = t.map((x) => x.qlooAudience?.affinity ?? -1);
+    expect(aff.every((v) => v >= 0)).toBe(true);
+    expect([...aff].sort((a, b) => b - a)).toEqual(aff);
+    const past = new Set(doac.episodes.flatMap((e) => e.guests.map((g) => nameKey(g.name))));
+    expect(t.some((x) => past.has(x.key))).toBe(false);
+    expect(t.map((x) => x.rank)).toEqual([1, 2, 3, 4, 5]);
+    expect(r.trace.some((s) => /audience’s taste/.test(s.title))).toBe(true);
+  });
+
+  it('no audience-taste list without LIVE Qloo', async () => {
+    const { NoQlooAdapter } = await import('../core/qloo/mock');
+    const r = await runAgent({ target: doac, others, qloo: new NoQlooAdapter(), originOf: ORIGIN_OF, people: PEOPLE });
+    expect(r.tasteRecommendations).toEqual([]);
+  });
+
   it('never reorders the picks: the same list with or without the audience step', async () => {
     const a = await runAgent({ target: doac, others, qloo: adapter(true).q, originOf: ORIGIN_OF, people: PEOPLE });
     const b = await runAgent({ target: doac, others, qloo: adapter(false).q, originOf: ORIGIN_OF, people: PEOPLE });
