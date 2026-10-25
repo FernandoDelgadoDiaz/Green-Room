@@ -9,6 +9,7 @@ import { Badge } from './Badge';
 import { GuestAvatar, initials } from './GuestAvatar';
 import { audienceSubtitle, citableThemes, whoTheyAre, whySentences } from '../why';
 import { cleanTopic, clipTopic } from '../../core/topic';
+import { WhyThese } from './WhyThese';
 
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}`);
 
@@ -882,6 +883,7 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
   return (
     <div className="space-y-8">
     <GuestLineup result={result} show={show} recs={recs} view={view} setView={setView} views={views} newKeys={newKeys} leftKeys={leftKeys} />
+    <WhyThese result={result} show={show} recs={view === 'none' ? result.recommendations : recs} />
     {hasBaseline && <QlooValue result={result} view={view} setView={setView} hasTaste={hasTaste} />}
     {banner}
     <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
