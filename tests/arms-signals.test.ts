@@ -102,6 +102,7 @@ describe('editorial band: affinity reorders comparable candidates only', () => {
     explained.explanations.set('p:ann lee', [{ entityId: 'p:yan past', score: 0.6 }, { entityId: 'p:zed past', score: 0.3 }, { entityId: 'unknown', score: 0.9 }]);
     const withWhy = await runAgent({ target, others: [close], qloo: explained, asOf: AS_OF, k: 1 });
     expect(withWhy.recommendations[0].qlooAudience?.explainedBy).toEqual(['Yan Past', 'Zed Past']);
+    // Theme tags used as signals are named too ("Artificial Intelligence"), not dropped.
     expect(closeRun.recommendations[0].qlooAudience?.explainedBy).toBeUndefined();
     const r = await run(far);
     expect(r.recommendations[0].name).toBe('Bob Ray');

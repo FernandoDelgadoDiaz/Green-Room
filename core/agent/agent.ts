@@ -106,7 +106,7 @@ export interface QlooAudience {
   demographics: Demographics | null;
   trend: Trend['direction'] | null;
   trendPercentile: number | null;
-  /** The show's signals (past guests, the show itself) that weighed most in this affinity, per Qloo explainability; absent when Qloo gave none. */
+  /** The show's signals (past guests, the show itself, its theme tags) that weighed most in this affinity, per Qloo explainability; absent when Qloo gave none. */
   explainedBy?: string[];
 }
 
@@ -1552,7 +1552,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         warn([`Qloo affinity scoring failed: ${String(err)}`, `Falló el cálculo de afinidad en Qloo: ${String(err)}`]);
       }
       // Which of the show's signals drove each affinity (Qloo explainability), as names the producer knows.
-      const signalName = new Map([...resolved, ...(podcastEntity ? [podcastEntity] : [])].map((e) => [e.entityId, e.name]));
+      const signalName = new Map([...resolved, ...(podcastEntity ? [podcastEntity] : []), ...tagSignals].map((e) => [e.entityId, e.name]));
       for (const id of ids) {
         const names = (qloo.explanations?.get(id) ?? []).filter((x) => x.score > 0).map((x) => signalName.get(x.entityId)).filter((n): n is string => Boolean(n));
         if (names.length) explainedByOf.set(id, [...new Set(names)].slice(0, 3));
