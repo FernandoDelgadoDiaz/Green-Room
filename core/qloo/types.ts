@@ -38,6 +38,8 @@ export interface QlooEntity {
   types?: string[];
   /** Wikidata ids Qloo links to this entity, when present (entity `external` field; shape not yet validated live). */
   wikidataIds?: string[];
+  /** feature.explainability: how much each signal entity contributed to this result's affinity, when Qloo returns it. */
+  explain?: Array<{ entityId: string; score: number }>;
 }
 
 export interface QlooCall {
@@ -62,6 +64,8 @@ export interface QlooAdapter {
   personInsights(args: { signalIds: string[]; tagIds?: string[]; excludeIds: string[]; take: number; popularityMax?: number }): Promise<QlooEntity[]>;
   /** Affinity of specific candidate entities to the signals (filter.results.entities). */
   affinityFor(args: { signalIds: string[]; tagIds?: string[]; candidateIds: string[] }): Promise<Map<string, number>>;
+  /** Per candidate entity, the signal entities that drove its affinity (feature.explainability), from the last affinityFor; LIVE only. */
+  readonly explanations?: Map<string, Array<{ entityId: string; score: number }>>;
   /** Qloo calls still allowed in this analysis (LIVE adapter); absent → unlimited (MOCK, doubles). */
   budgetLeft?(): number;
   /** Cross-domain taste of the audience implied by the signals (artists, films, books…). */

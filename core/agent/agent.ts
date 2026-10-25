@@ -106,6 +106,8 @@ export interface QlooAudience {
   demographics: Demographics | null;
   trend: Trend['direction'] | null;
   trendPercentile: number | null;
+  /** The show's signals (past guests, the show itself) that weighed most in this affinity, per Qloo explainability; absent when Qloo gave none. */
+  explainedBy?: string[];
 }
 
 export interface RecommendationAudience {
@@ -527,6 +529,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   let guestProfile: ShowGuestProfile | null = null;
   let audienceDemographics: AgentResult['audienceDemographics'] = null;
   const qlooAudienceOf = new Map<string, QlooAudience>();
+  const explainedByOf = new Map<string, string[]>();
   let themeEvidence = 1;
   const catShare = new Map<OccupationCategory, number>();
   const profileStrong = () => Boolean(guestProfile?.strong);
@@ -1548,6 +1551,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       } catch (err) {
         warn([`Qloo affinity scoring failed: ${String(err)}`, `Falló el cálculo de afinidad en Qloo: ${String(err)}`]);
       }
+      // Which of the show's signals drove each affinity (Qloo explainability), as names the producer knows.
+      const signalName = new Map([...resolved, ...(podcastEntity ? [podcastEntity] : [])].map((e) => [e.entityId, e.name]));
+      for (const id of ids) {
+        const names = (qloo.explanations?.get(id) ?? []).filter((x) => x.score > 0).map((x) => signalName.get(x.entityId)).filter((n): n is string => Boolean(n));
+        if (names.length) explainedByOf.set(id, [...new Set(names)].slice(0, 3));
+      }
       // Rank-normalize affinities within the shortlist so the blend does not depend on Qloo's raw scale.
       const sorted = [...affinities.entries()].sort((a, b) => a[1] - b[1]);
       affinityRank = new Map(sorted.map(([id], i) => [id, sorted.length > 1 ? i / (sorted.length - 1) : 1]));
@@ -1731,6 +1740,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           demographics: gd,
           trend: trend?.direction ?? null,
           trendPercentile: trend?.latestPercentile ?? null,
+          ...(explainedByOf.has(c.qlooEntityId!) ? { explainedBy: explainedByOf.get(c.qlooEntityId!) } : {}),
         });
       }
       const matched = [...qlooAudienceOf.values()].filter((q) => q.demographicMatch !== null).length;
@@ -2128,7 +2138,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       history: historyStatus,
       external: c.external ?? null,
       audience: audienceOf(c),
-      qlooAudience: qlooAudienceOf.get(c.key) ?? null,
+      qlooAudience:
+        qlooAudienceOf.get(c.key) ??
+        (c.qlooEntityId && explainedByOf.has(c.qlooEntityId)
+          ? { qlooEntityId: c.qlooEntityId, affinity: c.qlooAffinity, demographicMatch: null, demographics: null, trend: null, trendPercentile: null, explainedBy: explainedByOf.get(c.qlooEntityId) }
+          : null),
       assessment: {
         qlooProposedRank: c.qlooProposedRank,
         qlooAffinity: blend > 0 ? c.qlooAffinity : null,
@@ -2157,7 +2171,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       : [];
   const tasteRecommendations: Recommendation[] = tastePicks.map((c, i) => {
     const r = toRecommendation(c, i);
-    return r.qlooAudience ? r : { ...r, qlooAudience: { qlooEntityId: c.qlooEntityId!, affinity: c.qlooAffinity, demographicMatch: null, demographics: null, trend: null, trendPercentile: null } };
+    return r.qlooAudience ? r : { ...r, qlooAudience: { qlooEntityId: c.qlooEntityId!, affinity: c.qlooAffinity, demographicMatch: null, demographics: null, trend: null, trendPercentile: null, ...(explainedByOf.has(c.qlooEntityId!) ? { explainedBy: explainedByOf.get(c.qlooEntityId!) } : {}) } };
   });
   if (tasteRecommendations.length) {
     const inBoth = tasteRecommendations.filter((t) => recommendations.some((r) => r.key === t.key)).length;
