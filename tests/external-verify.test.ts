@@ -19,6 +19,8 @@ describe('external verification (Wikidata + Wikipedia, real fixtures)', () => {
     expect(c.namesakes.length).toBeGreaterThanOrEqual(3); // film producer, artist, PhD, Taiwanese politician…
     expect(c.wikipedia?.url).toBe('https://en.wikipedia.org/wiki/Andrew_Yang');
     expect(c.languages.spoken).toEqual(['en']);
+    // Citizenship (P27) is read too: without it, Qloo's proposals never met the audience-country gate.
+    expect(c.countries).toEqual(['us']);
     expect(c.sources.map((s) => s.name)).toEqual(['Wikidata', 'Wikipedia']);
   });
 
@@ -35,6 +37,7 @@ describe('external verification (Wikidata + Wikipedia, real fixtures)', () => {
     const [doc] = await verify([q('qk', 'Santiago Korovsky', { description: 'Argentine actor and screenwriter' })], 'es');
     expect(doc).toMatchObject({ status: 'documented', wikipedia: { lang: 'es' } });
     expect(doc.languages.spoken).toEqual(['es']);
+    expect(doc.countries).toEqual(['ar']);
   });
 
   it('detects bands and duos from Wikidata types, not from the name', async () => {

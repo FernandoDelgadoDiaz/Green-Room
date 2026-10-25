@@ -661,8 +661,8 @@ function DiscoveryDetails({ result, show }: { result: RecommendResult; show: Sho
 
 /** The five picks as large portraits: the answer comes first, the analysis below. */
 type ListView = 'none' | 'evidence' | 'taste';
-/** Which list opens first when Qloo's order is available. */
-const DEFAULT_VIEW: ListView = 'taste';
+/** Which list opens first. Evidence first until Qloo's order is validated live with its proposals competing (2026-10-25: affinities as low as 0 in All-In). */
+const DEFAULT_VIEW: ListView = 'evidence';
 
 function GuestLineup({ result, show, recs, view, setView, views, newKeys, leftKeys }: { result: RecommendResult; show: ShowSummary; recs: Recommendation[]; view: ListView; setView: (v: ListView) => void; views: ListView[]; newKeys: Set<string>; leftKeys: Set<string> }) {
   const { lang, t } = useI18n();
