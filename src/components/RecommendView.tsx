@@ -476,7 +476,14 @@ const AGE_LABEL: Record<string, { en: string; es: string }> = {
 export function demographicSummary(d: { age: Record<string, number>; gender: Record<string, number> }, lang: 'en' | 'es'): string | null {
   const ages = Object.entries(d.age).filter(([, v]) => v > 0.05).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k]) => AGE_LABEL[k]?.[lang] ?? k.replace(/_/g, ' '));
   const male = d.gender.male ?? 0;
-  const gender = Math.abs(male) < 0.05 ? null : male > 0 ? (lang === 'es' ? 'algo más hombres' : 'slightly more men') : lang === 'es' ? 'algo más mujeres' : 'slightly more women';
+  // Qloo's gender affinity runs from -1 to 1: "slightly" only for a mild lean.
+  const strong = Math.abs(male) >= 0.3;
+  const gender =
+    Math.abs(male) < 0.05
+      ? null
+      : male > 0
+        ? lang === 'es' ? (strong ? 'sobre todo hombres' : 'algo más hombres') : strong ? 'mostly men' : 'slightly more men'
+        : lang === 'es' ? (strong ? 'sobre todo mujeres' : 'algo más mujeres') : strong ? 'mostly women' : 'slightly more women';
   const parts = [ages.length ? (lang === 'es' ? `más afín entre ${ages.join(' y ')}` : `skews ${ages.join(' and ')}`) : null, gender].filter(Boolean);
   return parts.length ? parts.join(' · ') : null;
 }
