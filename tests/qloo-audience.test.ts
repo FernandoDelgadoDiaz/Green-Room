@@ -24,6 +24,7 @@ describe('Qloo demographics and trending: tolerant parsing', () => {
     expect(m.get('B8BEE72B')?.age['30_to_34']).toBe(0.7);
     expect(m.get('urn:tag:genre:media:action')?.gender.male).toBe(0.08);
     expect(demographicSummary(m.get('B8BEE72B')!, 'en')).toBe('skews 30–34 and 25–29 · slightly more men');
+    expect(demographicSummary({ age: { '45_to_54': 0.95 }, gender: { male: 0.95, female: -0.95 } }, 'es')).toBe('más afín entre 45 a 54 · sobre todo hombres');
   });
 
   it('reads a weekly trending series and its direction; unknown shapes give null, never an error', () => {

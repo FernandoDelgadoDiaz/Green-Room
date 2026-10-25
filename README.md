@@ -4,7 +4,16 @@
 
 Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/). Qloo's taste graph is the audience signal: past guests become the taste fingerprint of the show, and Qloo finds and scores people with affinity to it.
 
-> **Status (2026-10-24): live with the real Qloo API.** The public demo at https://greenroom1.netlify.app runs every analysis against Qloo's hackathon API, in a background job with a shared daily budget and a result cache. Validated end to end on Netlify with real Qloo: complete results with no rate-limit errors (see [docs/LIVE_ENGINE_FIX.md](docs/LIVE_ENGINE_FIX.md) and [docs/PUBLIC_LIVE.md](docs/PUBLIC_LIVE.md)). Podcasts, episodes, dates and guests come from official RSS feeds. Anything not returned by Qloo is labeled; a MOCK demo exists only when the visitor chooses it.
+> **Status (2026-10-25): live with the real Qloo API.** The public demo at https://greenroom1.netlify.app runs every analysis against Qloo's hackathon API, in a background job with a shared daily budget and a result cache. Validated end to end on Netlify with real Qloo: complete results with no rate-limit errors (see [docs/LIVE_ENGINE_FIX.md](docs/LIVE_ENGINE_FIX.md) and [docs/PUBLIC_LIVE.md](docs/PUBLIC_LIVE.md)). Podcasts, episodes, dates and guests come from official RSS feeds. Anything not returned by Qloo is labeled; a MOCK demo exists only when the visitor chooses it.
+
+## For judges, in 60 seconds
+
+1. Open **https://greenroom1.netlify.app** and press **This Week in Startups** (or **All-In**) next to *See a live example*. Cached live results open instantly; no sign-in.
+2. **The five portraits are the answer.** Switch **Without Qloo / With Qloo / By audience taste · Qloo** above them: the same analysis with Qloo turned off, on, and ordered by Qloo alone. Portraits marked *New with Qloo* are not in the list without it (This Week in Startups, live run of 2026-10-25: Qloo changed 4 of the 5).
+3. Read **What Qloo changed in this search**, right below: who entered with Qloo and why (proposed by Qloo and verified, or rose on audience affinity), who left, and both lists measured alike.
+4. Scroll to **Who this show's audience is**: Qloo's age and gender read of the audience (This Week in Startups: mostly men aged 45–54).
+5. Open **Prepare invitation** on any card: a letter built only from that guest's evidence, editable, that opens in your email or WhatsApp. Nothing is sent from the app.
+6. **Data & method → How well Qloo knows each market** shows where Qloo is strong (US) and weak (Argentina), measured on our own runs.
 
 ## How Green Room uses Qloo
 
@@ -15,7 +24,7 @@ Qloo is not a garnish here: the agent cannot describe a show's audience, find pe
 | `GET /search` (types `urn:entity:person`, `urn:entity:podcast`) | Confirm past guests (and the show itself) as Qloo entities, by context, never by name alone | Agent trace: the audience signal |
 | `GET /v2/tags` (semantic search) | Map the show's themes to Qloo tags when guests can't carry the signal (re-planning) | Agent trace |
 | `GET /v2/insights` `filter.type=urn:entity:person` | People this audience has affinity for, outside the show's history (discovery) | "What Qloo added" |
-| `GET /v2/insights` `filter.type=urn:entity:person` + `filter.results.entities` | Affinity of each comparable candidate to the show's audience signal | Ranking (inside an editorial band) and each card |
+| `GET /v2/insights` `filter.type=urn:entity:person` + `filter.results.entities` + `feature.explainability=true` | Affinity of each comparable candidate to the show's audience signal, and which of the show's signals (past guests, the show, its theme tags) drove it; same call | Ranking (inside an editorial band), the Qloo order, and each card. Explanations are recorded per pick (returned for all 25 scored candidates in the live run of 2026-10-25) |
 | `GET /v2/insights` `filter.type=urn:demographics` | Age/gender affinity of the show's audience signal and, when Qloo has it, of each recommended guest | "Who this show's audience is" (works on live shows); each card's profile match only when Qloo returns a profile for that person |
 | `GET /v2/trending` (`urn:entity:person`) | Each recommended guest's weekly popularity over the last 12 weeks | Each card: rising / steady / cooling, only when Qloo returns a series (it returned none for the people in our live tests) |
 | `GET /v2/insights` `filter.type=urn:entity:artist`, `urn:entity:movie`, `urn:entity:book` | Cultural hooks of the audience across domains | "What Qloo added": conversation hooks |
