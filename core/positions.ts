@@ -3,7 +3,10 @@
 type Position = { en: string; es: string; since: string | null };
 
 /** Only positions that name where they are held ("Governor of Buenos Aires Province"), not a bare "Chief executive officer". */
-export const specificPosition = (ps: Position[] | undefined) => ps?.find((p) => /\s(of|for)\s/i.test(` ${p.en} `) || /\s(de|del)\s/i.test(` ${p.es} `));
+// "Member of the board of directors" names no organization: the "of" belongs to the role itself.
+const GENERIC_ROLE = /^(member of (the )?)?board of (directors|trustees|governors)( member)?$|^miembro del? (consejo|junta|directorio)( de administración| directivo| de directores)?$/i;
+export const specificPosition = (ps: Position[] | undefined) =>
+  ps?.find((p) => !GENERIC_ROLE.test(p.en.trim()) && !GENERIC_ROLE.test(p.es.trim()) && (/\s(of|for)\s/i.test(` ${p.en} `) || /\s(de|del)\s/i.test(` ${p.es} `)));
 
 /**
  * Wikidata stores Spanish position labels in the masculine ("senador de Argentina"). When the person's

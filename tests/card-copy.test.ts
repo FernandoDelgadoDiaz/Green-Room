@@ -138,4 +138,11 @@ describe('positions read right', () => {
     expect(positionLabel(senate, 'en', { bio: { es: 'Carolina Losada es una política.' } })).toBe('Senator of Argentina');
     expect(specificPosition([{ en: 'Chief executive officer', es: 'director ejecutivo', since: '2014' }])).toBeUndefined();
   });
+
+  it('a board seat with no organization is not a specific position', async () => {
+    const { specificPosition } = await import('../core/positions');
+    expect(specificPosition([{ en: 'board of directors member', es: 'miembro del consejo de administración', since: '2008' }])).toBeUndefined();
+    expect(specificPosition([{ en: 'member of the board of directors', es: 'miembro de la junta directiva', since: null }])).toBeUndefined();
+    expect(specificPosition([{ en: 'Governor of Buenos Aires Province', es: 'gobernador de la provincia de Buenos Aires', since: '2023' }])?.en).toBe('Governor of Buenos Aires Province');
+  });
 });
