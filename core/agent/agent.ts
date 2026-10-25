@@ -545,7 +545,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         description: c.external.description,
         occupations: c.external.occupations.slice(0, 4),
         categories: categoriesOf(c.external.occupations.map((o) => o.en)),
-        countries: [],
+        // Citizenship from the same Wikidata record: without it, people Qloo proposed never met the
+        // "from the audience's countries" gate and were left out of both lists.
+        countries: c.external.countries ?? [],
         wikipedias: c.external.languages.articles.length,
         articles: c.external.languages.articles.map((l) => `${l}wiki`),
         photo: null,

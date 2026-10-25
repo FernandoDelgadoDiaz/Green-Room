@@ -41,6 +41,8 @@ export interface ExternalCheck {
   wikipedia: { lang: 'en' | 'es'; title: string; url: string; extract: string } | null;
   /** Languages spoken (Wikidata P1412) and Wikipedia editions with an article. */
   languages: { spoken: string[]; articles: string[] };
+  /** Citizenship (Wikidata P27) as ISO 3166-1 alpha-2 codes, lowercase; only countries in COUNTRY_CODES. */
+  countries?: string[];
   /** Same-name people found and not chosen. */
   namesakes: Array<{ wikidataId: string; description: string | null }>;
   /** Labels and aliases of the chosen item (en/es): used to catch the same person under another spelling. */
@@ -60,6 +62,14 @@ const DISAMBIGUATION = 'Q4167410';
 const GROUP_IDS = new Set(['Q215380', 'Q5741069', 'Q9212979', 'Q2088357', 'Q281643', 'Q4438121', 'Q16887380']);
 const ORG_IDS = new Set(['Q43229', 'Q4830453', 'Q783794', 'Q891723', 'Q6881511', 'Q1616075']);
 const WORK_IDS = new Set(['Q482994', 'Q11424', 'Q5398426', 'Q7366', 'Q7725634', 'Q134556', 'Q17537576', 'Q24862', 'Q169930', 'Q273057']);
+// Wikidata country items → ISO 3166-1 alpha-2 (the audiences and guests in our catalog and their neighbours).
+const COUNTRY_CODES: Record<string, string> = {
+  Q30: 'us', Q145: 'gb', Q174193: 'gb', Q16: 'ca', Q408: 'au', Q664: 'nz', Q27: 'ie', Q96: 'mx', Q414: 'ar', Q29: 'es', Q155: 'br', Q298: 'cl', Q739: 'co', Q419: 'pe',
+  Q717: 've', Q77: 'uy', Q733: 'py', Q750: 'bo', Q736: 'ec', Q241: 'cu', Q786: 'do', Q774: 'gt', Q783: 'hn', Q792: 'sv', Q811: 'ni', Q800: 'cr', Q804: 'pa', Q142: 'fr',
+  Q183: 'de', Q38: 'it', Q45: 'pt', Q55: 'nl', Q31: 'be', Q39: 'ch', Q40: 'at', Q34: 'se', Q20: 'no', Q35: 'dk', Q33: 'fi', Q36: 'pl', Q159: 'ru', Q212: 'ua', Q41: 'gr',
+  Q43: 'tr', Q801: 'il', Q668: 'in', Q843: 'pk', Q148: 'cn', Q17: 'jp', Q884: 'kr', Q865: 'tw', Q334: 'sg', Q252: 'id', Q928: 'ph', Q881: 'vn', Q869: 'th', Q833: 'my',
+  Q1033: 'ng', Q258: 'za', Q114: 'ke', Q79: 'eg', Q1028: 'ma', Q878: 'ae', Q851: 'sa', Q794: 'ir', Q213: 'cz', Q28: 'hu', Q218: 'ro',
+};
 const LANG_CODES: Record<string, string> = { Q1860: 'en', Q1321: 'es', Q150: 'fr', Q188: 'de', Q652: 'it', Q5146: 'pt', Q7737: 'ru', Q7850: 'zh', Q5287: 'ja' };
 
 interface WdEntity {
@@ -162,6 +172,7 @@ export class WikidataVerifier {
         backgroundText: e ? text(e) : '',
         wikipedia: null,
         languages: { spoken: e ? claimIds(e, 'P1412').map((q) => LANG_CODES[q]).filter(Boolean) : [], articles: e ? Object.keys(e.sitelinks ?? {}).map((s) => s.replace('wiki', '')) : [] },
+        countries: e ? [...new Set(claimIds(e, 'P27').map((q) => COUNTRY_CODES[q]).filter(Boolean))] : [],
         namesakes: [],
         canonicalName: e?.labels?.en?.value ?? e?.labels?.es?.value ?? entity.name,
         names: e ? [...new Set([entity.name, ...Object.values(e.labels ?? {}).map((l) => l.value), ...Object.values(e.aliases ?? {}).flatMap((a) => a.map((x) => x.value))])] : [entity.name],
