@@ -36,6 +36,7 @@ class Fake implements QlooAdapter {
     return new Map(candidateIds.filter((id) => id in this.aff).map((id) => [id, this.aff[id]]));
   }
   async categoryInsights() { return []; }
+  readonly explanations = new Map<string, Array<{ entityId: string; score: number }>>();
 }
 
 describe('four controlled arms: which Qloo effect changes the list', () => {
@@ -96,6 +97,12 @@ describe('editorial band: affinity reorders comparable candidates only', () => {
     expect(bob.editorial!).toBeGreaterThan(ann.editorial!);
     expect(cmp.means!.withQloo).toEqual({ affinity: ann.affinity, affinityKnown: 1, editorial: ann.editorial });
     expect(cmp.means!.withoutQloo).toEqual({ affinity: bob.affinity, affinityKnown: 1, editorial: bob.editorial });
+    // Explainability: the past guests that drove Ann's affinity, by name; nothing invented when Qloo gives none.
+    const explained = new Fake([], { 'p:ann lee': 0.9, 'p:bob ray': 0.1 });
+    explained.explanations.set('p:ann lee', [{ entityId: 'p:yan past', score: 0.6 }, { entityId: 'p:zed past', score: 0.3 }, { entityId: 'unknown', score: 0.9 }]);
+    const withWhy = await runAgent({ target, others: [close], qloo: explained, asOf: AS_OF, k: 1 });
+    expect(withWhy.recommendations[0].qlooAudience?.explainedBy).toEqual(['Yan Past', 'Zed Past']);
+    expect(closeRun.recommendations[0].qlooAudience?.explainedBy).toBeUndefined();
     const r = await run(far);
     expect(r.recommendations[0].name).toBe('Bob Ray');
     expect(r.trace.find((s) => s.tool?.startsWith('qloo.insights (filter'))!.decision).toMatch(/within 15%/);

@@ -14,9 +14,11 @@ const byId = (id: string) => DATASETS.find((d) => d.id === id)!;
 describe('presentation changes do not alter the logic', () => {
   // Fixed corpus (the original three shows): the catalog adds comparison shows, which legitimately
   // changes rankings, so the regression is checked on the corpus the baseline was recorded with.
-  it('recommendations keep the same people, order and scores (±0.001; "now" moves)', async () => {
+  // Recency depends on "now": run at the day the baseline was recorded (2026-10-23), or the scores
+  // drift a little every day and the check fails for no change in the code.
+  it('recommendations keep the same people, order and scores (±0.001)', async () => {
     for (const [showId, expected] of Object.entries(baseline.recs)) {
-      const r = await runAgent({ target: byId(showId), others: others(showId), qloo: new MockQlooAdapter() });
+      const r = await runAgent({ target: byId(showId), others: others(showId), qloo: new MockQlooAdapter(), asOf: '2026-10-23T12:00:00.000Z' });
       expect(r.recommendations.map((x) => x.key)).toEqual((expected as Array<[string, number]>).map(([k]) => k));
       r.recommendations.forEach((x, i) => expect(Math.abs(x.score - (expected as Array<[string, number]>)[i][1])).toBeLessThan(1e-3));
     }

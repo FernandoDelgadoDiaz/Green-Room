@@ -98,6 +98,7 @@ export function parseEntity(raw: unknown): QlooEntity | null {
   const wikidataIds = (Array.isArray(ext) ? ext : ext ? [ext] : [])
     .map((x) => (x && typeof x === 'object' ? (x as Record<string, unknown>).id : x))
     .filter((x): x is string => typeof x === 'string' && /^Q\d+$/.test(x));
+  const explain = parseExplain(query.explainability);
   return {
     entityId,
     name,
@@ -108,7 +109,26 @@ export function parseEntity(raw: unknown): QlooEntity | null {
     ...(description ? { description } : {}),
     ...(types.length ? { types } : {}),
     ...(wikidataIds.length ? { wikidataIds } : {}),
+    ...(explain.length ? { explain } : {}),
   };
+}
+
+/**
+ * feature.explainability, read tolerantly: an object keyed by signal kind ("signal.interests.entities")
+ * holding [{ entity_id, score }], or such a list directly. Highest contribution first.
+ */
+export function parseExplain(v: unknown): Array<{ entityId: string; score: number }> {
+  const lists = Array.isArray(v) ? [v] : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).filter(Array.isArray) : [];
+  const out: Array<{ entityId: string; score: number }> = [];
+  for (const list of lists as unknown[][])
+    for (const x of list) {
+      if (!x || typeof x !== 'object') continue;
+      const o = x as Record<string, unknown>;
+      const id = [o.entity_id, o.entityId, o.id].find((i): i is string => typeof i === 'string' && i.length > 0);
+      const score = numOrNull(o.score);
+      if (id && score !== null) out.push({ entityId: id, score });
+    }
+  return out.sort((a, b) => b.score - a.score);
 }
 
 /** /search returns results: Entity[]; /v2/insights returns results.entities: Entity[]. */
@@ -401,11 +421,15 @@ export class LiveQlooAdapter implements QlooAdapter {
     });
   }
 
+  readonly explanations = new Map<string, Array<{ entityId: string; score: number }>>();
+  /** Turned off for the rest of the analysis if Qloo rejects feature.explainability. */
+  private explainability = true;
+
   async affinityFor({ signalIds, tagIds = [], candidateIds }: { signalIds: string[]; tagIds?: string[]; candidateIds: string[] }) {
     const out = new Map<string, number>();
     for (let i = 0; i < candidateIds.length; i += 50) {
       const batch = candidateIds.slice(i, i + 50);
-      const entities = await this.get('/v2/insights', {
+      const params = (explain: boolean) => ({
         'filter.type': 'urn:entity:person',
         'signal.interests.entities': signalIds.join(','),
         'signal.interests.tags': tagIds.join(','),
@@ -413,16 +437,33 @@ export class LiveQlooAdapter implements QlooAdapter {
         // An unknown name such as filter.entities is silently ignored and would return arbitrary people.
         'filter.results.entities': batch.join(','),
         take: String(batch.length),
+        // Which signals drove each affinity: the same call, no extra request.
+        ...(explain ? { 'feature.explainability': 'true' } : {}),
       });
-      let withAffinity = 0;
-      for (const e of entities) if (e.affinity !== undefined) {
-        out.set(e.entityId, e.affinity);
-        withAffinity++;
+      let entities: QlooEntity[];
+      try {
+        entities = await this.get('/v2/insights', params(this.explainability));
+      } catch (err) {
+        if (!(this.explainability && err instanceof QlooError && err.status === 400)) throw err;
+        this.explainability = false;
+        entities = await this.get('/v2/insights', params(false));
       }
-      // Entities can come back without query.affinity; record how many carried a value.
+      let withAffinity = 0;
+      let explained = 0;
+      for (const e of entities) {
+        if (e.affinity !== undefined) {
+          out.set(e.entityId, e.affinity);
+          withAffinity++;
+        }
+        if (e.explain?.length) {
+          this.explanations.set(e.entityId, e.explain);
+          explained++;
+        }
+      }
+      // Entities can come back without query.affinity or explainability; record how many carried each.
       const ids = batch.join(',');
       const last = [...this.calls].reverse().find((c) => c.params['filter.results.entities'] === ids);
-      if (last) last.note = `affinity values: ${withAffinity}${last.note ? `; ${last.note}` : ''}`;
+      if (last) last.note = `affinity values: ${withAffinity}; explainability: ${this.explainability ? explained : 'rejected (400)'}${last.note ? `; ${last.note}` : ''}`;
     }
     return out;
   }
