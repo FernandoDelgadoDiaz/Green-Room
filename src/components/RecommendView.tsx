@@ -669,8 +669,25 @@ function DiscoveryDetails({ result, show }: { result: RecommendResult; show: Sho
 
 /** The five picks as large portraits: the answer comes first, the analysis below. */
 type ListView = 'none' | 'evidence' | 'taste';
-/** Which list opens first. Evidence first until Qloo's order is validated live with its proposals competing (2026-10-25: affinities as low as 0 in All-In). */
-const DEFAULT_VIEW: ListView = 'evidence';
+/**
+ * Which lists a result offers and which opens first, decided per show from its own data (agreed with
+ * the producer on 2026-10-25, measured live on 2026-10-26):
+ * - Qloo's order opens first only when it holds five people, each with affinity ≥ 0.5 (This Week in
+ *   Startups: Ben Horowitz 1.0 … Reed Hastings 0.5; All-In had four, down to 0).
+ * - "Without Qloo" and its panel appear only when Qloo changes at least 3 of the 5 (TWiST 4, All-In 2).
+ */
+export const TASTE_FIRST_MIN_AFFINITY = 0.5;
+export const WITHOUT_QLOO_MIN_CHANGED = 3;
+export function listViews(result: Pick<RecommendResult, 'qlooMode' | 'tasteRecommendations' | 'comparison' | 'baselineRecommendations' | 'recommendations'>): { views: ListView[]; initial: ListView } {
+  const live = result.qlooMode === 'LIVE';
+  const taste = live ? (result.tasteRecommendations ?? []) : [];
+  const c = result.comparison;
+  const changed = c && typeof c.overlap === 'number' ? c.k - c.overlap : 0;
+  const hasBaseline = live && Boolean(c?.rows) && (result.baselineRecommendations ?? []).length > 0 && changed >= WITHOUT_QLOO_MIN_CHANGED;
+  const views: ListView[] = [...(hasBaseline ? (['none'] as const) : []), 'evidence', ...(taste.length >= 3 ? (['taste'] as const) : [])];
+  const strongTaste = taste.length >= result.recommendations.length && taste.length >= 5 && taste.every((r) => (r.qlooAudience?.affinity ?? 0) >= TASTE_FIRST_MIN_AFFINITY);
+  return { views, initial: strongTaste ? 'taste' : 'evidence' };
+}
 
 function GuestLineup({ result, show, recs, view, setView, views, newKeys, leftKeys }: { result: RecommendResult; show: ShowSummary; recs: Recommendation[]; view: ListView; setView: (v: ListView) => void; views: ListView[]; newKeys: Set<string>; leftKeys: Set<string> }) {
   const { lang, t } = useI18n();
@@ -867,12 +884,14 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
   const [visible, setVisible] = useState(0);
   // Qloo's own order of the same checked candidates (LIVE only); the producer switches between them.
   const taste = result.qlooMode === 'LIVE' ? (result.tasteRecommendations ?? []) : [];
-  const hasTaste = taste.length >= 3;
-  // The same analysis without Qloo (LIVE, results computed after this view existed).
-  const baseline = result.qlooMode === 'LIVE' && result.comparison?.rows ? (result.baselineRecommendations ?? []) : [];
-  const hasBaseline = baseline.length > 0;
-  const views: ListView[] = [...(hasBaseline ? (['none'] as const) : []), 'evidence', ...(hasTaste ? (['taste'] as const) : [])];
-  const [chosen, setView] = useState<ListView>(DEFAULT_VIEW);
+  const { views, initial } = listViews(result);
+  const hasTaste = views.includes('taste');
+  // The same analysis without Qloo, offered only when Qloo changed enough of the five (listViews).
+  const hasBaseline = views.includes('none');
+  const baseline = hasBaseline ? (result.baselineRecommendations ?? []) : [];
+  const [chosen, setView] = useState<ListView>(initial);
+  // Another show's result: open its own first list.
+  useEffect(() => setView(initial), [result]); // eslint-disable-line react-hooks/exhaustive-deps
   const view: ListView = views.includes(chosen) ? chosen : 'evidence';
   const recs = view === 'taste' ? taste : view === 'none' ? baseline : result.recommendations;
   // "New with Qloo" is measured against the list without Qloo when it exists, else against the evidence list.

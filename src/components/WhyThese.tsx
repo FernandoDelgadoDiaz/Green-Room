@@ -58,8 +58,11 @@ export function WhyThese({ result, show, recs }: { result: RecommendResult; show
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-stone-400">{t('why.each')}</p>
           <ul className="mt-2 divide-y divide-white/5">
-            {recs.map((r) => {
-              const w = guestWhy(r, lang, Date.now(), show.name);
+            {recs.map((r, i) => {
+              const w = guestWhy(r, lang, Date.now(), show.name, { kindClaims: (result.cardsVersion ?? 0) >= 2 });
+              // The same "kind of guest" sentence only once in the block.
+              const kind = w.kind && !recs.slice(0, i).some((p) => guestWhy(p, lang, Date.now(), show.name, { kindClaims: (result.cardsVersion ?? 0) >= 2 }).kind === w.kind) ? w.kind : null;
+              const offers = [w.offers, kind].filter(Boolean).join(' ') || null;
               return (
                 <li key={r.key} className="flex gap-3 py-3">
                   <GuestAvatar name={r.name} profile={result.profiles[r.key]} size="sm" />
@@ -68,7 +71,7 @@ export function WhyThese({ result, show, recs }: { result: RecommendResult; show
                       {r.rank}. {r.name}
                     </button>
                     {live && <p className="text-emerald-100"><span className="mr-1.5 text-[11px] font-semibold uppercase tracking-widest text-emerald-300">{t('why.qloo')}</span>{w.qloo}</p>}
-                    {w.offers && <p className="text-stone-300"><span className="mr-1.5 text-[11px] font-semibold uppercase tracking-widest text-brass-300">{t('why.offers')}</span>{w.offers}</p>}
+                    {offers && <p className="text-stone-300"><span className="mr-1.5 text-[11px] font-semibold uppercase tracking-widest text-brass-300">{t('why.offers')}</span>{offers}</p>}
                     {w.timely && <p className="text-stone-400"><span className="mr-1.5 text-[11px] font-semibold uppercase tracking-widest text-stone-500">{t('why.timely')}</span>{w.timely}</p>}
                   </div>
                 </li>

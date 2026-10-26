@@ -38,6 +38,8 @@ export interface GuestWhy {
   name: string;
   qloo: string;
   offers: string | null;
+  /** "The same kind of guest as …": shown once per block (consecutive picks often share the same pair). */
+  kind: string | null;
   timely: string | null;
 }
 
@@ -95,7 +97,7 @@ export function audienceRead(result: Pick<RecommendResult, 'audienceDemographics
   return { profile, likes, how };
 }
 
-export function guestWhy(rec: Recommendation, lang: Lang, now = Date.now(), showName = ''): GuestWhy {
+export function guestWhy(rec: Recommendation, lang: Lang, now = Date.now(), showName = '', opts: { kindClaims?: boolean } = {}): GuestWhy {
   const es = lang === 'es';
   const q = rec.qlooAudience;
   // The show itself as the only reason says nothing new (shows matched by their own Qloo entity).
@@ -111,9 +113,21 @@ export function guestWhy(rec: Recommendation, lang: Lang, now = Date.now(), show
   // Only a position that says of what ("CEO of Anthropic"), as in the invitation letters.
   const pos = specificPosition(rec.audience?.positions);
   const position = pos ? positionLabel(pos, lang, rec.audience) : null;
-  const offers = [position ? `${position.charAt(0).toUpperCase()}${position.slice(1)}.` : null, themes.length ? (es ? `Habla de temas frecuentes del programa: ${themes.join('; ')}.` : `Talks about frequent topics on the show: ${themes.join('; ')}.`) : null]
-    .filter(Boolean)
-    .join(' ') || null;
+  // Past guests of the same kind (from each person's description), as in the letters; skipped on older results.
+  const a = rec.audience;
+  const cat = opts.kindClaims === false ? null : (a?.sharedCategories.find((c) => (a.similarByCategory?.[c] ?? []).length) ?? null);
+  const pool = cat ? (a!.similarByCategory![cat] ?? []) : [];
+  const similar = pool.slice(0, 2);
+  const kind = similar.length
+    ? es
+      ? `Del mismo tipo de invitado que ${list(similar, lang)}, que ya ${similar.length === 1 ? 'pasó' : 'pasaron'} por el programa.`
+      : `The same kind of guest as ${list(similar, lang)}, who ${similar.length === 1 ? 'has' : 'have'} already been on the show.`
+    : null;
+  const own = [position ? `${position.charAt(0).toUpperCase()}${position.slice(1)}.` : null, themes.length ? (es ? `Habla de temas frecuentes del programa: ${themes.join('; ')}.` : `Talks about frequent topics on the show: ${themes.join('; ')}.`) : null].filter(Boolean);
+  // People Qloo proposed have no interviews in our sources: their own Wikidata description says what they do.
+  const d = rec.external?.description;
+  const described = !own.length && d ? (es ? (d.es ?? d.en) : (d.en ?? d.es)) : null;
+  const offers = own.length ? own.join(' ') : described ? `${described.charAt(0).toUpperCase()}${described.slice(1)}.` : null;
   const latest = rec.appearances[0];
   const months = latest ? (now - Date.parse(latest.published)) / (30.44 * 24 * 3600 * 1000) : null;
   const timely = latest
@@ -124,8 +138,27 @@ export function guestWhy(rec: Recommendation, lang: Lang, now = Date.now(), show
       : es
         ? `Última entrevista: ${latest.showName}, ${monthYear(latest.published, lang)}.`
         : `Latest interview: ${latest.showName}, ${monthYear(latest.published, lang)}.`
-    : null;
-  return { key: rec.key, name: rec.name, qloo, offers, timely };
+    : rec.source === 'qloo-external' && rec.external?.status === 'documented'
+      ? proposedByQloo(rec, lang)
+      : null;
+  return { key: rec.key, name: rec.name, qloo, offers, kind, timely };
+}
+
+/** For people Qloo proposed: three wordings that rotate with the card's rank, so consecutive cards differ. */
+function proposedByQloo(rec: Recommendation, lang: Lang): string {
+  const where = rec.external?.wikipedia ? (lang === 'es' ? 'Wikidata y Wikipedia' : 'Wikidata and Wikipedia') : 'Wikidata';
+  const v = Math.max(0, (rec.rank ?? 1) - 1) % 3;
+  return lang === 'es'
+    ? [
+        `Lo propuso Qloo; no tiene entrevistas en nuestras fuentes y su identidad está verificada en ${where}.`,
+        `Sugerido por Qloo. Sin entrevistas en nuestras fuentes: lo identificamos en ${where}.`,
+        `Llegó por Qloo y lo verificamos en ${where}; todavía no tiene entrevistas en nuestras fuentes.`,
+      ][v]
+    : [
+        `Proposed by Qloo; no interviews in our sources, identity verified in ${where}.`,
+        `Suggested by Qloo. No interviews in our sources: identified in ${where}.`,
+        `Came from Qloo and was verified in ${where}; no interviews in our sources yet.`,
+      ][v];
 }
 
 /** What the agent did, in four to six plain steps with this run's numbers. */

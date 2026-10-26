@@ -55,6 +55,23 @@ describe('why each guest', () => {
   });
 });
 
+describe('people Qloo proposed', () => {
+  const ext = {
+    key: 'bh', name: 'Ben Horowitz', rank: 1, sharedThemes: [], appearances: [], source: 'qloo-external',
+    external: { status: 'documented', wikipedia: { lang: 'en', title: 'Ben Horowitz', url: 'u', extract: '' }, description: { en: 'American businessman', es: 'empresario e inversor estadounidense' } },
+    audience: { positions: [], sharedCategories: ['business'], similarByCategory: { business: ['Alexis Ohanian', 'Brian Chesky'] } },
+    qlooAudience: { affinity: 1 },
+  } as unknown as Recommendation;
+  it('says Qloo proposed them, how they were verified, and which past guests share their profile', () => {
+    const w = guestWhy(ext, 'es', Date.now(), 'TWiST', { kindClaims: true });
+    expect(w.kind).toBe('Del mismo tipo de invitado que Alexis Ohanian y Brian Chesky, que ya pasaron por el programa.');
+    expect(w.offers).toBe('Empresario e inversor estadounidense.');
+    expect(w.timely).toBe('Lo propuso Qloo; no tiene entrevistas en nuestras fuentes y su identidad está verificada en Wikidata y Wikipedia.');
+    expect(guestWhy({ ...(ext as object), rank: 2 } as Recommendation, 'es').timely).not.toBe(w.timely);
+    expect(guestWhy(ext, 'es', Date.now(), 'TWiST', { kindClaims: false }).kind).toBeNull();
+  });
+});
+
 describe('what the agent did', () => {
   it('uses this run’s numbers, in order', () => {
     const s = agentSteps(base, 'TWiST', 'es');
