@@ -1,8 +1,8 @@
 // Public Qloo LIVE path (/api/discover): limits, failures, kill switch and scope.
 // Qloo is a scripted LIVE-shaped adapter here: these tests prove the guard and the handler, not Qloo.
 import { describe, expect, it } from 'vitest';
-import { MemoryCasStore, PublicGuard, publicConfig, type CasStore } from '../core/public-live/guard';
-import { handlePublicLive, liveHealth, runPublicJob, type PublicLiveDeps, type PublicLiveEnv } from '../core/public-live/handler';
+import { cacheKeyFor, MemoryCasStore, PublicGuard, publicConfig, type CasStore } from '../core/public-live/guard';
+import { handlePublicLive, liveHealth, RULES_VERSION, runPublicJob, type PublicLiveDeps, type PublicLiveEnv } from '../core/public-live/handler';
 import { handleLive } from '../core/api';
 import { sha256Hex } from '../core/access';
 import { QlooError, type QlooAdapter, type QlooCall } from '../core/qloo/types';
@@ -190,6 +190,20 @@ describe('public endpoint: LIVE results, cache and honest failures', () => {
     now += 61 * 60_000;
     await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, ip: '198.51.100.3', now: () => now }));
     expect(built).toHaveLength(2); // partial entry expired: a new run
+  });
+
+  it('a cached result from older agent rules is recomputed on the next visit', async () => {
+    const store = new MemoryCasStore();
+    const built: QlooAdapter[] = [];
+    await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built }));
+    const key = `result/${cacheKeyFor('show', 'diary-of-a-ceo')}`;
+    const saved = (await store.get(key))!.data as { body: { rules?: number } };
+    expect(saved.body.rules).toBe(RULES_VERSION);
+    // The same entry as written before the rules version existed: still fresh by time, but older rules.
+    delete saved.body.rules;
+    await store.put(key, saved);
+    await live({ action: 'recommend', showId: 'diary-of-a-ceo' }, ENV, deps(store, { built, ip: '198.51.100.9' }));
+    expect(built).toHaveLength(2);
   });
 
   it('when a limit refuses a new run, an earlier dated LIVE result is offered (never MOCK)', async () => {

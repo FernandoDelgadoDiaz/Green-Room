@@ -184,7 +184,7 @@ export async function handlePublicLive(req: unknown, env: PublicLiveEnv, deps: P
     } else {
       cacheKey = cacheKeyFor('feed', hit.feedUrl);
       const cachedOpen = await guard.cached<Cached>(cacheKey).catch(() => null);
-      if (cachedOpen?.fresh) return { status: 200, body: { analysis: cachedOpen.body.analysis, result: withLive(cachedOpen.body.result, { cached: true, computedAt: cachedOpen.at }) } };
+      if (current(cachedOpen)) return { status: 200, body: { analysis: cachedOpen.body.analysis, result: withLive(cachedOpen.body.result, { cached: true, computedAt: cachedOpen.at }) } };
       let feed;
       try {
         feed = await fetchText(hit.feedUrl);
@@ -208,7 +208,7 @@ export async function handlePublicLive(req: unknown, env: PublicLiveEnv, deps: P
   // ---------------------------------------------------------------- cache, then a queued LIVE job
   const respond = (result: unknown, an: unknown) => (action === 'analyze' ? { analysis: an, result } : result);
   const prior = await guard.cached<Cached>(cacheKey).catch(() => null);
-  if (prior?.fresh) return { status: 200, body: respond(withLive(prior.body.result, { cached: true, computedAt: prior.at, partial: prior.body.partial ?? false }), prior.body.analysis ?? analysis) };
+  if (current(prior)) return { status: 200, body: respond(withLive(prior.body.result, { cached: true, computedAt: prior.at, partial: prior.body.partial ?? false }), prior.body.analysis ?? analysis) };
   if (!deps.trigger) return refuse('guard_unavailable', prior); // no way to run the job → no reservation
   // The same show is already being analyzed: join that job instead of paying for a second run.
   const running = await joinable(deps.store!, cacheKey, cfg, now()).catch(() => null);
@@ -265,7 +265,17 @@ interface Cached {
   result: unknown;
   analysis: unknown;
   partial?: boolean;
+  /** RULES_VERSION the result was computed with; absent on results from before it existed (version 1). */
+  rules?: number;
 }
+
+/**
+ * Bumped when a change to the agent's rules would change who is recommended. A cached result from older
+ * rules is recomputed on the next visit (and still shown, dated, if the visit cannot start a new run).
+ * Version 2: unrecorded citizenship or language no longer excludes Qloo's proposals; photos for them.
+ */
+export const RULES_VERSION = 2;
+const current = <T extends { fresh: boolean; body: Cached }>(c: T | null): c is T => Boolean(c?.fresh && (c.body.rules ?? 1) >= RULES_VERSION);
 
 function refuseBare(code: 'guard_unavailable') {
   return { status: STATUS_OF[code], body: { code, message: REFUSAL[code], retry: true } };
@@ -380,7 +390,7 @@ export async function runPublicJob(jobId: string, env: PublicLiveEnv, deps: Pick
     // Complete results are cached for PUBLIC_CACHE_HOURS; results that lost some Qloo answers for
     // PUBLIC_PARTIAL_CACHE_HOURS (labeled partial), so one bad minute at Qloo is not re-paid by every visitor.
     const ttl = partial ? cfg.partialCacheHours : cfg.cacheHours;
-    if (ttl > 0) await guard.saveResult(job.cacheKey, { result, analysis: t.analysis, partial } satisfies Cached, ttl).catch(() => undefined);
+    if (ttl > 0) await guard.saveResult(job.cacheKey, { result, analysis: t.analysis, partial, rules: RULES_VERSION } satisfies Cached, ttl).catch(() => undefined);
     const computedAt = new Date().toISOString();
     await recordCoverage(store, t.kind === 'catalog' ? `show:${t.showId}` : `feed:${target.name}`, coverageOf(result, { country: t.kind === 'catalog' ? verifiedCountry(t.showId) : null, computedAt }));
     await finish(store, job, { status: 200, body: respond(withLive(result, { cached: false, computedAt: new Date().toISOString(), qlooCalls: calls, partial, errors: health.errors, ...(adapter.metrics?.rateLimit ? { qlooRateLimit: adapter.metrics.rateLimit } : {}) })) }, { qlooCalls: calls });
