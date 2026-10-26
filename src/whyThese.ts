@@ -104,9 +104,7 @@ export function guestWhy(rec: Recommendation, lang: Lang, now = Date.now(), show
   const by = (q?.explainedBy ?? []).filter((n) => n !== showName);
   const qloo =
     q?.affinity === null || q?.affinity === undefined
-      ? es
-        ? 'Qloo no tiene dato de afinidad para esta persona.'
-        : 'Qloo has no affinity value for this person.'
+      ? noAffinity(rec, lang)
       : (es ? `Afinidad con tu público: ${pct(q.affinity)} de 100, comparada con los demás candidatos.` : `Affinity with your audience: ${pct(q.affinity)} out of 100, compared with the other candidates.`) +
         (by.length ? (es ? ` Lo que más pesó: ${list(by, lang)}.` : ` What weighed most: ${list(by, lang)}.`) : '');
   const themes = citableThemes(rec).slice(0, 2).map((s) => (es ? s.labelEs : s.label));
@@ -142,6 +140,22 @@ export function guestWhy(rec: Recommendation, lang: Lang, now = Date.now(), show
       ? proposedByQloo(rec, lang)
       : null;
   return { key: rec.key, name: rec.name, qloo, offers, kind, timely };
+}
+
+/**
+ * No Qloo affinity: says why (not found in Qloo, or found but not scored for this audience), in three
+ * wordings that rotate with the card's rank so a list of evidence-only picks does not repeat itself.
+ */
+function noAffinity(rec: Recommendation, lang: Lang): string {
+  const v = Math.max(0, (rec.rank ?? 1) - 1) % 3;
+  const found = Boolean(rec.qlooEntityId);
+  if (lang === 'es')
+    return found
+      ? ['Qloo conoce a esta persona, pero no le dio puntaje con este público.', 'Está en Qloo, sin puntaje de afinidad para esta audiencia.', 'Qloo no le dio puntaje para este público: entra por la evidencia.'][v]
+      : ['No está en el catálogo de Qloo: entra por la evidencia de sus entrevistas.', 'Fuera del catálogo de Qloo; entra por sus entrevistas verificadas.', 'Sin registro en Qloo: lo respaldan sus entrevistas, no el gusto del público.'][v];
+  return found
+    ? ['Qloo knows this person but gave no score for this audience.', 'In Qloo, with no affinity score for this audience.', 'Qloo did not score this person for this audience: the evidence picks them.'][v]
+    : ['Not in Qloo’s catalog: picked on interview evidence.', 'Outside Qloo’s catalog; in on verified interviews.', 'No Qloo record: backed by interviews, not by audience taste.'][v];
 }
 
 /** For people Qloo proposed: three wordings that rotate with the card's rank, so consecutive cards differ. */

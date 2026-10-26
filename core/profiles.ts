@@ -138,6 +138,36 @@ export function imageInfoUrl(files: string[]): string {
   return `${WIKI_API('en')}?${p.toString()}`;
 }
 
+/**
+ * Free-licensed Commons photos by file name (spaces or underscores), with author and license for the
+ * credit. Keys use underscores. Images without license metadata or marked non-free are skipped.
+ */
+export async function commonsPhotos(fileNames: string[], fetchJson: JsonFetcher): Promise<Map<string, GuestPhoto>> {
+  const files = [...new Set(fileNames.map((f) => f.replace(/ /g, '_')))];
+  const photos = new Map<string, GuestPhoto>();
+  for (const batch of chunk(files, 25)) {
+    const body = (await fetchJson(imageInfoUrl(batch))) as { query?: { pages?: Array<{ title: string; imageinfo?: Array<Record<string, unknown>> }>; normalized?: Array<{ from: string; to: string }> } };
+    for (const p of body.query?.pages ?? []) {
+      const info = p.imageinfo?.[0];
+      if (!info) continue;
+      const meta = (info.extmetadata ?? {}) as Record<string, { value?: string }>;
+      const license = stripHtml(meta.LicenseShortName?.value ?? '');
+      // Keep only images whose license metadata is present and free.
+      if (!license || /fair use|non-free/i.test(license)) continue;
+      photos.set(p.title.replace(/^File:/, '').replace(/ /g, '_'), {
+        thumbUrl: String(info.thumburl ?? info.url),
+        width: Number(info.thumbwidth ?? 0),
+        height: Number(info.thumbheight ?? 0),
+        filePage: String(info.descriptionurl ?? ''),
+        license,
+        licenseUrl: meta.LicenseUrl?.value ?? null,
+        artist: stripHtml(meta.Artist?.value ?? 'Unknown author').slice(0, 120),
+      });
+    }
+  }
+  return photos;
+}
+
 export function esExtractsUrl(titles: string[]): string {
   const p = new URLSearchParams({ action: 'query', format: 'json', formatversion: '2', redirects: '1', titles: titles.join('|'), prop: 'extracts|info', inprop: 'url', exintro: '1', explaintext: '1', exsentences: '2', exlimit: '20' });
   return `${WIKI_API('es')}?${p.toString()}`;
@@ -265,28 +295,7 @@ export async function resolveProfiles(
     }
   }
 
-  const files = [...new Set(accepted.map((a) => a.page.pageimage).filter((x): x is string => Boolean(x)))];
-  const photos = new Map<string, GuestPhoto>();
-  for (const batch of chunk(files, 25)) {
-    const body = (await fetchJson(imageInfoUrl(batch))) as { query?: { pages?: Array<{ title: string; imageinfo?: Array<Record<string, unknown>> }>; normalized?: Array<{ from: string; to: string }> } };
-    for (const p of body.query?.pages ?? []) {
-      const info = p.imageinfo?.[0];
-      if (!info) continue;
-      const meta = (info.extmetadata ?? {}) as Record<string, { value?: string }>;
-      const license = stripHtml(meta.LicenseShortName?.value ?? '');
-      // Keep only images whose license metadata is present and free (pilicense=free already filters).
-      if (!license || /fair use|non-free/i.test(license)) continue;
-      photos.set(p.title.replace(/^File:/, '').replace(/ /g, '_'), {
-        thumbUrl: String(info.thumburl ?? info.url),
-        width: Number(info.thumbwidth ?? 0),
-        height: Number(info.thumbheight ?? 0),
-        filePage: String(info.descriptionurl ?? ''),
-        license,
-        licenseUrl: meta.LicenseUrl?.value ?? null,
-        artist: stripHtml(meta.Artist?.value ?? 'Unknown author'),
-      });
-    }
-  }
+  const photos = await commonsPhotos([...new Set(accepted.map((a) => a.page.pageimage).filter((x): x is string => Boolean(x)))], fetchJson);
 
   const esTitles = accepted.filter((a) => a.lang === 'en').map((a) => a.page.langlinks?.find((l) => l.lang === 'es')?.title).filter((x): x is string => Boolean(x));
   const esExtracts = new Map<string, { extract: string; url: string }>();

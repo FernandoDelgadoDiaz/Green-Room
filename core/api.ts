@@ -19,7 +19,7 @@ import { QlooError, type QlooAdapter } from './qloo/types';
 import { HourlyQuota, limitsFromEnv, liveSwitch, verifyBearer, type LiveEnv } from './access';
 import { runComparison, runCoverage, runOriginality, summarizeComparison, summarizeCoverage } from './experiment';
 import { redact } from './qloo/credentials';
-import { resolveProfiles, type GuestProfile } from './profiles';
+import { commonsPhotos, resolveProfiles, type GuestPhoto, type GuestProfile } from './profiles';
 import { nameKey } from './names';
 import { PublicGuard, publicConfig, type CasStore, type PublicEnv } from './public-live/guard';
 
@@ -156,6 +156,31 @@ export async function recommendFor(target: PodcastDataset, others: PodcastDatase
       }),
       photo: { ...person.photo, width: 320, height: 0 },
     };
+  }
+  // People Qloo proposed from outside our sources: their Wikidata image (P18), free Commons license only.
+  const externals = shown.filter((r) => r.external?.photoFile && !profiles[r.key]?.photo);
+  if (externals.length && env.PROFILE_LOOKUP !== '0') {
+    const photos = await commonsPhotos(
+      externals.map((r) => r.external!.photoFile!),
+      (u) => safeJson(u, { allowHosts: WIKI_HOSTS, timeoutMs: 6000 }),
+    ).catch(() => new Map<string, GuestPhoto>());
+    for (const rec of externals) {
+      const ext = rec.external!;
+      const photo = photos.get(ext.photoFile!.replace(/ /g, '_'));
+      if (!photo) continue;
+      profiles[rec.key] = {
+        ...(profiles[rec.key] ?? {
+          name: rec.name,
+          wikipedia: ext.wikipedia ? { title: ext.wikipedia.title, url: ext.wikipedia.url } : { title: ext.canonicalName, url: `https://www.wikidata.org/wiki/${ext.wikidataId}` },
+          wikidataId: ext.wikidataId,
+          description: ext.description,
+          extract: { en: null, es: null, esUrl: null },
+          matchEvidence: ext.identityEvidence,
+          retrievedAt: new Date().toISOString().slice(0, 10),
+        }),
+        photo,
+      };
+    }
   }
   // "Probable" language: an identity-checked Wikipedia article exists in the show's language.
   // Indirect evidence only; it never becomes "confirmed".
