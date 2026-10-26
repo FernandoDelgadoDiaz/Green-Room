@@ -43,3 +43,15 @@ describe('Qloo explainability', () => {
     expect(q.explanations.size).toBe(0);
   });
 });
+
+describe('Qloo quota headers', () => {
+  it('keeps the rate-limit headers of the latest response as numbers, and nothing else', async () => {
+    const { rateLimitHeaders } = await import('../core/qloo/client');
+    const h = new Headers({ 'X-RateLimit-Remaining-Month': '48210', 'X-RateLimit-Limit-Second': '10', 'Content-Type': 'application/json', 'X-RateLimit-Bogus': 'n/a' });
+    expect(rateLimitHeaders(h)).toEqual({ 'x-ratelimit-remaining-month': 48210, 'x-ratelimit-limit-second': 10 });
+    const fetchImpl = async () => new Response(JSON.stringify({ results: [] }), { status: 200, headers: h });
+    const q = new LiveQlooAdapter({ apiKey: 'k', fetchImpl: fetchImpl as typeof fetch });
+    await q.searchPerson('x');
+    expect(q.metrics.rateLimit?.['x-ratelimit-remaining-month']).toBe(48210);
+  });
+});

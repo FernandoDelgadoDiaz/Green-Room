@@ -56,6 +56,22 @@ export interface QlooMetrics {
   startedAt: number;
   /** Requests that finally failed (after any retries): answers the analysis really lost. */
   lost?: number;
+  /** Qloo's own rate-limit headers from the latest response (e.g. x-ratelimit-remaining-month), as numbers. */
+  rateLimit?: Record<string, number>;
+}
+
+/** Rate-limit headers Qloo sends (developer support, 2026-10-26: X-RateLimit-Remaining-Month and per-second limits). */
+const RATE_HEADERS = ['x-ratelimit-remaining-month', 'x-ratelimit-limit-month', 'x-ratelimit-remaining-second', 'x-ratelimit-limit-second', 'x-ratelimit-remaining', 'x-ratelimit-limit'];
+export function rateLimitHeaders(headers: { get(name: string): string | null; forEach?: (cb: (value: string, key: string) => void) => void } | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  const keep = (k: string, v: string | null) => {
+    const n = v === null ? NaN : Number(v);
+    if (/ratelimit/i.test(k) && Number.isFinite(n)) out[k.toLowerCase()] = n;
+  };
+  if (!headers) return out;
+  if (typeof headers.forEach === 'function') headers.forEach((v, k) => keep(k, v));
+  else for (const k of RATE_HEADERS) keep(k, headers.get(k));
+  return out;
 }
 
 export function summarizeMetrics(m: QlooMetrics) {
@@ -317,6 +333,8 @@ export class LiveQlooAdapter implements QlooAdapter {
       const res = await this.fetchImpl(url, { headers: { 'X-Api-Key': this.opts.apiKey, Accept: 'application/json' }, signal: ctrl.signal });
       this.metrics.latenciesMs.push(Date.now() - t0);
       this.metrics.statuses[res.status] = (this.metrics.statuses[res.status] ?? 0) + 1;
+      const rl = rateLimitHeaders(res.headers);
+      if (Object.keys(rl).length) this.metrics.rateLimit = rl;
       return res;
     } catch (err) {
       const kind = ctrl.signal.aborted ? 'timeout' : 'network';

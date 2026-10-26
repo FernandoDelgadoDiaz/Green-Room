@@ -27,6 +27,8 @@ export interface LiveMeta {
   qlooCalls?: number;
   partial?: boolean;
   errors?: Record<string, number>;
+  /** Qloo's rate-limit headers on the analysis' last response (quota left this month, per-second limits). */
+  qlooRateLimit?: Record<string, number>;
 }
 
 export type RecommendResult = AgentResult & {
