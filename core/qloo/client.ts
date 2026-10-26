@@ -247,12 +247,22 @@ export class LiveQlooAdapter implements QlooAdapter {
     return Math.max(0, this.limits.maxCalls - (this.opts.sharedBudget ?? this.metrics).networkCalls);
   }
 
-  /** Waits for the rate gate: minimum spacing between starts and any 429 cool-down. */
+  /**
+   * Waits for the rate gate: minimum spacing between starts and any 429 cool-down. The gate is checked
+   * again after every wait and a start is claimed only when it is actually open: a timer that fires late
+   * (a loaded machine) must not squeeze the next start, and a cool-down set by a 429 while a request was
+   * already waiting must still hold it back.
+   */
   private async pace() {
-    const now = Date.now();
-    const at = Math.max(now, this.nextStartAt, this.cooldownUntil);
-    this.nextStartAt = at + (this.limits.minIntervalMs ?? 0);
-    if (at > now) await new Promise((r) => setTimeout(r, at - now));
+    for (;;) {
+      const now = Date.now();
+      const at = Math.max(now, this.nextStartAt, this.cooldownUntil);
+      if (at <= now) {
+        this.nextStartAt = now + (this.limits.minIntervalMs ?? 0);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, at - now));
+    }
   }
 
   private throttled(waitMs: number) {

@@ -811,7 +811,7 @@ function AudienceChart({ result }: { result: RecommendResult }) {
  * the two lists measured alike (Qloo audience affinity, and fit from evidence alone). Only facts of
  * this run; whether a guest is editorially better is the producer's call.
  */
-function QlooValue({ result, view, setView, hasTaste }: { result: RecommendResult; view: ListView; setView: (v: ListView) => void; hasTaste: boolean }) {
+function QlooValue({ result, view, setView, hasTaste, taste }: { result: RecommendResult; view: ListView; setView: (v: ListView) => void; hasTaste: boolean; taste: Recommendation[] }) {
   const { t } = useI18n();
   const c = result.comparison;
   if (!c?.rows || !c.means) return null;
@@ -823,6 +823,9 @@ function QlooValue({ result, view, setView, hasTaste }: { result: RecommendResul
   // Averaged, and claimed, only when Qloo has a value for most of both lists.
   const enough = w.affinityKnown >= 3 && b.affinityKnown >= 3;
   const rose = enough && w.affinity !== null && b.affinity !== null && w.affinity > b.affinity;
+  // Qloo's own order measured the same way (affinity rank from this run): the clearest read of what Qloo adds.
+  const tasteVals = hasTaste ? taste.map((r) => r.qlooAudience?.affinity).filter((x): x is number => typeof x === 'number') : [];
+  const tasteMean = tasteVals.length >= 3 && b.affinityKnown >= 3 && b.affinity !== null ? tasteVals.reduce((x, y) => x + y, 0) / tasteVals.length : null;
   const metric = (label: string, before: number | null, after: number | null, note?: string) => (
     <div className="rounded-xl bg-white/5 p-3">
       <p className="text-[11px] uppercase tracking-widest text-stone-500">{label}</p>
@@ -843,9 +846,11 @@ function QlooValue({ result, view, setView, hasTaste }: { result: RecommendResul
       <p className="mt-1 text-lg text-stone-100">
         {entered.length === 0 ? t('qv.same', { k: c.k }) : t(entered.length === 1 ? 'qv.changedOne' : 'qv.changedMany', { n: entered.length, k: c.k })}{' '}
         {entered.length > 0 && rose && t('qv.closer')}
+        {tasteMean !== null && tasteMean > b.affinity! && <span className="text-emerald-200"> {t('qv.tasteCloser', { t: pct(tasteMean), b: pct(b.affinity) })}</span>}
       </p>
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        {metric(t('qv.mAffinity'), enough ? b.affinity : null, enough ? w.affinity : null, t(enough ? 'qv.known' : 'qv.fewKnown', { a: b.affinityKnown, b: w.affinityKnown, k: c.k }))}
+      <div className={`mt-4 grid gap-2 ${tasteMean !== null && enough ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+        {tasteMean !== null && metric(t('qv.mTaste'), b.affinity, tasteMean, t('qv.tasteNote', { a: b.affinityKnown, n: tasteVals.length, k: c.k }))}
+        {(enough || tasteMean === null) && metric(t('qv.mAffinity'), enough ? b.affinity : null, enough ? w.affinity : null, t(enough ? 'qv.known' : 'qv.fewKnown', { a: b.affinityKnown, b: w.affinityKnown, k: c.k }))}
         {metric(t('qv.mEvidence'), b.editorial, w.editorial, t('qv.evidenceNote'))}
       </div>
       {entered.length > 0 && (
@@ -910,7 +915,7 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
     <div className="space-y-8">
     <GuestLineup result={result} show={show} recs={recs} view={view} setView={setView} views={views} newKeys={newKeys} leftKeys={leftKeys} />
     <WhyThese result={result} show={show} recs={view === 'none' ? result.recommendations : recs} />
-    {hasBaseline && <QlooValue result={result} view={view} setView={setView} hasTaste={hasTaste} />}
+    {hasBaseline && <QlooValue result={result} view={view} setView={setView} hasTaste={hasTaste} taste={taste} />}
     {banner}
     <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <section className="order-2 space-y-6 lg:order-1">
