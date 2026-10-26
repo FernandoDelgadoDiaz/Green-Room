@@ -713,7 +713,7 @@ function GuestLineup({ result, show, recs, view, setView, views, newKeys, leftKe
     );
   };
   return (
-    <section>
+    <section id="lineup" className="scroll-mt-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h3 className="font-display text-4xl sm:text-5xl">{t('recs.title')}</h3>
@@ -914,7 +914,7 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
   return (
     <div className="space-y-8">
     <GuestLineup result={result} show={show} recs={recs} view={view} setView={setView} views={views} newKeys={newKeys} leftKeys={leftKeys} />
-    <WhyThese result={result} show={show} recs={view === 'none' ? result.recommendations : recs} />
+    <WhyThese result={result} show={show} recs={recs} without={view === 'none' ? { onShowQloo: () => (setView(hasTaste ? 'taste' : 'evidence'), document.getElementById('lineup')?.scrollIntoView({ behavior: 'smooth', block: 'start' })) } : undefined} />
     {hasBaseline && <QlooValue result={result} view={view} setView={setView} hasTaste={hasTaste} taste={taste} />}
     {banner}
     <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">

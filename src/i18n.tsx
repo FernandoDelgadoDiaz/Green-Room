@@ -231,6 +231,12 @@ const STRINGS = {
   'why.qloo': { en: 'Qloo', es: 'Qloo' },
   'why.offers': { en: 'Brings', es: 'Aporta' },
   'why.timely': { en: 'Now', es: 'Actualidad' },
+  'why.withoutTitle': { en: 'Why these five, without Qloo', es: 'Por qué estos 5, sin Qloo' },
+  'why.withoutLead': { en: 'Chosen from public evidence only: the show’s themes, recent interviews and track record. Qloo took no part in choosing them.', es: 'Elegidos solo con evidencia pública: los temas del programa, entrevistas recientes y trayectoria. Qloo no participó en la elección.' },
+  'why.withoutAff': { en: 'Your audience’s affinity with this list, measured afterwards with Qloo: {b}/100 on average.', es: 'Afinidad de tu público con esta lista, medida después con Qloo: {b}/100 en promedio.' },
+  'why.withoutTaste': { en: 'The five Qloo picks by your audience’s taste average {t}/100.', es: 'Los 5 que elige Qloo por el gusto de tu público promedian {t}/100.' },
+  'why.withoutBtn': { en: 'See who Qloo picks', es: 'Ver los que elige Qloo' },
+  'why.measured': { en: 'Measured afterwards', es: 'Medido después' },
   'view.none': { en: 'Without Qloo', es: 'Sin Qloo' },
   'view.withQloo': { en: 'With Qloo', es: 'Con Qloo' },
   'view.noneLead': {

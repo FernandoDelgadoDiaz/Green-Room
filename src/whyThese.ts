@@ -142,6 +142,13 @@ export function guestWhy(rec: Recommendation, lang: Lang, now = Date.now(), show
   return { key: rec.key, name: rec.name, qloo, offers, kind, timely };
 }
 
+/** For the list without Qloo: the affinity Qloo measured for this person afterwards (comparison row), never a reason for the pick. */
+export function measuredAffinity(affinity: number | null | undefined, lang: Lang): string {
+  if (affinity === null || affinity === undefined)
+    return lang === 'es' ? 'Qloo no tiene un valor de afinidad para esta persona con este público.' : 'Qloo has no affinity value for this person with this audience.';
+  return lang === 'es' ? `Afinidad con tu público: ${pct(affinity)} de 100. Qloo no participó en esta elección: midió la afinidad después, para comparar.` : `Affinity with your audience: ${pct(affinity)} out of 100. Qloo took no part in this pick: it measured the affinity afterwards, to compare.`;
+}
+
 /**
  * No Qloo affinity: says why (not found in Qloo, or found but not scored for this audience), in three
  * wordings that rotate with the card's rank so a list of evidence-only picks does not repeat itself.

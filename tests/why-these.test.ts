@@ -1,6 +1,6 @@
 // "Why these five": every sentence comes from a field of the result; nothing when it is missing.
 import { describe, expect, it } from 'vitest';
-import { agentSteps, audienceRead, guestWhy } from '../src/whyThese';
+import { agentSteps, audienceRead, guestWhy, measuredAffinity } from '../src/whyThese';
 import type { Recommendation } from '../core/agent/agent';
 
 const diag = (strategy: string, confirmed = 0, searched = 0) =>
@@ -86,5 +86,12 @@ describe('what the agent did', () => {
 
   it('never mentions Qloo proposals when there were none', () => {
     expect(agentSteps({ ...(base as object), funnel: { proposed: 0, identityVerified: 0, ranked: 0 } } as never, 'X', 'es').join(' ')).not.toMatch(/me propuso/);
+  });
+});
+
+describe('the list without Qloo', () => {
+  it('reports the affinity Qloo measured afterwards, never as the reason for the pick', () => {
+    expect(measuredAffinity(0.12, 'es')).toBe('Afinidad con tu público: 12 de 100. Qloo no participó en esta elección: midió la afinidad después, para comparar.');
+    expect(measuredAffinity(null, 'en')).toBe('Qloo has no affinity value for this person with this audience.');
   });
 });
