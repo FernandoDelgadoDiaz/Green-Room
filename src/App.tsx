@@ -203,6 +203,8 @@ function Shell() {
     if (!(e instanceof LiveError)) return setError(String(e));
     const stale = e.staleLive as (RecommendResult & { result?: RecommendResult }) | null;
     const staleResult = stale ? (stale.result ?? stale) : null;
+    // The earlier result carries the refusal's reason, so the page says why it is not a new analysis.
+    if (staleResult?.live) staleResult.live = { ...staleResult.live, stale: true, staleReason: e.explanation };
     setFailure({ code: e.code, message: e.explanation, retry: e.retry ? retry : null, stale: stale ? () => (setFailure(null), show(stale)) : null, staleDate: staleResult?.live?.computedAt ?? null, mock });
   };
 

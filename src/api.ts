@@ -24,6 +24,8 @@ export interface LiveMeta {
   cached: boolean;
   computedAt: string;
   stale?: boolean;
+  /** Why a new LIVE result could not be produced (the refusal's own message), set when the user opens the earlier one. */
+  staleReason?: { en: string; es: string } | null;
   qlooCalls?: number;
   partial?: boolean;
   errors?: Record<string, number>;
