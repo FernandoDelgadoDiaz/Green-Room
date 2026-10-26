@@ -195,9 +195,10 @@ describe('why discoveries do or do not reach the top 5 (DOAC)', () => {
     // The gap is topical, not missing history: even with maximal activity and recency Yang stays below the cutoff.
     expect(pos['Andrew Yang'].reason).toMatch(/gap is topical, not missing history/);
     expect(pos['Andrew Yang'].notMeasured).toEqual(expect.arrayContaining(['momentum', 'recency']));
-    // Dan Price is held back by an unconfirmed language, and the reason says so.
-    expect(pos['Dan Price'].languageConfirmed).toBe(false);
-    expect(pos['Dan Price'].reason).toMatch(/Language not confirmed/);
+    // Dan Price: Wikidata records no spoken language, but a US citizenship makes English probable
+    // (unknown is not a mismatch); he still stays below the cutoff on the evidence.
+    expect(pos['Dan Price'].languageConfirmed).toBe(true);
+    expect(pos['Dan Price'].reason).not.toMatch(/Language not confirmed/);
     expect(r.recommendations.every((x) => x.source !== 'qloo-external')).toBe(true);
   });
 });

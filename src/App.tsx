@@ -187,7 +187,7 @@ function Shell() {
       /* URL updates are a convenience only */
     }
   };
-  const demos = ['all-in', 'this-week-in-startups'].map((id) => shows.find((x) => x.id === id)).filter((x): x is ShowSummary => Boolean(x));
+  const demos = ['this-week-in-startups', 'all-in'].map((id) => shows.find((x) => x.id === id)).filter((x): x is ShowSummary => Boolean(x));
 
   const [external, setExternal] = useState<{ hit: PodcastHit; analysis: FeedAnalysisSummary | null } | null>(null);
 
