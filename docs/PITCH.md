@@ -7,7 +7,7 @@
 - **The final, Nov 5:** the 3 finalists "appear **on air** with **Jason Calacanis, Cedric the Entertainer and Alex Elias**, who will pick the winner". Each one presents the idea, answers questions and learns the result in real time. Winners are announced on or around **Nov 5, 3:00 pm ET (17:00 in Argentina)**.
 - **Not stated anywhere:** the exact time slot, how long each finalist speaks, or whether it is remote. Prepare a 2-minute and a 30-second version, and confirm everything when notified.
 
-The audience is three people: Jason Calacanis (podcaster and investor, host of This Week in Startups), Cedric the Entertainer (comedian and host, Qloo backer) and Alex Elias (Qloo's CEO). Keep the app open on This Week in Startups before you start.
+The audience is three people: Jason Calacanis (podcaster and investor, host of This Week in Startups), Cedric the Entertainer (comedian and host, Qloo backer) and Alex Elias (Qloo's CEO). Keep the app open on This Week in Startups before you start. (The Devpost judging panel before the final also includes Mike Diolosa, Qloo's CTO: the Qloo table in the README is written for him.)
 
 ## The 2-minute pitch (English)
 
@@ -15,11 +15,11 @@ The audience is three people: Jason Calacanis (podcaster and investor, host of T
 > "Every podcast lives or dies by its guests, and most shows book them the same way: from memory, from their own circle, from whoever's famous this week. Green Room is an agent that books guests on evidence and on taste."
 
 **0:15 · Live demo (55 s)**: open https://greenroom1.netlify.app/?lang=en&show=this-week-in-startups
-> "Jason, this is your show. Green Room read its real episode history and learned who you actually interview: founders, investors, operators, mostly American.
-> These five people have never been on This Week in Startups. Every one has real interviews on comparable shows, with links, and each card explains why, in a sentence written from that evidence.
-> This is where Qloo comes in. Qloo tells us who your audience is — here, by age and gender — and how strongly that audience has affinity for each guest. Qloo's affinity also changed the order of this list, and Qloo proposed people from outside your world; each one had to pass the same checks before it could get in."
+> "Jason, this is your show. Green Room read all 499 episodes and set aside the 114 people you've already had on.
+> Then it asked Qloo who your audience is: mostly men, 45 to 54, reading *The Power Law* and *Chaos Monkeys*. And it asked Qloo who that audience leans toward. These five: Ben Horowitz, Marc Andreessen, Travis Kalanick, Brad Feld, Reed Hastings. Every one verified: right person, never on your show.
+> Now watch. *(tap "Without Qloo")* Same analysis, Qloo off: Ray Dalio, Elon Musk, Satya Nadella. Famous, but your audience's affinity for that list averages 19 out of 100. Qloo's list: 75."
 
-Point at: the five portraits → a card's green "Qloo on this guest's audience" strip → "Who this show's audience is" chart.
+Point at: the five portraits → "Why these five" → tap **Without Qloo** → "What Qloo changed in this search" (19 → 75).
 
 **1:10 · Why only Qloo (20 s)**
 > "Your RSS feed tells you who you booked. Only Qloo tells you what your audience likes. Without Qloo, Green Room can list credible people. With Qloo, it can tell a producer whose audience is theirs and who their audience is."
@@ -39,9 +39,9 @@ Update the numbers in the closing before the final: they come from "Data & metho
 > "Un podcast vive o muere por sus invitados, y la mayoría de los programas los elige igual: de memoria, de su propio círculo, o por quién es famoso esta semana. Green Room es un agente que elige invitados con evidencia y con gusto."
 
 **0:15 · Demo en vivo (55 s)**: abrir This Week in Startups.
-> "Jason, este es tu programa. Green Room leyó el historial real de episodios y aprendió a quién entrevistás de verdad: fundadores, inversores, operadores, mayormente estadounidenses.
-> Estas cinco personas nunca estuvieron en This Week in Startups. Todas tienen entrevistas reales en programas comparables, con enlaces, y cada tarjeta explica por qué en una frase escrita a partir de esa evidencia.
-> Acá entra Qloo. Qloo nos dice quién es tu audiencia, por edad y género, y cuánta afinidad tiene esa audiencia con cada invitado. La afinidad de Qloo también cambió el orden de esta lista, y Qloo propuso gente de fuera de tu mundo; cada una tuvo que pasar los mismos controles para poder entrar."
+> "Jason, este es tu programa. Green Room leyó los 499 episodios y dejó afuera a las 114 personas que ya invitaste.
+> Después le preguntó a Qloo cómo es tu audiencia: sobre todo hombres de 45 a 54 años, que leen *The Power Law* y *Chaos Monkeys*. Y le preguntó por quién se inclina esa audiencia. Estos cinco: Ben Horowitz, Marc Andreessen, Travis Kalanick, Brad Feld, Reed Hastings. Todos verificados: la persona correcta y nunca estuvieron en tu programa.
+> Ahora miren. *(tocar "Sin Qloo")* El mismo análisis con Qloo apagado: Ray Dalio, Elon Musk, Satya Nadella. Famosos, pero la afinidad de tu audiencia con esa lista promedia 19 sobre 100. La lista de Qloo: 75."
 
 **1:10 · Por qué solo con Qloo (20 s)**
 > "Tu feed te dice a quién invitaste. Solo Qloo te dice qué le gusta a tu audiencia. Sin Qloo, Green Room puede listar gente creíble. Con Qloo, le puede decir a un productor qué invitado tiene un público como el suyo y quién es su audiencia."
@@ -59,7 +59,7 @@ A subscription for producers and networks: per show, with weekly shortlists and 
 No language model ranks anyone. A rule-based agent works from public evidence (RSS interview history, Wikidata identity and country) and from Qloo's taste graph, and every step says why it ran. An LLM can't tell you whose audience overlaps yours; Qloo can.
 
 **"Does Qloo actually change the picks?"**
-Qloo affinity reorders comparable candidates, and Qloo proposes people the show's history never had, which must pass the same checks; on the US shows we ran live, Qloo's affinity changed the top five. We were careful: in historical backtests, Qloo didn't raise hit rates, so we don't claim better predictions. What Qloo adds is the audience read: who the show's audience is by age and gender, and how much affinity it has for each guest.
+Yes, and the app shows it with one tap. On This Week in Startups (live, Oct 26), Qloo changes 4 of the 5, and Qloo's order averages 75/100 audience affinity against 19/100 for the list without Qloo, measured the same way in the same run. Qloo proposed 30 people; 19 passed identity verification and 15 became candidates. We were careful: in historical backtests, Qloo didn't raise hit rates, so we don't claim better predictions. What Qloo adds is the audience read: who the show's audience is by age and gender, and how much affinity it has for each guest.
 
 **"How do you know who the audience is?"**
 We don't, and we say so. Qloo gives aggregate taste and demographic affinity for the show's signals. It's inferred, never listener data, and it's labeled that way.

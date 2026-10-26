@@ -1,6 +1,6 @@
 # Judge access
 
-What the rules say (qloo.devpost.com/rules, read 2026-10-23):
+What the rules say (qloo.devpost.com/rules, read 2026-10-23 and again 2026-10-25):
 - Access must be provided to a working project for judging and testing.
 - The project must be available "free of charge and without any restriction … until the Judging Period ends".
 - Judging period: Nov 2, 2026 12:00 ET to Nov 5, 2026 23:45 ET.
@@ -20,20 +20,19 @@ What the rules say (qloo.devpost.com/rules, read 2026-10-23):
 
 ## Testing instructions (paste into Devpost)
 
-> **No login needed.** Open https://greenroom1.netlify.app, or go straight to a live example: https://greenroom1.netlify.app/?show=all-in (also "All-In →" and "This Week in Startups →" on the home page).
+> **No login needed.** Open https://greenroom1.netlify.app and press **This Week in Startups** or **All-In** next to *See a live example*, or go straight to https://greenroom1.netlify.app/?show=this-week-in-startups.
 >
-> 1. **Pick a podcast.** Choose a country, then a podcast, and press **Analyze**. Or search any podcast by name or link; shows listed in Apple Podcasts whose episode titles name their guests can be analyzed.
+> 1. **The five portraits are the answer.** Above them, switch between **Without Qloo**, **With Qloo** and **By audience taste · Qloo**: the same analysis with Qloo off, on, and ordered by Qloo alone. *New with Qloo* marks people who are not in the list without Qloo. When Qloo's own order is strong (five people with high affinity), it opens first.
+> 2. **Read "Why these five"**, right below:
+>    - what Qloo found out about the show's audience (age, gender and what else it likes);
+>    - why each guest is here: their Qloo affinity, what they bring and how recent their last interview is;
+>    - what the agent did, step by step, with this run's numbers.
+> 3. **Read "What Qloo changed in this search"** (shown when Qloo changes at least 3 of the 5): who entered with Qloo and why, who left, and both lists measured the same way.
+> 4. **Open "Prepare invitation"** on any guest card. It is a letter built only from that guest's evidence; you can edit it and open it in your email or WhatsApp. Nothing is sent from the app.
+> 5. **Pick any other podcast.** Choose a country and a podcast, or search any show by name or link.
 >    - The 24 catalog shows open instantly from a cached Qloo analysis made for judging (the banner says when it was computed).
 >    - A podcast analyzed for the first time runs live against Qloo in the background and usually takes 20–90 seconds.
-> 2. **The five recommended guests come first**, as portraits; click one to jump to its card. Then read **"What Qloo added"**:
->    - who this show's audience is, according to Qloo (age and gender affinity);
->    - new people that only Qloo's taste graph surfaced, each verified (identity, theme, not a past guest, language);
->    - Qloo's cultural conversation hooks (music, films, books).
-> 3. **Read the five guest cards.** They are people this show's audience knows (same country and the same kind of guest the show already interviews), with a verifiable interview track record. Each card shows:
->    - Qloo's read of the guest's audience: affinity to the show's audience (profile match and 12-week trend appear only when Qloo has them for that person);
->    - the evidence, with links;
->    - a draft invitation.
-> 4. **Open "Data & method" → "How well Qloo knows each market"** to see, measured on every live analysis, how well Qloo knows US, UK, Mexican, Spanish and Argentine shows. Where Qloo does not know a show's audience, the results say so instead of guessing.
-> 5. **Open "What the agent did"** to see every step of the agent loop, why it ran and how it re-planned. Open the discovery panel to see every person Qloo proposed and why each one was kept or set aside.
+> 6. **Open "Data & method" → "How well Qloo knows each market"** to see, measured on our own live analyses, where Qloo knows a show's audience well (US) and where it doesn't (Argentina). Where Qloo does not know an audience, the results say so instead of guessing.
+> 7. **Open "What the agent did"** for every step of the agent loop, and the discovery panel for every person Qloo proposed and why each one was kept or set aside.
 >
 > The app opens in English (add `?lang=es` for Spanish); the switch is at the top right. If Qloo is ever unavailable, the app says so and offers a retry; it never silently replaces live results with simulated ones. A clearly labeled demo without Qloo exists only if you choose it.
