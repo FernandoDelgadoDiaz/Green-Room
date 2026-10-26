@@ -13,7 +13,7 @@ What the rules say (qloo.devpost.com/rules, read 2026-10-23 and again 2026-10-25
 - **Budget raised for Nov 2–5.**
   - `PUBLIC_DAILY_QLOO_CALLS` goes up from 300, the per-visitor cap goes up (`PUBLIC_FRESH_PER_IP_PER_DAY=10`) and the open-search allowance goes from 3 to 15 new podcasts a day (`PUBLIC_OPEN_FEEDS_PER_DAY=15`), so judges can analyze shows of their own.
   - The global Qloo call ceiling, one-at-a-time background jobs, the 429-aware pacing and the emergency pause stay on.
-  - Qloo's own key quota: ask in Discord #api-help to confirm or raise it for the judging period, as the developer guide suggests.
+  - Qloo's own key quota: **confirmed by Qloo's developer support on 2026-10-26.** Default hackathon limits were raised; ~2,000 calls on Nov 1 and up to ~800 a day during judging fit within them, and the key stays active through the judging period. The real numbers are in each response's headers (`X-RateLimit-Remaining-Month` and per-second limits); every live result records them in `live.qlooRateLimit`. If 429s appear while judges use the demo, Qloo offered to look at the key.
 - **After Nov 5 23:45 ET:**
   - set `QLOO_PUBLIC_ENABLED=false` and redeploy;
   - the key is deactivated by Qloo after the event anyway.
