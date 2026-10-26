@@ -533,7 +533,7 @@ function QlooCoverageNotice({ result }: { result: RecommendResult }) {
   );
 }
 
-function QlooContribution({ result }: { result: RecommendResult }) {
+function QlooContribution({ result, taste }: { result: RecommendResult; taste: Recommendation[] }) {
   const { lang, t } = useI18n();
   if (result.qlooMode !== 'LIVE') return null;
   const fresh = result.discoveryPositions.filter((p) => p.source === 'qloo-external' && p.eligible).sort((a, b) => a.qlooRank - b.qlooRank);
@@ -542,6 +542,7 @@ function QlooContribution({ result }: { result: RecommendResult }) {
   const hooks = recognizableHooks(result);
   const weak = weakQlooCoverage(result);
   const f = result.funnel;
+  const tasteRank = (name: string) => taste.find((r) => r.name === name)?.rank ?? null;
   return (
     <div className="card border border-emerald-400/30 bg-emerald-500/5 p-5 text-sm">
       <h3 className="flex items-center gap-2 font-display text-2xl">{t('qc.title')} <Badge p="LIVE" /></h3>
@@ -556,6 +557,7 @@ function QlooContribution({ result }: { result: RecommendResult }) {
               <p className="font-semibold text-stone-100">
                 {p.name}
                 {p.inTopK && <span className="ml-2 text-xs font-normal text-emerald-300">{t('disc.newInTop')}</span>}
+                {tasteRank(p.name) && <span className="ml-2 text-xs font-normal text-emerald-300">{t('qc.inTaste', { n: tasteRank(p.name)! })}</span>}
               </p>
               <p className="text-[11px] text-stone-400">{t('qc.suggested', { q: p.qlooRank })}</p>
               {!p.inTopK && (
@@ -915,9 +917,11 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
     <div className="space-y-8">
     <GuestLineup result={result} show={show} recs={recs} view={view} setView={setView} views={views} newKeys={newKeys} leftKeys={leftKeys} />
     <WhyThese result={result} show={show} recs={recs} without={view === 'none' ? { onShowQloo: () => (setView(hasTaste ? 'taste' : 'evidence'), document.getElementById('lineup')?.scrollIntoView({ behavior: 'smooth', block: 'start' })) } : undefined} />
-    {hasBaseline && <QlooValue result={result} view={view} setView={setView} hasTaste={hasTaste} taste={taste} />}
-    {banner}
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    {hasBaseline && view !== 'none' && <QlooValue result={result} view={view} setView={setView} hasTaste={hasTaste} taste={taste} />}
+    {view !== 'none' && banner}
+    <div className={view === 'none' ? 'space-y-4' : 'grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]'}>
+      {/* Without Qloo: only that list and why each person leaves with Qloo; the full analysis is under With Qloo. */}
+      {view !== 'none' && (
       <section className="order-2 space-y-6 lg:order-1">
         <AudienceChart result={result} />
         <details className="card group p-5">
@@ -965,20 +969,25 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
         </div>
         )}
       </section>
+      )}
 
       <section className="order-1 space-y-4 lg:order-2">
         {result.qlooMode === 'MOCK' && <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-200">{t('recs.mock')}</div>}
         {recs.map((r) => <RecommendationCard key={`${view}-${r.key}`} rec={r} show={show} result={result} isNew={newKeys.has(r.key)} />)}
-        <QlooContribution result={result} />
-        <AnalysisSummary result={result} show={show} />
-        <DiscoveryPanel result={result} show={show} part="head" />
+        {view !== 'none' && (
+          <>
+            <QlooContribution result={result} taste={taste} />
+            <AnalysisSummary result={result} show={show} />
+            <DiscoveryPanel result={result} show={show} part="head" />
+          </>
+        )}
         {warnings.length > 0 && (
           <details className="rounded-xl border border-brass-400/30 bg-brass-400/10 px-4 py-3 text-sm text-brass-300">
             <summary className="cursor-pointer">{t('recs.warnings', { n: warnings.length })}</summary>
             <ul className="mt-2 list-disc space-y-1 pl-5">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
           </details>
         )}
-        <DiscoveryPanel result={result} show={show} part="details" />
+        {view !== 'none' && <DiscoveryPanel result={result} show={show} part="details" />}
         {result.discarded.length > 0 && (
           <details className="card p-4 text-sm text-stone-300">
             <summary className="cursor-pointer font-semibold">{t('recs.discarded', { n: result.discarded.length })}</summary>

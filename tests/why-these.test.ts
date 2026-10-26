@@ -1,6 +1,6 @@
 // "Why these five": every sentence comes from a field of the result; nothing when it is missing.
 import { describe, expect, it } from 'vitest';
-import { agentSteps, audienceRead, guestWhy, measuredAffinity } from '../src/whyThese';
+import { agentSteps, audienceRead, guestWhy, withQlooFate } from '../src/whyThese';
 import type { Recommendation } from '../core/agent/agent';
 
 const diag = (strategy: string, confirmed = 0, searched = 0) =>
@@ -90,8 +90,10 @@ describe('what the agent did', () => {
 });
 
 describe('the list without Qloo', () => {
-  it('reports the affinity Qloo measured afterwards, never as the reason for the pick', () => {
-    expect(measuredAffinity(0.12, 'es')).toBe('Afinidad con tu público: 12 de 100. Qloo no participó en esta elección: midió la afinidad después, para comparar.');
-    expect(measuredAffinity(null, 'en')).toBe('Qloo has no affinity value for this person with this audience.');
+  it('says why each person leaves once Qloo is on, or that they stay', () => {
+    expect(withQlooFate({ status: 'left', affinity: 0.29 }, 'es')).toBe('Sale con Qloo: buena evidencia, pero este público se inclina poco por esta persona (afinidad 29/100).');
+    expect(withQlooFate({ status: 'left', affinity: null }, 'en')).toMatch(/^Out with Qloo: Qloo has no affinity value/);
+    expect(withQlooFate({ status: 'kept', affinity: 0.6 }, 'es')).toBe('Se queda también con Qloo: afinidad con tu público 60/100.');
+    expect(withQlooFate(undefined, 'es')).toBeNull();
   });
 });
