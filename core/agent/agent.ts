@@ -274,9 +274,10 @@ export interface LanguageStatus {
   /**
    * Where the language evidence comes from: an interview whose show declares the language and whose
    * title agrees ('declared+title'), only the show's declared language ('declared'), only the title
-   * ('title'), languages spoken in Wikidata ('wikidata'), or a Wikipedia article ('wikipedia').
+   * ('title'), languages spoken in Wikidata ('wikidata'), a Wikipedia article ('wikipedia'), or, when
+   * Wikidata records no language, the official language of a recorded citizenship ('citizenship').
    */
-  basis?: 'declared+title' | 'declared' | 'title' | 'wikidata' | 'wikipedia';
+  basis?: 'declared+title' | 'declared' | 'title' | 'wikidata' | 'wikipedia' | 'citizenship';
 }
 
 export interface HistoryStatus {
@@ -451,6 +452,12 @@ function monthsBetween(a: string, b: string): number {
   return (new Date(b).getTime() - new Date(a).getTime()) / MONTH_MS;
 }
 
+// Official language of a citizenship, used only when Wikidata records no spoken language (probable, never confirmed).
+const COUNTRY_LANGUAGE: Record<string, string> = Object.fromEntries([
+  ...['us', 'gb', 'ca', 'au', 'nz', 'ie'].map((cc) => [cc, 'en']),
+  ...['ar', 'mx', 'es', 'cl', 'co', 'pe', 've', 'uy', 'py', 'bo', 'ec', 'cu', 'do', 'gt', 'hn', 'sv', 'ni', 'cr', 'pa'].map((cc) => [cc, 'es']),
+]);
+
 export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const { target, others, qloo } = input;
   const k = input.k ?? 5;
@@ -582,9 +589,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
     const p = personOf(c);
     if (!p) return false;
     if (level === 2) return true;
-    if (level === 1) return p.wikipedias >= INTERNATIONAL_WIKIPEDIAS || (c.regionFit ?? 0) >= 0.6;
-    return (c.regionFit ?? 0) === 1 && (!profileStrong() || (c.typeFit ?? 0) > 0);
+    if (level === 1) return p.wikipedias >= INTERNATIONAL_WIKIPEDIAS || (c.regionFit ?? 0) >= 0.6 || countryUnrecorded(c);
+    return ((c.regionFit ?? 0) === 1 || countryUnrecorded(c)) && (!profileStrong() || (c.typeFit ?? 0) > 0);
   };
+  // People Qloo proposed whose Wikidata record has no citizenship (P27): unknown is not a mismatch, so the
+  // country rule does not exclude them. No country is imputed (region fit stays 0, the card claims none).
+  const countryUnrecorded = (c: Candidate) => Boolean(c.external) && !c.external!.countries?.length;
   const gateText = (): Bi[] => [
     [`documented people from the audience’s countries (${[...audienceCountries].join('/').toUpperCase() || '—'}) who match the kind of guest the show interviews`, `personas documentadas de los países de su audiencia (${[...audienceCountries].join('/').toUpperCase() || '—'}) del mismo tipo de invitado que entrevista el programa`],
     [`documented people from ${showCountry?.toUpperCase() ?? 'the show’s country'}, interviewed on its shows, or known in ${INTERNATIONAL_WIKIPEDIAS}+ Wikipedias`, `personas documentadas de ${showCountry?.toUpperCase() ?? 'el país del programa'}, entrevistadas en sus programas, o conocidas en ${INTERNATIONAL_WIKIPEDIAS}+ Wikipedias`],
@@ -634,7 +644,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const appLang = (a: Appearance) => a.language ?? langOf.get(a.showId);
   // Confirmed only by a verified interview in one of the show's habitual languages. Nobody is assumed to speak it.
   // External candidates: only languages documented in Wikidata (P1412) count as confirmed.
-  const speaksTarget = (c: Candidate) => (c.external ? c.external.languages.spoken.some((l) => accepted.has(l)) : c.appearances.some((a) => accepted.has(appLang(a) ?? '')));
+  // When Wikidata records no spoken language at all, the official language of a recorded citizenship
+  // counts as probable (shown as such on the card); a recorded language list without it still excludes.
+  const citizenshipLangs = (c: Candidate) => (c.external && !c.external.languages.spoken.length ? [...new Set((c.external.countries ?? []).map((cc) => COUNTRY_LANGUAGE[cc]).filter(Boolean))].filter((l) => accepted.has(l)) : []);
+  const speaksTarget = (c: Candidate) =>
+    c.external ? c.external.languages.spoken.some((l) => accepted.has(l)) || citizenshipLangs(c).length > 0 : c.appearances.some((a) => accepted.has(appLang(a) ?? ''));
   const acceptedLabel = () => [...accepted].join('/');
   let languageFilter = false;
   let picks: Candidate[] = [];
@@ -1412,7 +1426,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         }
         const okLang = speaksTarget(c);
         prop.checks.push(
-          okLang
+          okLang && !ch.languages.spoken.length
+            ? { check: 'language', ok: true, detail: `Languages spoken not recorded in Wikidata; citizen of a ${acceptedLabel()}-speaking country (probable, not confirmed).`, detailEs: `Wikidata no registra los idiomas que habla; ciudadano de un país de habla ${acceptedLabel()} (probable, sin confirmar).` }
+            : okLang
             ? { check: 'language', ok: true, detail: `Wikidata lists ${acceptedLabel()} among the languages spoken.`, detailEs: `Wikidata registra ${acceptedLabel()} entre los idiomas que habla.` }
             : { check: 'language', ok: null, detail: `Languages spoken in Wikidata: ${ch.languages.spoken.join(', ') || 'not recorded'}.`, detailEs: `Idiomas que habla según Wikidata: ${ch.languages.spoken.join(', ') || 'sin registrar'}.` },
         );
@@ -1961,6 +1977,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       const ex = c.external;
       const spoken = ex.languages.spoken.filter((l) => accepted.has(l));
       if (spoken.length) return { status: 'confirmed', target: targetLang, evidenceLanguages: spoken, basis: 'wikidata', evidenceEn: `Wikidata lists “${spoken.join(', ')}” among languages spoken`, evidenceEs: `Wikidata registra “${spoken.join(', ')}” entre los idiomas que habla` };
+      const byCountry = citizenshipLangs(c);
+      if (byCountry.length) return { status: 'probable', target: targetLang, evidenceLanguages: byCountry, basis: 'citizenship', evidenceEn: `Languages spoken not recorded; citizen of a “${byCountry.join(', ')}”-speaking country (Wikidata)`, evidenceEs: `Idiomas sin registrar; ciudadano de un país de habla “${byCountry.join(', ')}” (Wikidata)` };
       const art = ex.languages.articles.filter((l) => accepted.has(l));
       if (art.length) return { status: 'probable', target: targetLang, evidenceLanguages: art, basis: 'wikipedia', evidenceEn: `Wikipedia article in “${art.join(', ')}” (not proof of an interview in it)`, evidenceEs: `Artículo de Wikipedia en “${art.join(', ')}” (no prueba una entrevista en ese idioma)` };
       return { status: 'unknown', target: targetLang, evidenceLanguages: ex.languages.spoken, evidenceEn: 'No language evidence for the show’s languages', evidenceEs: 'Sin evidencia de idioma para los idiomas del programa' };
