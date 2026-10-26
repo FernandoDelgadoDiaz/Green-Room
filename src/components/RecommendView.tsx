@@ -915,6 +915,12 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
 
   return (
     <div className="space-y-8">
+    {result.live?.stale && (
+      <div role="status" className="rounded-xl border border-brass-400/50 bg-brass-400/15 px-4 py-3 text-sm text-brass-100">
+        <p className="font-semibold">{t('pl.staleTop', { date: result.live.computedAt.slice(0, 16).replace('T', ' ') })}</p>
+        <p className="mt-1">{result.live.staleReason ? (lang === 'es' ? result.live.staleReason.es : result.live.staleReason.en) : t('pl.staleNoReason')}</p>
+      </div>
+    )}
     <GuestLineup result={result} show={show} recs={recs} view={view} setView={setView} views={views} newKeys={newKeys} leftKeys={leftKeys} />
     <WhyThese result={result} show={show} recs={recs} without={view === 'none' ? { onShowQloo: () => (setView(hasTaste ? 'taste' : 'evidence'), document.getElementById('lineup')?.scrollIntoView({ behavior: 'smooth', block: 'start' })) } : undefined} />
     {hasBaseline && view !== 'none' && <QlooValue result={result} view={view} setView={setView} hasTaste={hasTaste} taste={taste} />}

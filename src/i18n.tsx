@@ -188,6 +188,8 @@ const STRINGS = {
     en: 'Earlier LIVE result, shown because a new one cannot be produced right now.',
     es: 'Resultado LIVE anterior, mostrado porque ahora no se puede generar uno nuevo.',
   },
+  'pl.staleTop': { en: 'Saved result from {date} UTC, not a new analysis.', es: 'Resultado guardado del {date} UTC, no es un análisis nuevo.' },
+  'pl.staleNoReason': { en: 'A new Qloo analysis cannot be produced right now.', es: 'Ahora no se puede generar un análisis nuevo con Qloo.' },
   'pl.partial': {
     en: 'Some Qloo queries failed ({errors}). The result uses only the answers that did arrive.',
     es: 'Algunas consultas a Qloo fallaron ({errors}). El resultado usa solo las respuestas que llegaron.',
