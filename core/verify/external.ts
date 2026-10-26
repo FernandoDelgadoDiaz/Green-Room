@@ -43,6 +43,8 @@ export interface ExternalCheck {
   languages: { spoken: string[]; articles: string[] };
   /** Citizenship (Wikidata P27) as ISO 3166-1 alpha-2 codes, lowercase; only countries in COUNTRY_CODES. */
   countries?: string[];
+  /** Wikimedia Commons file of the person's image (Wikidata P18), when recorded. */
+  photoFile?: string | null;
   /** Same-name people found and not chosen. */
   namesakes: Array<{ wikidataId: string; description: string | null }>;
   /** Labels and aliases of the chosen item (en/es): used to catch the same person under another spelling. */
@@ -173,6 +175,7 @@ export class WikidataVerifier {
         wikipedia: null,
         languages: { spoken: e ? claimIds(e, 'P1412').map((q) => LANG_CODES[q]).filter(Boolean) : [], articles: e ? Object.keys(e.sitelinks ?? {}).map((s) => s.replace('wiki', '')) : [] },
         countries: e ? [...new Set(claimIds(e, 'P27').map((q) => COUNTRY_CODES[q]).filter(Boolean))] : [],
+        photoFile: e ? ((e.claims?.P18 ?? []).map((c) => c.mainsnak.datavalue?.value).find((v): v is string => typeof v === 'string') ?? null) : null,
         namesakes: [],
         canonicalName: e?.labels?.en?.value ?? e?.labels?.es?.value ?? entity.name,
         names: e ? [...new Set([entity.name, ...Object.values(e.labels ?? {}).map((l) => l.value), ...Object.values(e.aliases ?? {}).flatMap((a) => a.map((x) => x.value))])] : [entity.name],
