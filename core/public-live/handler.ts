@@ -383,7 +383,7 @@ export async function runPublicJob(jobId: string, env: PublicLiveEnv, deps: Pick
     if (ttl > 0) await guard.saveResult(job.cacheKey, { result, analysis: t.analysis, partial } satisfies Cached, ttl).catch(() => undefined);
     const computedAt = new Date().toISOString();
     await recordCoverage(store, t.kind === 'catalog' ? `show:${t.showId}` : `feed:${target.name}`, coverageOf(result, { country: t.kind === 'catalog' ? verifiedCountry(t.showId) : null, computedAt }));
-    await finish(store, job, { status: 200, body: respond(withLive(result, { cached: false, computedAt: new Date().toISOString(), qlooCalls: calls, partial, errors: health.errors })) }, { qlooCalls: calls });
+    await finish(store, job, { status: 200, body: respond(withLive(result, { cached: false, computedAt: new Date().toISOString(), qlooCalls: calls, partial, errors: health.errors, ...(adapter.metrics?.rateLimit ? { qlooRateLimit: adapter.metrics.rateLimit } : {}) })) }, { qlooCalls: calls });
   } catch {
     const calls = adapter?.metrics?.networkCalls ?? 0;
     await guard.settle(job.leaseId, calls).catch(() => undefined);
