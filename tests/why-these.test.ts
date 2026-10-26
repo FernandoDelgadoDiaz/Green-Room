@@ -45,10 +45,13 @@ describe('why each guest', () => {
   it('gives the affinity and, only when Qloo explained it, what weighed most', () => {
     expect(guestWhy(rec({ affinity: 0.88 }), 'es', Date.parse('2026-10-25')).qloo).toBe('Afinidad con tu público: 88 de 100, comparada con los demás candidatos.');
     expect(guestWhy(rec({ affinity: 0.88, explainedBy: ['Artificial Intelligence', 'This Week in Startups'] }), 'es').qloo).toMatch(/Lo que más pesó: Artificial Intelligence y This Week in Startups\.$/);
-    expect(guestWhy(rec(null), 'es').qloo).toBe('No está en el catálogo de Qloo: entra por la evidencia de sus entrevistas.');
+    expect(guestWhy({ ...rec(null), identity: { status: 'pending', reason: 'not_found', evidence: [] } } as Recommendation, 'es').qloo).toBe('No está en el catálogo de Qloo: entra por la evidencia de sus entrevistas.');
+    // A same-name record Qloo could not confirm is not "not in Qloo".
+    expect(guestWhy({ ...rec(null), identity: { status: 'pending', reason: 'no_context', evidence: [] } } as Recommendation, 'es').qloo).toMatch(/^Qloo tiene a alguien con este nombre/);
+    expect(guestWhy(rec(null), 'es').qloo).toBe('Sin dato de Qloo para esta persona: entra por la evidencia.');
     expect(guestWhy({ ...rec(null), qlooEntityId: 'q1' } as Recommendation, 'es').qloo).toBe('Qloo conoce a esta persona, pero no le dio puntaje con este público.');
     // Consecutive evidence-only cards do not repeat the same sentence.
-    const lines = [1, 2, 3].map((rank) => guestWhy({ ...rec(null), rank } as Recommendation, 'es').qloo);
+    const lines = [1, 2, 3].map((rank) => guestWhy({ ...rec(null), rank, identity: { status: 'pending', reason: 'not_found', evidence: [] } } as Recommendation, 'es').qloo);
     expect(new Set(lines).size).toBe(3);
     expect(guestWhy(rec({ affinity: 0.5, explainedBy: ['All-In'] }), 'es', Date.now(), 'All-In').qloo).not.toMatch(/pesó/);
   });

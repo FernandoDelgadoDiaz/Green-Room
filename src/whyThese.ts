@@ -165,14 +165,21 @@ export function withQlooFate(row: { status: 'kept' | 'entered' | 'left'; affinit
  */
 function noAffinity(rec: Recommendation, lang: Lang): string {
   const v = Math.max(0, (rec.rank ?? 1) - 1) % 3;
-  const found = Boolean(rec.qlooEntityId);
-  if (lang === 'es')
-    return found
+  const es = lang === 'es';
+  // Why there is no value: scored nowhere, not in Qloo, or a same-name record we could not confirm.
+  if (rec.qlooEntityId)
+    return es
       ? ['Qloo conoce a esta persona, pero no le dio puntaje con este público.', 'Está en Qloo, sin puntaje de afinidad para esta audiencia.', 'Qloo no le dio puntaje para este público: entra por la evidencia.'][v]
-      : ['No está en el catálogo de Qloo: entra por la evidencia de sus entrevistas.', 'Fuera del catálogo de Qloo; entra por sus entrevistas verificadas.', 'Sin registro en Qloo: lo respaldan sus entrevistas, no el gusto del público.'][v];
-  return found
-    ? ['Qloo knows this person but gave no score for this audience.', 'In Qloo, with no affinity score for this audience.', 'Qloo did not score this person for this audience: the evidence picks them.'][v]
-    : ['Not in Qloo’s catalog: picked on interview evidence.', 'Outside Qloo’s catalog; in on verified interviews.', 'No Qloo record: backed by interviews, not by audience taste.'][v];
+      : ['Qloo knows this person but gave no score for this audience.', 'In Qloo, with no affinity score for this audience.', 'Qloo did not score this person for this audience: the evidence picks them.'][v];
+  if (rec.identity?.reason === 'not_found')
+    return es
+      ? ['No está en el catálogo de Qloo: entra por la evidencia de sus entrevistas.', 'Fuera del catálogo de Qloo; entra por sus entrevistas verificadas.', 'Sin registro en Qloo: lo respaldan sus entrevistas, no el gusto del público.'][v]
+      : ['Not in Qloo’s catalog: picked on interview evidence.', 'Outside Qloo’s catalog; in on verified interviews.', 'No Qloo record: backed by interviews, not by audience taste.'][v];
+  if (rec.identity?.status === 'pending')
+    return es
+      ? ['Qloo tiene a alguien con este nombre, pero no pudimos confirmar que sea la misma persona: no usamos ese dato.', 'Hay un registro con este nombre en Qloo sin contexto que lo confirme; por las dudas, no se usa su afinidad.', 'Qloo no permitió confirmar su identidad (posible homónimo): entra solo por la evidencia.'][v]
+      : ['Qloo has someone with this name, but we could not confirm it is the same person: that value is not used.', 'A same-name record in Qloo with nothing to confirm it; to be safe, its affinity is not used.', 'Qloo did not let us confirm the identity (possible namesake): in on evidence alone.'][v];
+  return es ? 'Sin dato de Qloo para esta persona: entra por la evidencia.' : 'No Qloo value for this person: in on evidence.';
 }
 
 /** For people Qloo proposed: three wordings that rotate with the card's rank, so consecutive cards differ. */
