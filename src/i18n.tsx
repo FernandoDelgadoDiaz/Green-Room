@@ -135,8 +135,8 @@ const STRINGS = {
   'qa.guestAudience': { en: 'Their audience: {d}', es: 'Su audiencia: {d}' },
   'qc.title': { en: 'What Qloo added', es: 'Lo que aportó Qloo' },
   'qc.lead': {
-    en: 'Found through Qloo’s taste graph and checked by the agent. The five picks below are ranked on evidence, so Qloo never pushes anyone in.',
-    es: 'Encontrado con el grafo de gustos de Qloo y verificado por el agente. Las cinco elecciones de abajo se ordenan por evidencia: Qloo nunca mete a nadie a la fuerza.',
+    en: 'Found through Qloo’s taste graph and checked by the agent with the same rules as any other candidate: Qloo never pushes anyone in unchecked.',
+    es: 'Encontrado con el grafo de gustos de Qloo y verificado por el agente con las mismas reglas que cualquier otro candidato: Qloo nunca mete a nadie sin control.',
   },
   'qc.people': { en: 'New people only Qloo found', es: 'Personas nuevas que solo Qloo encontró' },
   'qc.none': {
@@ -171,7 +171,8 @@ const STRINGS = {
   },
   'disc.newRow': { en: 'Qloo rank {q} · topical fit {f} · position {p} in our ranking', es: 'Posición {q} en Qloo · ajuste temático {f} · posición {p} en nuestro ranking' },
   'disc.newLang': { en: 'language not confirmed', es: 'idioma no confirmado' },
-  'disc.newInTop': { en: 'in the top five', es: 'en el top cinco' },
+  'disc.newInTop': { en: 'in the With Qloo list', es: 'en la lista Con Qloo' },
+  'qc.inTaste': { en: '#{n} in Qloo’s taste order', es: '#{n} en el orden por gusto de Qloo' },
   'pl.audience': {
     en: 'Inferred, not measured: Qloo’s affinities are taste patterns of people who like this show’s signals (its past guests, the show itself or its topics). They are not data about this show’s listeners, and we do not know who they are.',
     es: 'Inferidas, no medidas: las afinidades de Qloo son patrones de gusto de quienes se interesan por las señales de este programa (sus invitados anteriores, el propio programa o sus temas). No son datos de los oyentes de este programa, y no sabemos quiénes son.',
@@ -236,7 +237,8 @@ const STRINGS = {
   'why.withoutAff': { en: 'Your audience’s affinity with this list, measured afterwards with Qloo: {b}/100 on average.', es: 'Afinidad de tu público con esta lista, medida después con Qloo: {b}/100 en promedio.' },
   'why.withoutTaste': { en: 'The five Qloo picks by your audience’s taste average {t}/100.', es: 'Los 5 que elige Qloo por el gusto de tu público promedian {t}/100.' },
   'why.withoutBtn': { en: 'See who Qloo picks', es: 'Ver los que elige Qloo' },
-  'why.measured': { en: 'Measured afterwards', es: 'Medido después' },
+  'why.withQloo': { en: 'With Qloo', es: 'Con Qloo' },
+  'why.withoutOnly': { en: 'Everything else in this analysis (what Qloo found out about the audience, its discoveries, the agent’s steps) is under With Qloo.', es: 'El resto del análisis (lo que Qloo descubrió del público, sus descubrimientos, los pasos del agente) está en Con Qloo.' },
   'view.none': { en: 'Without Qloo', es: 'Sin Qloo' },
   'view.withQloo': { en: 'With Qloo', es: 'Con Qloo' },
   'view.noneLead': {
@@ -293,7 +295,7 @@ const STRINGS = {
   'aud.women': { en: 'Women', es: 'Mujeres' },
   'aud.legend': { en: 'Right of the line: this audience over-indexes on that group; left: under-indexes.', es: 'A la derecha de la línea: esta audiencia está sobrerrepresentada en ese grupo; a la izquierda, subrepresentada.' },
   'home.demo': { en: 'See a live example', es: 'Ver un ejemplo en vivo' },
-  'qc.whyNot': { en: 'Why not in the top five', es: 'Por qué no está entre los cinco' },
+  'qc.whyNot': { en: 'Why not in the With Qloo list', es: 'Por qué no está en la lista Con Qloo' },
   'qc.suggested': { en: 'Suggested by Qloo (#{q})', es: 'Sugerido por Qloo (#{q})' },
   'recs.title': { en: 'Five guests to invite next', es: 'Cinco invitados para convocar' },
   'recs.meta': { en: '{n} past guests excluded · as of {date}', es: '{n} invitados anteriores excluidos · al {date}' },

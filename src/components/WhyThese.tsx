@@ -3,7 +3,7 @@ import type { RecommendResult, ShowSummary } from '../api';
 import { useI18n } from '../i18n';
 import { Badge } from './Badge';
 import { GuestAvatar } from './GuestAvatar';
-import { agentSteps, audienceRead, guestWhy, measuredAffinity } from '../whyThese';
+import { agentSteps, audienceRead, guestWhy, withQlooFate } from '../whyThese';
 
 /**
  * "Why these five", right under the portraits: what Qloo inferred about the audience, one short
@@ -106,6 +106,7 @@ function WithoutQloo({ result, show, recs, onShowQloo }: { result: RecommendResu
           <button onClick={onShowQloo} className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-stage-950 hover:bg-emerald-300">
             {t('why.withoutBtn')} →
           </button>
+          <p className="text-[11px] text-stone-400">{t('why.withoutOnly')}</p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-stone-400">{t('why.each')}</p>
@@ -114,7 +115,7 @@ function WithoutQloo({ result, show, recs, onShowQloo }: { result: RecommendResu
               const w = guestWhy(r, lang, Date.now(), show.name, { kindClaims: (result.cardsVersion ?? 0) >= 2 });
               const kind = w.kind && !recs.slice(0, i).some((p) => guestWhy(p, lang, Date.now(), show.name, { kindClaims: (result.cardsVersion ?? 0) >= 2 }).kind === w.kind) ? w.kind : null;
               const offers = [w.offers, kind].filter(Boolean).join(' ') || null;
-              const row = rows.find((x) => x.key === r.key);
+              const fate = withQlooFate(rows.find((x) => x.key === r.key), lang);
               return (
                 <li key={r.key} className="flex gap-3 py-3">
                   <GuestAvatar name={r.name} profile={result.profiles[r.key]} size="sm" />
@@ -124,7 +125,7 @@ function WithoutQloo({ result, show, recs, onShowQloo }: { result: RecommendResu
                     </button>
                     {offers && <p className="text-stone-300"><span className="mr-1.5 text-[11px] font-semibold uppercase tracking-widest text-brass-300">{t('why.offers')}</span>{offers}</p>}
                     {w.timely && <p className="text-stone-400"><span className="mr-1.5 text-[11px] font-semibold uppercase tracking-widest text-stone-500">{t('why.timely')}</span>{w.timely}</p>}
-                    {row && <p className="text-stone-400"><span className="mr-1.5 text-[11px] font-semibold uppercase tracking-widest text-emerald-300/70">{t('why.measured')}</span>{measuredAffinity(row.affinity, lang)}</p>}
+                    {fate && <p className="text-emerald-100/90"><span className="mr-1.5 text-[11px] font-semibold uppercase tracking-widest text-emerald-300">{t('why.withQloo')}</span>{fate}</p>}
                   </div>
                 </li>
               );

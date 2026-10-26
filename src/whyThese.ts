@@ -142,11 +142,21 @@ export function guestWhy(rec: Recommendation, lang: Lang, now = Date.now(), show
   return { key: rec.key, name: rec.name, qloo, offers, kind, timely };
 }
 
-/** For the list without Qloo: the affinity Qloo measured for this person afterwards (comparison row), never a reason for the pick. */
-export function measuredAffinity(affinity: number | null | undefined, lang: Lang): string {
-  if (affinity === null || affinity === undefined)
-    return lang === 'es' ? 'Qloo no tiene un valor de afinidad para esta persona con este público.' : 'Qloo has no affinity value for this person with this audience.';
-  return lang === 'es' ? `Afinidad con tu público: ${pct(affinity)} de 100. Qloo no participó en esta elección: midió la afinidad después, para comparar.` : `Affinity with your audience: ${pct(affinity)} out of 100. Qloo took no part in this pick: it measured the affinity afterwards, to compare.`;
+/** For the list without Qloo: what happens to this person once Qloo is on (comparison row). */
+export function withQlooFate(row: { status: 'kept' | 'entered' | 'left'; affinity: number | null } | undefined, lang: Lang): string | null {
+  if (!row) return null;
+  const es = lang === 'es';
+  const a = row.affinity === null ? null : pct(row.affinity);
+  if (row.status === 'kept')
+    return a === null ? (es ? 'Se queda también con Qloo.' : 'Stays with Qloo too.') : es ? `Se queda también con Qloo: afinidad con tu público ${a}/100.` : `Stays with Qloo too: audience affinity ${a}/100.`;
+  if (row.status !== 'left') return null;
+  return a === null
+    ? es
+      ? 'Sale con Qloo: Qloo no tiene dato de afinidad de este público con esta persona, y entran otros hacia los que sí se inclina.'
+      : 'Out with Qloo: Qloo has no affinity value for this audience and this person, and people it does lean toward come in.'
+    : es
+      ? `Sale con Qloo: buena evidencia, pero este público se inclina poco por esta persona (afinidad ${a}/100).`
+      : `Out with Qloo: good evidence, but this audience leans little toward this person (affinity ${a}/100).`;
 }
 
 /**
