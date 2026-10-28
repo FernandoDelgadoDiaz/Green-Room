@@ -896,9 +896,16 @@ export function RecommendView({ show, result, banner }: { show: ShowSummary; res
   // The same analysis without Qloo, offered only when Qloo changed enough of the five (listViews).
   const hasBaseline = views.includes('none');
   const baseline = hasBaseline ? (result.baselineRecommendations ?? []) : [];
-  const [chosen, setView] = useState<ListView>(initial);
+  // A shared link can open a given list: ?view=without | with | taste (ignored when that list is not offered).
+  const linked = (() => {
+    const v = new URLSearchParams(window.location.search).get('view');
+    const m: Record<string, ListView> = { without: 'none', with: 'evidence', taste: 'taste' };
+    return v && m[v] && views.includes(m[v]) ? m[v] : null;
+  })();
+  const opening = linked ?? initial;
+  const [chosen, setView] = useState<ListView>(opening);
   // Another show's result: open its own first list.
-  useEffect(() => setView(initial), [result]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setView(opening), [result]); // eslint-disable-line react-hooks/exhaustive-deps
   const view: ListView = views.includes(chosen) ? chosen : 'evidence';
   const recs = view === 'taste' ? taste : view === 'none' ? baseline : result.recommendations;
   // "New with Qloo" is measured against the list without Qloo when it exists, else against the evidence list.
