@@ -1088,13 +1088,13 @@
    "appleUrl": "https://podcasts.apple.com/us/podcast/this-week-in-startups/id315114957",
    "feedUrl": "https://feeds.megaphone.fm/LTANT7633840743",
    "appleTrackCount": 1493,
-   "lastRelease": "2026-10-24T01:52:00.000Z",
+   "lastRelease": "2026-10-30T22:34:00.000Z",
    "snapshot": {
     "episodes": 499,
-    "withGuestNames": 133,
-    "coverage": 0.27,
-    "first": "2024-01-27T03:04:44.000Z",
-    "last": "2026-10-24T01:52:00.000Z"
+    "withGuestNames": 130,
+    "coverage": 0.26,
+    "first": "2024-01-31T23:29:37.000Z",
+    "last": "2026-10-30T22:34:00.000Z"
    },
    "status": "limited",
    "statusReason": "few_guest_names"
