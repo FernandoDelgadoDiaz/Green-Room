@@ -676,6 +676,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const unverified: Array<{ entity: QlooEntity; rank: number; attempt: number; signal: string }> = [];
   const attempts: DiscoveryFunnel['attempts'] = [];
   let discoveryAttempts = 0;
+  // Set when most of Qloo's first proposals were already on the show: ask for the next ones, same signal.
+  let morePeople = false;
   let verifyDiscoveryRuns = 0;
   let altPodcast: QlooEntity | null = null;
   const altTags: QlooEntity[] = [];
@@ -1167,8 +1169,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
     qloo_discover_people: async () => {
       discoveryAttempts++;
-      // Attempt 1 uses the settled audience signal; attempt 2 (replanning) an alternative one.
-      const alt = discoveryAttempts > 1;
+      // Attempt 1 uses the settled audience signal; attempt 2 (replanning) an alternative one, or the
+      // same signal again for the next people when the first ones had already been on the show.
+      const alt = discoveryAttempts > 1 && !morePeople;
       const sIds = alt ? (altPodcast ? [altPodcast.entityId] : podcastEntity ? [podcastEntity.entityId] : []) : signalIds();
       const tIds = alt ? (altTags.length ? altTags : tagSignals).map((x) => x.entityId) : tagIds();
       const signal = alt ? [sIds.length ? 'podcast' : '', tIds.length ? 'tags' : ''].filter(Boolean).join('+') || 'none' : signalStrategy;
@@ -1185,7 +1188,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       if (!fresh.length && !proposals.length)
         funnelDiagnosis = { diagnosis: 'coverage', diagnosisText: 'Coverage: Qloo proposed nobody for the signals tried.', diagnosisTextEs: 'Cobertura: Qloo no propuso a nadie con las señales probadas.' };
       step({
-        title: alt ? ['Ask Qloo again with another audience signal', 'Volver a preguntar a Qloo con otra señal de audiencia'] : ['Ask Qloo who else this audience has affinity for', 'Preguntar a Qloo con quién más tiene afinidad esta audiencia'],
+        title: alt
+          ? ['Ask Qloo again with another audience signal', 'Volver a preguntar a Qloo con otra señal de audiencia']
+          : discoveryAttempts > 1
+            ? ['Ask Qloo for the next people, leaving out those already proposed', 'Pedir a Qloo las siguientes personas, sin las ya propuestas']
+            : ['Ask Qloo who else this audience has affinity for', 'Preguntar a Qloo con quién más tiene afinidad esta audiencia'],
         tool: 'qloo.insights (person)',
         detail: [`${fresh.length} people proposed by Qloo (signal: ${signal}).`, `${fresh.length} personas propuestas por Qloo (señal: ${signal}).`],
         decision: fresh.length
@@ -1893,6 +1900,19 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           `${externalQueue.length} propuestas de Qloo no tienen entrevistas en nuestro RSS: las reviso en fuentes independientes en lugar de descartarlas.`,
         ],
       };
+    // This audience's favorites were already booked: most of Qloo's proposals are past guests. Ask once
+    // more with the same signal; Qloo leaves out everyone it already proposed.
+    const repeats = proposals.filter((p) => p.failure === 'repeat').length;
+    if (qloo.mode === 'LIVE' && discoveryAttempts === 1 && !morePeople && proposals.length >= 10 && repeats * 2 >= proposals.length && !outOfTime() && (qloo.budgetLeft?.() ?? Infinity) >= 8) {
+      morePeople = true;
+      return {
+        tool: 'qloo_discover_people',
+        why: [
+          `${repeats} of the ${proposals.length} people Qloo proposed were already on ${target.name}: this audience’s favorites have been booked. Asking Qloo for the next ones.`,
+          `${repeats} de las ${proposals.length} personas que propuso Qloo ya estuvieron en ${target.name}: los favoritos de esta audiencia ya fueron invitados. Le pido a Qloo las siguientes.`,
+        ],
+      };
+    }
     // Replanning the discovery: Qloo's people could not be turned into verified candidates.
     if (qloo.mode === 'LIVE' && discoveryAttempts === 1 && rankedProposals() === 0 && !outOfTime() && (qloo.budgetLeft?.() ?? Infinity) >= 8) {
       const why = funnelDiagnosis.diagnosisText;
