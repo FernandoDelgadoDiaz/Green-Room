@@ -12,7 +12,7 @@ import { externalThemes } from '../verify/occupations';
 import { THEMES, THEME_IDS, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
 import { qlooKind, type Demographics, type QlooAdapter, type QlooEntity, type Trend } from '../qloo/types';
 import { topicPhrase } from '../topic';
-import { knownPastEpisodes } from '../known-past-guests';
+import { knownPastEpisodes, publicTitles } from '../known-past-guests';
 export { topicPhrase };
 import { CATEGORY_LABELS, categoriesOf, mainCategory, type OccupationCategory, type PersonRecord } from '../people';
 
@@ -508,6 +508,10 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   const olderPast = new Map<string, Appearance & { name: string }>();
   const pastOf = (key: string) => pastGuests.get(key) ?? olderPast.get(key);
   const isPast = (key: string) => pastGuests.has(key) || olderPast.has(key);
+  // A full name (two words or more) in any episode title of the show, feed or public record: the
+  // title may not follow a guest pattern ("Airbnb Co-Founder Joe Gebbia on…"), so it counts as a
+  // possible earlier appearance and the person is not proposed.
+  const inPastTitles = (key: string) => key.split(' ').length >= 2 && allTitles.some((t) => t.includes(` ${key} `));
   let allTitles: string[] = [];
   let coverage = 0;
   const titlesByKey = new Map<string, string[]>();
@@ -780,6 +784,9 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       } else if (targetHostKeys.has(key)) {
         discarded.push({ name: c.name, reason: `Host of ${target.name}`, reasonEs: `Conductor de ${target.name}` });
         p.delete(key);
+      } else if (inPastTitles(key)) {
+        discarded.push({ name: c.name, reason: `Name appears in a ${target.name} episode title: possible earlier appearance`, reasonEs: `Su nombre aparece en el título de un episodio de ${target.name}: posible participación anterior` });
+        p.delete(key);
       }
     }
   };
@@ -851,7 +858,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           const prev = olderPast.get(key);
           if (!prev || e.published < prev.published) olderPast.set(key, { name: g.name, showId: target.id, showName: target.name, episodeId: e.id, title: e.title, published: e.published, url: e.url });
         }
-      allTitles = [...history, ...older].map((e) => ` ${nameKey(e.title)} `);
+      allTitles = [...[...history, ...older].map((e) => e.title), ...publicTitles(target.id)].map((t) => ` ${nameKey(t)} `);
       coverage = history.length ? withGuests.length / history.length : 0;
       // Interview titles per person (this show and comparison shows, before asOf): the context used to
       // confirm an identity in Qloo.
@@ -1384,6 +1391,13 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         const pastVariant = variantKeys.find((x) => isPast(x) || targetHostKeys.has(x));
         if (pastVariant) {
           const why: Bi = [`Same person as “${ch.names.find((n) => nameKey(n) === pastVariant)}”, already on ${target.name} or its host (Wikidata ${ch.wikidataId})`, `Misma persona que “${ch.names.find((n) => nameKey(n) === pastVariant)}”, que ya participó en ${target.name} o es su conductor (Wikidata ${ch.wikidataId})`];
+          prop.checks.push({ check: 'repeat', ok: false, detail: why[0], detailEs: why[1] });
+          Object.assign(prop, { outcome: 'discarded', failure: 'repeat', reason: why[0], reasonEs: why[1] });
+          removeDiscovery(primaryId);
+          continue;
+        }
+        if ([key, ...variantKeys].some(inPastTitles)) {
+          const why: Bi = [`Name appears in a ${target.name} episode title: possible earlier appearance`, `Su nombre aparece en el título de un episodio de ${target.name}: posible participación anterior`];
           prop.checks.push({ check: 'repeat', ok: false, detail: why[0], detailEs: why[1] });
           Object.assign(prop, { outcome: 'discarded', failure: 'repeat', reason: why[0], reasonEs: why[1] });
           removeDiscovery(primaryId);

@@ -90,7 +90,7 @@ describe('agent loop: observe → decide → act → verify → replan', () => {
     expect(r.warnings.some((w) => /Time budget/.test(w))).toBe(true);
   });
 
-  it('verification rejects a pick whose name appears in the show’s titles and re-selects', async () => {
+  it('never proposes someone named in the show’s titles, even when no guest pattern caught it', async () => {
     const ep = (id: string, title: string, published: string, guests: string[], confidence: 'high' | 'low' = 'high') => ({ id, title, published, url: null, guests: guests.map((name) => ({ name, method: 'title-pattern' as const, confidence })), excluded: false });
     const mk = (id: string, episodes: ReturnType<typeof ep>[]): PodcastDataset => ({ id, name: id, host: 'H ' + id, hostAliases: ['H ' + id], language: 'en', description: '', source: { feedUrl: '', website: '', retrievedAt: '', retrievedVia: '', note: '' }, episodes });
     // Ann Lee is named in a target title the extractor did not parse as a guest.
@@ -102,11 +102,9 @@ describe('agent loop: observe → decide → act → verify → replan', () => {
       ep('b', 'AI robots future', '2024-02-02T00:00:00.000Z', ['Bob Ray']),
     ]);
     const r = await runAgent({ target, others: [other], qloo: new NoQlooAdapter(), asOf: '2024-06-01T00:00:00.000Z', k: 1 });
-    expect(tools(r).filter((t) => t === 'verify_shortlist').length).toBeGreaterThanOrEqual(2);
-    expect(tools(r).filter((t) => t === 'select_shortlist').length).toBeGreaterThanOrEqual(2);
-    expect(r.plan.find((p) => p.tool === 'select_shortlist' && /re-selecting/.test(p.why))).toBeTruthy();
+    // Ruled out with the other past guests, before the shortlist (no re-selection needed).
     expect(r.recommendations.map((x) => x.name)).toEqual(['Bob Ray']);
-    expect(r.trace.some((s) => /possible earlier appearance/.test(s.detail))).toBe(true);
+    expect(r.discarded.find((d) => d.name === 'Ann Lee')?.reason).toMatch(/possible earlier appearance/);
   });
 
   it('never exceeds the step budget and records why each step ran', async () => {

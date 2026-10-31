@@ -13,7 +13,7 @@ on:
         default: ''
   push:
     branches: ['feat/**']
-    paths: ['data/catalog/sources.json', 'data/catalog/spotify-requested-at', 'scripts/fetch-spotify.ts', 'scripts/fetch-rss.ts', '.github/workflows/build-spotify.yml']
+    paths: ['data/catalog/sources.json', 'data/catalog/spotify-requested-at', 'scripts/fetch-spotify.ts', 'scripts/fetch-rss.ts', 'scripts/fetch-youtube-titles.ts', '.github/workflows/build-spotify.yml']
 
 permissions:
   contents: write
@@ -52,6 +52,10 @@ jobs:
           REFETCH: ${{ github.event.inputs.refetch }}
       - run: npx tsx scripts/fetch-spotify.ts
         if: steps.creds.outputs.ok == 'true'
+      - name: List official YouTube channel titles (past-guest check)
+        run: |
+          pip install --quiet yt-dlp
+          npx tsx scripts/fetch-youtube-titles.ts
       - run: npm run catalog:build
       - run: npm run people:build
       - run: npx tsc -p tsconfig.json --noEmit
@@ -59,7 +63,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/catalog.json data/podcasts core/datasets.ts data/people.json
+          git add data/catalog.json data/podcasts core/datasets.ts data/people.json data/catalog/youtube-titles.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "Data: new shows, catalog and people (workflow run ${{ github.run_id }})"
           # Data files are regenerated from scratch: on a conflict with a concurrent data run, keep this one.

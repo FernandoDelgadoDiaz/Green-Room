@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { runAgent } from '../core/agent/agent';
 import { knownPastEpisodes } from '../core/known-past-guests';
 import { NoQlooAdapter } from '../core/qloo/mock';
-import type { PodcastDataset } from '../core/types';
+import type { Episode, PodcastDataset } from '../core/types';
 
 const ep = (id: string, title: string, published: string, guests: string[]) => ({ id, title, published, url: null, guests: guests.map((name) => ({ name, method: 'title-pattern' as const, confidence: 'high' as const })), excluded: false });
-const mk = (id: string, episodes: ReturnType<typeof ep>[], olderEpisodes?: ReturnType<typeof ep>[]): PodcastDataset => ({ id, name: id, host: `Host ${id}`, hostAliases: [`Host ${id}`], language: 'en', description: '', source: { feedUrl: '', website: '', retrievedAt: '', retrievedVia: '', note: '' }, episodes, ...(olderEpisodes ? { olderEpisodes } : {}) });
+const mk = (id: string, episodes: Episode[], olderEpisodes?: Episode[]): PodcastDataset => ({ id, name: id, host: `Host ${id}`, hostAliases: [`Host ${id}`], language: 'en', description: '', source: { feedUrl: '', website: '', retrievedAt: '', retrievedVia: '', note: '' }, episodes, ...(olderEpisodes ? { olderEpisodes } : {}) });
 
 const target = mk(
   'show',
@@ -26,9 +26,16 @@ describe('past guests beyond the analysis window', () => {
     expect(r.discarded.find((d) => d.name === 'Ann Lee')?.reasonEs).toMatch(/Ya fue invitado en show \(2019-03-01\)/);
   });
 
+  it('rules out a past guest found only in the public record', async () => {
+    const t = mk('this-week-in-startups', target.episodes);
+    const o = mk('other', [ep('o9', 'Travis Kalanick on startups and venture capital', '2026-05-01T00:00:00Z', ['Travis Kalanick']), ...other.episodes]);
+    const r = await runAgent({ target: t, others: [o], qloo: new NoQlooAdapter(), k: 3, asOf: '2026-10-01T00:00:00.000Z' });
+    expect(r.recommendations.map((x) => x.name)).not.toContain('Travis Kalanick');
+  });
+
   it('reads the public record for appearances the feed does not carry, each with its source', () => {
     const twist = knownPastEpisodes('this-week-in-startups');
-    expect(twist.map((e) => e.guests[0].name).sort()).toEqual(['Ben Horowitz', 'Marc Andreessen', 'Travis Kalanick']);
+    expect(twist.map((e) => e.guests[0].name).sort()).toEqual(['Ben Horowitz', 'Chris Dixon', 'Marc Andreessen', 'Travis Kalanick']);
     for (const e of twist) expect(e.url).toMatch(/^https:\/\//);
     expect(knownPastEpisodes('no-such-show')).toEqual([]);
   });
