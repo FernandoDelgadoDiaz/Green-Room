@@ -40,3 +40,29 @@ describe('past guests beyond the analysis window', () => {
     expect(knownPastEpisodes('no-such-show')).toEqual([]);
   });
 });
+
+describe('when Qloo proposes mostly past guests', () => {
+  it('asks Qloo for the next people, excluding those already proposed', async () => {
+    const past = Array.from({ length: 10 }, (_, i) => `Past Guest${String.fromCharCode(65 + i)}`);
+    const t = mk('t2', past.map((n, i) => ep(`p${i}`, `${n}: startups and venture capital`, `2026-0${(i % 8) + 1}-03T00:00:00Z`, [n])));
+    const o = mk('o2', [ep('n1', 'Nora Fresh: startups and venture capital', '2026-05-01T00:00:00Z', ['Nora Fresh'])]);
+    const calls: string[][] = [];
+    const qloo = {
+      mode: 'LIVE' as const,
+      calls: [],
+      searchPerson: async (name: string) => [{ entityId: `p:${name}`, name, description: [t, o].flatMap((d) => d.episodes).filter((e) => e.guests.some((g) => g.name === name)).map((e) => e.title).join(' ') }],
+      searchPodcast: async () => [],
+      findTags: async () => [],
+      personInsights: async (a: { excludeIds: string[] }) => {
+        calls.push(a.excludeIds);
+        return calls.length === 1 ? past.map((n) => ({ entityId: `q:${n}`, name: n, types: ['urn:entity:person'] })) : [{ entityId: 'q:nora', name: 'Nora Fresh', types: ['urn:entity:person'] }];
+      },
+      affinityFor: async () => new Map<string, number>(),
+      categoryInsights: async () => [],
+    };
+    const r = await runAgent({ target: t, others: [o], qloo: qloo as never, k: 1, asOf: '2026-10-01T00:00:00.000Z' });
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toEqual(expect.arrayContaining(past.map((n) => `q:${n}`)));
+    expect(r.plan.some((p) => /already on t2/.test(p.why))).toBe(true);
+  });
+});
