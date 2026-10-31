@@ -3,14 +3,17 @@
 // scripts/build-catalog.ts. Runs in the "Build catalog data" workflow, where feed hosts are reachable.
 //
 //   npx tsx scripts/fetch-rss.ts
+//   REFETCH=this-week-in-startups npx tsx scripts/fetch-rss.ts   (snapshot these again, dataset or not)
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const UA = 'GreenRoom/0.3 (Qloo Agentic Hackathon 2026 demo; https://greenroom1.netlify.app)';
 const src = JSON.parse(readFileSync('data/catalog/sources.json', 'utf8')) as { shows: Array<{ id: string; feedUrl: string; spotifyId?: string; notAnalyzable?: string; existing?: boolean }> };
+const refetch = new Set((process.env.REFETCH ?? '').split(',').map((x) => x.trim()).filter(Boolean));
 mkdirSync('data/raw/catalog', { recursive: true });
 for (const s of src.shows) {
-  if (s.existing || s.spotifyId || s.notAnalyzable || existsSync(`data/podcasts/${s.id}.json`) || existsSync(`data/raw/catalog/${s.id}.xml`)) continue;
+  if (s.existing || s.spotifyId || s.notAnalyzable) continue;
+  if (!refetch.has(s.id) && (existsSync(`data/podcasts/${s.id}.json`) || existsSync(`data/raw/catalog/${s.id}.xml`))) continue;
   try {
     const res = await fetch(s.feedUrl, { headers: { 'User-Agent': UA, Accept: 'application/rss+xml, application/xml;q=0.9, */*;q=0.5' }, redirect: 'follow' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

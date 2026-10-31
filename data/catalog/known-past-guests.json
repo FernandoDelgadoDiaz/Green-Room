@@ -1,0 +1,26 @@
+{
+ "_note": "Appearances on public record that a show's RSS feed does not carry (older than the feed, or a guest not named in the episode title). Used only to never propose a past guest again. Every entry cites a public source.",
+ "this-week-in-startups": [
+  {
+   "name": "Travis Kalanick",
+   "published": "2011-08-16",
+   "title": "Travis Kalanick of Uber - TWiST #180",
+   "url": "https://www.youtube.com/watch?v=550X5OZVk7Y",
+   "evidence": "Episode on the show's official YouTube channel (before the RSS feed's oldest item)."
+  },
+  {
+   "name": "Ben Horowitz",
+   "published": "2020-01-24",
+   "title": "E1021: Bubble Co-CEO & Co-Founder Emmanuel Straschnov (Ben Horowitz and Marc Andreessen call in at the end)",
+   "url": "https://podscripts.co/podcasts/this-week-in-startups/e1021-bubble-co-ceo-co-founder-emmanuel-straschnov-built-a-no-code-platform-to-empower-the-next-generation-of-programmers-shares-insights-on-bootstrapping-to-over-300k-users-developing-skills-while-scaling-more",
+   "evidence": "Episode transcript: “stick around for the end of the episode when Ben Horowitz and Marc Andreessen are calling in” (not named in the title)."
+  },
+  {
+   "name": "Marc Andreessen",
+   "published": "2020-01-24",
+   "title": "E1021: Bubble Co-CEO & Co-Founder Emmanuel Straschnov (Ben Horowitz and Marc Andreessen call in at the end)",
+   "url": "https://podscripts.co/podcasts/this-week-in-startups/e1021-bubble-co-ceo-co-founder-emmanuel-straschnov-built-a-no-code-platform-to-empower-the-next-generation-of-programmers-shares-insights-on-bootstrapping-to-over-300k-users-developing-skills-while-scaling-more",
+   "evidence": "Episode transcript: “stick around for the end of the episode when Ben Horowitz and Marc Andreessen are calling in” (not named in the title)."
+  }
+ ]
+}

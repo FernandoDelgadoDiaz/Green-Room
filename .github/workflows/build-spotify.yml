@@ -6,6 +6,11 @@ name: Build catalog data
 # commits the result to the branch it ran on.
 on:
   workflow_dispatch:
+    inputs:
+      refetch:
+        description: 'Show ids to snapshot again, comma-separated (e.g. this-week-in-startups)'
+        required: false
+        default: ''
   push:
     branches: ['feat/**']
     paths: ['data/catalog/sources.json', 'data/catalog/spotify-requested-at', 'scripts/fetch-spotify.ts', 'scripts/fetch-rss.ts', '.github/workflows/build-spotify.yml']
@@ -43,6 +48,8 @@ jobs:
           key: wd-cache-${{ github.run_id }}
           restore-keys: wd-cache-
       - run: npx tsx scripts/fetch-rss.ts
+        env:
+          REFETCH: ${{ github.event.inputs.refetch }}
       - run: npx tsx scripts/fetch-spotify.ts
         if: steps.creds.outputs.ok == 'true'
       - run: npm run catalog:build

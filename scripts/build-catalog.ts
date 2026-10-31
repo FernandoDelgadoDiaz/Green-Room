@@ -77,8 +77,10 @@ for (const s of src.shows) {
   // Snapshots are gitignored: where this run has none for a show (e.g. in CI), keep its stored dataset.
   else if (!existsSync(raw) && !existsSync(spotifyRaw) && existsSync(stored)) ds = JSON.parse(readFileSync(stored, 'utf8'));
   else if (!s.notAnalyzable && (existsSync(raw) || (s.spotifyId && existsSync(spotifyRaw)))) {
-    const feed = existsSync(raw) ? parseFeed(readFileSync(raw, 'utf8'), MAX_EPISODES) : spotifyFeed(spotifyRaw);
-    const episodes: Episode[] = feed.items.map((it) => {
+    // Every item is read: the most recent MAX_EPISODES are analyzed, the older ones only keep past guests
+    // from being proposed again (a show like This Week in Startups has three times that many).
+    const feed = existsSync(raw) ? parseFeed(readFileSync(raw, 'utf8'), Infinity) : spotifyFeed(spotifyRaw);
+    const toEpisode = (it: ParsedFeed['items'][number]): Episode => {
       const ex = excluded.test(it.title);
       return {
         id: it.guid,
@@ -90,7 +92,10 @@ for (const s of src.shows) {
         ...(ex ? { excludedReason: 'Trailer or announcement' } : {}),
         ...(rerun.test(it.title) ? { rerun: true } : {}),
       };
-    });
+    };
+    const episodes = feed.items.slice(0, MAX_EPISODES).map(toEpisode);
+    // Older items: only those that name a guest, without the fields the analysis uses.
+    const olderEpisodes = feed.items.slice(MAX_EPISODES).map(toEpisode).filter((e) => !e.excluded && e.guests.length);
     ds = {
       id: s.id,
       name: s.name,
@@ -105,9 +110,10 @@ for (const s of src.shows) {
         retrievedVia: s.spotifyId && !existsSync(raw)
           ? 'Episode list from the official Spotify Web API (show has no public RSS feed); snapshot taken by the "Build catalog from Spotify" workflow'
           : 'Feed URL from the official Apple Podcasts lookup API; RSS snapshot fetched through a scraping service (the build container cannot reach feed hosts directly)',
-        note: `Most recent ${MAX_EPISODES} items at most. Guest names come from a generic, conservative title rule (core/extract-generic.ts, confidence "low"); a spot check of 36 extractions found 3 non-person phrases.`,
+        note: `Most recent ${MAX_EPISODES} items analyzed; older items (${feed.items.length - episodes.length}) are read only to exclude past guests. Guest names come from a generic, conservative title rule (core/extract-generic.ts, confidence "low"); a spot check of 36 extractions found 3 non-person phrases.`,
       },
       episodes,
+      ...(olderEpisodes.length ? { olderEpisodes } : {}),
     };
     writeFileSync(`data/podcasts/${s.id}.json`, JSON.stringify(ds) + '\n');
   }

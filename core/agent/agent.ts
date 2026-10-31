@@ -12,6 +12,7 @@ import { externalThemes } from '../verify/occupations';
 import { THEMES, THEME_IDS, addInto, cosine, emptyVector, themesOfTitle, topThemes, type ThemeId, type ThemeVector } from '../themes';
 import { qlooKind, type Demographics, type QlooAdapter, type QlooEntity, type Trend } from '../qloo/types';
 import { topicPhrase } from '../topic';
+import { knownPastEpisodes } from '../known-past-guests';
 export { topicPhrase };
 import { CATEGORY_LABELS, categoriesOf, mainCategory, type OccupationCategory, type PersonRecord } from '../people';
 
@@ -502,6 +503,12 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   let history: Episode[] = [];
   let withGuests: Episode[] = [];
   const pastGuests = new Map<string, Appearance & { name: string }>();
+  // Appearances outside the analysis window: older feed items and the public record. They only stop
+  // a past guest from being proposed again; counts, themes and the audience signal use pastGuests.
+  const olderPast = new Map<string, Appearance & { name: string }>();
+  const pastOf = (key: string) => pastGuests.get(key) ?? olderPast.get(key);
+  const isPast = (key: string) => pastGuests.has(key) || olderPast.has(key);
+  let allTitles: string[] = [];
   let coverage = 0;
   const titlesByKey = new Map<string, string[]>();
   let historyStatus: HistoryStatus = { status: 'not_found_partial', pastGuestCount: 0, episodesChecked: 0, episodesWithoutGuestName: 0, coverage: 0 };
@@ -766,7 +773,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   };
   const filterRepeats = (p: Map<string, Candidate>) => {
     for (const [key, c] of p) {
-      const past = pastGuests.get(key);
+      const past = pastOf(key);
       if (past) {
         discarded.push({ name: c.name, reason: `Already a guest on ${target.name} (${d10(past.published)})`, reasonEs: `Ya fue invitado en ${target.name} (${d10(past.published)})`, evidence: past });
         p.delete(key);
@@ -836,6 +843,15 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
           const prev = pastGuests.get(key);
           if (!prev || e.published < prev.published) pastGuests.set(key, { name: g.name, showId: target.id, showName: target.name, episodeId: e.id, title: e.title, published: e.published, url: e.url });
         }
+      const older = [...(target.olderEpisodes ?? []), ...knownPastEpisodes(target.id)].filter((e) => e.published && e.published < asOf && !e.excluded);
+      for (const e of older)
+        for (const g of e.guests) {
+          const key = nameKey(g.name);
+          if (pastGuests.has(key)) continue;
+          const prev = olderPast.get(key);
+          if (!prev || e.published < prev.published) olderPast.set(key, { name: g.name, showId: target.id, showName: target.name, episodeId: e.id, title: e.title, published: e.published, url: e.url });
+        }
+      allTitles = [...history, ...older].map((e) => ` ${nameKey(e.title)} `);
       coverage = history.length ? withGuests.length / history.length : 0;
       // Interview titles per person (this show and comparison shows, before asOf): the context used to
       // confirm an identity in Qloo.
@@ -1177,7 +1193,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
     verify_discoveries: async () => {
       verifyDiscoveryRuns++;
-      const targetTitles = history.map((e) => ` ${nameKey(e.title)} `);
+      const targetTitles = allTitles;
       const batch = unverified.splice(0);
       for (const u of batch) {
         const name = u.entity.name;
@@ -1204,7 +1220,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
             ? { check: 'person', ok: true, detail: `Qloo type: ${typesLabel}.`, detailEs: `Tipo en Qloo: ${typesLabel}.` }
             : { check: 'person', ok: null, detail: `Qloo type is generic or ambiguous (${typesLabel}): the kind (person, band, organization) must be confirmed in Wikidata.`, detailEs: `El tipo en Qloo es genérico o ambiguo (${typesLabel}): el tipo de entidad (persona, banda, organización) se confirma en Wikidata.` },
         );
-        const past = pastGuests.get(key);
+        const past = pastOf(key);
         const inTitles = key.split(' ').length >= 2 && targetTitles.some((x) => x.includes(` ${key} `));
         if (past || targetHostKeys.has(key) || inTitles) {
           const why: Bi = past
@@ -1364,8 +1380,8 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
         // someone we already have in our RSS is the same candidate, never a second one.
         const variantKeys = [...new Set([...ch.names, ch.name].map(nameKey))].filter((x) => x && x !== key);
         // The canonical name itself may be a past guest (Qloo spelled it differently).
-        if (pastGuests.has(key) || targetHostKeys.has(key)) variantKeys.unshift(key);
-        const pastVariant = variantKeys.find((x) => pastGuests.has(x) || targetHostKeys.has(x));
+        if (isPast(key) || targetHostKeys.has(key)) variantKeys.unshift(key);
+        const pastVariant = variantKeys.find((x) => isPast(x) || targetHostKeys.has(x));
         if (pastVariant) {
           const why: Bi = [`Same person as “${ch.names.find((n) => nameKey(n) === pastVariant)}”, already on ${target.name} or its host (Wikidata ${ch.wikidataId})`, `Misma persona que “${ch.names.find((n) => nameKey(n) === pastVariant)}”, que ya participó en ${target.name} o es su conductor (Wikidata ${ch.wikidataId})`];
           prop.checks.push({ check: 'repeat', ok: false, detail: why[0], detailEs: why[1] });
@@ -1778,7 +1794,7 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
       verifyRounds++;
       // Check each pick against evidence the earlier steps could not use. Failures send the planner
       // back to select_shortlist with the rejected people excluded (at most 2 rounds).
-      const targetTitles = history.map((e) => ` ${nameKey(e.title)} `);
+      const targetTitles = allTitles;
       const newlyRejected: string[] = [];
       for (const c of picks) {
         const key = ` ${c.key} `;

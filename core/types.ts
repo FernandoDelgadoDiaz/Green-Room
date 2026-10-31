@@ -10,6 +10,8 @@ export type ExtractionMethod =
   | 'title-pattern'
   | 'description-first-sentence'
   | 'manual-override'
+  /** A past appearance on public record that the feed does not carry (core/known-past-guests.ts). */
+  | 'public-record'
   | 'none';
 
 export interface GuestMention {
@@ -50,6 +52,11 @@ export interface PodcastDataset {
   description: string;
   source: PodcastSource;
   episodes: Episode[];
+  /**
+   * Feed items older than the analysis window (the most recent `episodes`). Used only to never
+   * propose someone who was already on the show; themes, recency and the audience signal ignore them.
+   */
+  olderEpisodes?: Episode[];
 }
 
 export interface Appearance {
