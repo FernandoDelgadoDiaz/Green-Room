@@ -275,8 +275,9 @@ interface Cached {
  * Version 2: unrecorded citizenship or language no longer excludes Qloo's proposals; photos for them.
  * Version 3: past guests are checked against the whole feed and the public record, not only the
  * analyzed episodes.
+ * Version 4: the name-in-a-title check covers every candidate and the official YouTube titles.
  */
-export const RULES_VERSION = 3;
+export const RULES_VERSION = 4;
 const current = <T extends { fresh: boolean; body: Cached }>(c: T | null): c is T => Boolean(c?.fresh && (c.body.rules ?? 1) >= RULES_VERSION);
 
 function refuseBare(code: 'guard_unavailable') {
