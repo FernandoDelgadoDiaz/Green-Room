@@ -198,12 +198,12 @@ export function analyzeFeedXml(xml: string, meta: { feedUrl: string; appleUrl?: 
   const sources = [meta.feedUrl, ...(meta.appleUrl ? [meta.appleUrl] : [])];
   let feed;
   try {
-    feed = parseFeed(xml, 300);
+    feed = parseFeed(xml, Infinity);
   } catch {
     return { level: 'insufficient', reasons: [{ en: 'The feed could not be parsed as RSS.', es: 'El feed no se pudo leer como RSS.' }], sources, dataset: null, stats: { episodes: 0, withGuestNames: 0, coverage: 0, last: null } };
   }
   const hostAliases = [meta.host, feed.author].filter((x): x is string => Boolean(x && x.trim())).map((x) => x.trim());
-  const episodes: Episode[] = feed.items.map((it) => {
+  const toEpisode = (it: (typeof feed.items)[number]): Episode => {
     const ex = EXCLUDED.test(it.title);
     return {
       id: it.guid,
@@ -215,7 +215,10 @@ export function analyzeFeedXml(xml: string, meta: { feedUrl: string; appleUrl?: 
       ...(ex ? { excludedReason: 'Trailer or announcement' } : {}),
       ...(RERUN.test(it.title) ? { rerun: true } : {}),
     };
-  });
+  };
+  // The 300 most recent items are analyzed; older ones only keep past guests from being proposed again.
+  const episodes = feed.items.slice(0, 300).map(toEpisode);
+  const olderEpisodes = feed.items.slice(300).map(toEpisode).filter((e) => !e.excluded && e.guests.length);
   const eps = episodes.filter((e) => !e.excluded && e.published);
   const withGuests = eps.filter((e) => e.guests.length).length;
   const coverage = eps.length ? withGuests / eps.length : 0;
@@ -232,7 +235,7 @@ export function analyzeFeedXml(xml: string, meta: { feedUrl: string; appleUrl?: 
     if (coverage < 0.3) ((level = 'limited'), reasons.push({ en: `Guest names in only ${Math.round(coverage * 100)}% of titles: repeat-guest checks may miss people.`, es: `Nombres de invitados en solo el ${Math.round(coverage * 100)}% de los títulos: el control de repetidos puede fallar.` }));
     if (last && (now.getTime() - new Date(last).getTime()) / 86400_000 > 365) ((level = 'limited'), reasons.push({ en: `No episode in the last year (last: ${last.slice(0, 10)}).`, es: `Sin episodios en el último año (último: ${last.slice(0, 10)}).` }));
   }
-  if (feed.items.length >= 300) reasons.push({ en: 'Only the 300 most recent episodes were read.', es: 'Solo se leyeron los 300 episodios más recientes.' });
+  if (feed.items.length > 300) reasons.push({ en: `The 300 most recent episodes were analyzed; the ${feed.items.length - 300} older ones were read only to rule out past guests.`, es: `Se analizaron los 300 episodios más recientes; los ${feed.items.length - 300} anteriores se leyeron solo para descartar invitados anteriores.` });
   const language = feed.language && feed.language !== 'und' ? feed.language : '';
   if (!language) reasons.push({ en: 'The feed does not declare a language.', es: 'El feed no declara un idioma.' });
   const id = `feed-${nameKey(feed.title || meta.feedUrl).replace(/\s+/g, '-').slice(0, 40) || 'show'}`;
@@ -248,6 +251,7 @@ export function analyzeFeedXml(xml: string, meta: { feedUrl: string; appleUrl?: 
           description: feed.description.slice(0, 220),
           source: { feedUrl: meta.feedUrl, website: meta.appleUrl ?? meta.feedUrl, retrievedAt: now.toISOString().slice(0, 10), retrievedVia: 'Live RSS fetch (open search)', note: 'Guest names from a generic title rule (confidence "low").' },
           episodes,
+          ...(olderEpisodes.length ? { olderEpisodes } : {}),
         };
   return { level, reasons, sources, dataset, stats: { episodes: eps.length, withGuestNames: withGuests, coverage: Math.round(coverage * 100) / 100, last } };
 }

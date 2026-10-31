@@ -273,8 +273,10 @@ interface Cached {
  * Bumped when a change to the agent's rules would change who is recommended. A cached result from older
  * rules is recomputed on the next visit (and still shown, dated, if the visit cannot start a new run).
  * Version 2: unrecorded citizenship or language no longer excludes Qloo's proposals; photos for them.
+ * Version 3: past guests are checked against the whole feed and the public record, not only the
+ * analyzed episodes.
  */
-export const RULES_VERSION = 2;
+export const RULES_VERSION = 3;
 const current = <T extends { fresh: boolean; body: Cached }>(c: T | null): c is T => Boolean(c?.fresh && (c.body.rules ?? 1) >= RULES_VERSION);
 
 function refuseBare(code: 'guard_unavailable') {
