@@ -4,6 +4,7 @@
 
 import type { Episode } from './types';
 import known from '../data/catalog/known-past-guests.json';
+import channelTitles from '../data/catalog/youtube-titles.json';
 
 interface KnownAppearance {
   name: string;
@@ -27,4 +28,14 @@ export function knownPastEpisodes(showId: string): Episode[] {
     guests: [{ name: a.name, method: 'public-record', confidence: 'high' }],
     excluded: false,
   }));
+}
+
+const TITLES = channelTitles as unknown as { shows?: Record<string, { channel: string; retrievedAt: string; titles: string[] }> };
+
+/**
+ * Every video title on the show's official YouTube channel (scripts/fetch-youtube-titles.ts), back to
+ * the show's first years. Only for the name-in-a-title check: a guest named there is not proposed.
+ */
+export function publicTitles(showId: string): string[] {
+  return TITLES.shows?.[showId]?.titles ?? [];
 }
