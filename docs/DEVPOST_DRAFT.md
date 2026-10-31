@@ -19,7 +19,7 @@
 2. This Week in Startups: five portraits in Qloo's taste order, each with its Qloo affinity.
 3. "Why these five": what Qloo found out about the audience, why each guest is here, what the agent did.
 4. "Without Qloo": the same analysis with Qloo off.
-5. "What Qloo changed in this search": who entered, who left, and Qloo's order at 92/100 audience affinity against 19/100 without Qloo.
+5. "What Qloo changed in this search": who entered, who left, and Qloo's order at 74/100 audience affinity against 19/100 without Qloo.
 6. "Who this show's audience is", according to Qloo.
 7. The invitation: editable, opens in email or WhatsApp.
 8. "How well Qloo knows each market".
@@ -44,13 +44,13 @@ Every guest has verified evidence (interview links, identity and language checks
 3. **profile** the audience by age and gender (`urn:demographics`);
 4. find what else that audience likes across books, films and music.
 
-**The same analysis with Qloo turned off** is one tap away ("Without Qloo"). On This Week in Startups (live run, 2026-10-26; Qloo's answers vary somewhat between runs):
-- Qloo changes **4 of the 5** guests.
-- Qloo's taste order (Ben Horowitz, Max Levchin, Dustin Moskovitz, Marc Andreessen, Travis Kalanick: none of them on the list without Qloo) averages **92/100** audience affinity. The list without Qloo (Ray Dalio, Eric Weinstein, Satya Nadella, Erin Brockovich, Elon Musk) averages **19/100**, both measured the same way in the same run.
+**The same analysis with Qloo turned off** is one tap away ("Without Qloo"). On This Week in Startups (live run, 2026-10-31; Qloo's answers vary somewhat between runs):
+- Qloo changes **3 of the 5** guests.
+- Qloo's taste order (Dustin Moskovitz, Bret Taylor, Adam D'Angelo, Ron Conway, Jessica Livingston: none of them on the list without Qloo, none of them ever on the show) averages **74/100** audience affinity. The list without Qloo (Ray Dalio, Eric Weinstein, Satya Nadella, Erin Brockovich, Elon Musk) averages **19/100**, both measured the same way in the same run.
 - Without Qloo you get famous people. With Qloo you get the people this audience leans toward.
 
 **Why a general-purpose LLM can't do this.** Asked "who should This Week in Startups book?", a language model guesses from fame. It does not know:
-- which 114 people have already been on the show (Green Room reads all 499 episodes and never proposes a past guest or the host);
+- who has already been on the show (Green Room reads the whole feed and the show's official YouTube titles back to 2009, and never proposes a past guest or the host: on This Week in Startups it set aside 67 past guests Qloo's audience still loves, such as Ben Horowitz and Travis Kalanick);
 - whether a name is the right person (Green Room checks identity in Wikidata and Wikipedia, and drops namesakes and people who have died);
 - what this audience actually likes. That is measured taste from Qloo's graph, not general knowledge.
 
@@ -68,7 +68,7 @@ For a Latin American launch, that gap is a data opportunity, not a reason to fak
 - A shared daily Qloo budget, a per-visitor cap and a server-side cache protect the hackathon key.
 - An emergency pause stops new Qloo calls without a redeploy.
 - Qloo data is never committed to the public repository.
-- 267 automated tests.
+- 272 automated tests.
 
 **Honest limits.**
 - Qloo describes aggregate taste, not individual listeners, and the app labels every Qloo value that way.
